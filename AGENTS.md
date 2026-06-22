@@ -43,12 +43,12 @@ pnpm test:conformance     # NAP conformance for every napplet
 ```
 
 `pnpm dev`/`pnpm shell` (see `scripts/dev.mjs`) take an optional napplet name —
-omit it when there is exactly one napplet. `pnpm dev` is bare Vite (SDK calls
-don't resolve — no shell); `pnpm shell` launches `kehto paja` wrapping Vite, a
-real `allow-scripts` iframe with simulated identity/relay/storage at
-http://127.0.0.1:5197. Note: `@kehto/cli`/`@kehto/paja` publish broken
-`workspace:*` deps, so `pnpm-workspace.yaml` `overrides` pins every `@kehto`
-package — remove once upstream republishes.
+omit it when there is exactly one napplet. `pnpm dev` is bare Vite on **:3001**
+(SDK calls don't resolve — no shell); `pnpm shell` launches `kehto paja` on
+**:3000** wrapping Vite on **:3001**, a real `allow-scripts` iframe with simulated
+identity/relay/storage (open http://127.0.0.1:3000). Note: `@kehto/cli`/`@kehto/paja`
+publish broken `workspace:*` deps, so `pnpm-workspace.yaml` `overrides` pins every
+`@kehto` package — remove once upstream republishes.
 
 Per-napplet (use pnpm's filter; `<name>` is the dir under `napplets/`):
 

@@ -31,10 +31,12 @@ export async function adoptNapplet(dir, { name, title } = {}) {
   // 1b. Wire the Kehto `paja` host shell: add @kehto/cli + a `shell` script.
   const pkgPath = join(dir, 'package.json');
   const pkg = JSON.parse(await readFile(pkgPath, 'utf8'));
+  // Pin memorable ports: paja host shell on 3000, napplet Vite on 3001.
   pkg.scripts = {
     ...pkg.scripts,
+    dev: 'vite --host 127.0.0.1 --port 3001 --strictPort',
     shell:
-      'kehto paja --target-url http://127.0.0.1:5173 -- vite --host 127.0.0.1 --port 5173 --strictPort',
+      'kehto paja --port 3000 --target-url http://127.0.0.1:3001 -- vite --host 127.0.0.1 --port 3001 --strictPort',
   };
   pkg.devDependencies = {
     '@kehto/cli': KEHTO_CLI_VERSION,

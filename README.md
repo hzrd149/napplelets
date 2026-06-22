@@ -39,16 +39,17 @@ pnpm dev [name]      # Vite dev server — fast UI iteration, no host shell
 pnpm shell [name]    # run inside a reference host shell, with live reload
 ```
 
-`name` is optional when there is exactly one napplet. `pnpm dev` is plain Vite,
-best for layout/styling; the shell's NAP services (identity, relay, storage…)
-aren't present, so SDK calls won't resolve there.
+`name` is optional when there is exactly one napplet. `pnpm dev` is plain Vite
+on **http://127.0.0.1:3001**, best for layout/styling; the shell's NAP services
+(identity, relay, storage…) aren't present, so SDK calls won't resolve there.
 
 `pnpm shell` runs the napplet inside Kehto's **paja** host shell (`kehto paja`):
 a real `allow-scripts` iframe driven by the reference runtime, with simulated
-identity/relay/storage so SDK calls actually resolve. It serves the runtime at
-http://127.0.0.1:5197 (top bar / sandboxed napplet / bottom bar) and live-reloads
-through Vite. Tune the simulation with `kehto paja` flags or a `kehto.dev.json`
-(`--identity-mode`, `--relay-mode`, `--storage-mode`, `--config-value`, …).
+identity/relay/storage so SDK calls actually resolve. Open the shell at
+**http://127.0.0.1:3000** (top bar / sandboxed napplet / bottom bar); the napplet
+itself is served by Vite on **3001** and live-reloads. Tune the simulation with
+`kehto paja` flags or a `kehto.dev.json` (`--identity-mode`, `--relay-mode`,
+`--storage-mode`, `--config-value`, …).
 
 > **Two workarounds, both temporary** (remove when upstream fixes them):
 > - `@kehto/cli` and `@kehto/paja` publish `workspace:*` dependency specs that

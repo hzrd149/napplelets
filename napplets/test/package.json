@@ -4,12 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite --host 127.0.0.1",
+    "dev": "vite --host 127.0.0.1 --port 3001 --strictPort",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
     "type-check": "tsc --noEmit",
     "verify": "pnpm type-check && pnpm build",
-    "shell": "kehto paja --target-url http://127.0.0.1:5173 -- vite --host 127.0.0.1 --port 5173 --strictPort",
+    "shell": "kehto paja --port 3000 --target-url http://127.0.0.1:3001 -- vite --host 127.0.0.1 --port 3001 --strictPort",
     "test:conformance": "pnpm build && napplet-conformance ./dist",
     "test:conformance:ui": "napplet-conformance --ui . --exec \"vite build --watch\""
   },
