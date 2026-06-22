@@ -5,8 +5,12 @@
 // This is deliberately written as deterministic replacement rather than regex
 // patching of upstream text, so it stays correct across @napplet/boilerplate
 // versions even if their local doc layout changes.
-import { rm, writeFile } from 'node:fs/promises';
+import { readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+
+// Pinned because @kehto/cli ships unusable `workspace:*` deps; the matching
+// version pins live in the root pnpm-workspace.yaml `overrides`.
+const KEHTO_CLI_VERSION = '0.2.0';
 
 function titleFromName(name) {
   return name
@@ -23,6 +27,20 @@ export async function adoptNapplet(dir, { name, title } = {}) {
   for (const shared of ['docs', '.codex', 'LICENSE']) {
     await rm(join(dir, shared), { recursive: true, force: true });
   }
+
+  // 1b. Wire the Kehto `paja` host shell: add @kehto/cli + a `shell` script.
+  const pkgPath = join(dir, 'package.json');
+  const pkg = JSON.parse(await readFile(pkgPath, 'utf8'));
+  pkg.scripts = {
+    ...pkg.scripts,
+    shell:
+      'kehto paja --target-url http://127.0.0.1:5173 -- vite --host 127.0.0.1 --port 5173 --strictPort',
+  };
+  pkg.devDependencies = {
+    '@kehto/cli': KEHTO_CLI_VERSION,
+    ...pkg.devDependencies,
+  };
+  await writeFile(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
 
   // 2. Extend the shared base tsconfig instead of carrying a full copy.
   await writeFile(

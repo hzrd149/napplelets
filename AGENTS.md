@@ -34,16 +34,27 @@ Workspace-wide (run from root):
 
 ```bash
 pnpm install              # link all workspace packages
+pnpm dev [name]           # vite dev server for one napplet (no host shell)
+pnpm shell [name]         # run one napplet inside the Kehto `paja` host shell
 pnpm build                # build every napplet (-r)
 pnpm verify               # type-check + build every napplet
 pnpm type-check           # strict TS across the workspace
 pnpm test:conformance     # NAP conformance for every napplet
 ```
 
+`pnpm dev`/`pnpm shell` (see `scripts/dev.mjs`) take an optional napplet name —
+omit it when there is exactly one napplet. `pnpm dev` is bare Vite (SDK calls
+don't resolve — no shell); `pnpm shell` launches `kehto paja` wrapping Vite, a
+real `allow-scripts` iframe with simulated identity/relay/storage at
+http://127.0.0.1:5197. Note: `@kehto/cli`/`@kehto/paja` publish broken
+`workspace:*` deps, so `pnpm-workspace.yaml` `overrides` pins every `@kehto`
+package — remove once upstream republishes.
+
 Per-napplet (use pnpm's filter; `<name>` is the dir under `napplets/`):
 
 ```bash
 pnpm --filter <name> dev                # vite dev server (127.0.0.1)
+pnpm --filter <name> shell              # kehto paja host shell wrapping vite
 pnpm --filter <name> verify             # type-check + single-file build
 pnpm --filter <name> test:conformance   # build, then napplet-conformance ./dist
 pnpm --filter <name> test:conformance:ui # interactive conformance UI w/ watch build

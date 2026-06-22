@@ -2,11 +2,11 @@
 // Launch one napplet for local development.
 //
 //   pnpm dev [name]            # Vite dev server (fast UI iteration, no host shell)
-//   pnpm shell [name]          # run inside a reference host shell with live reload
+//   pnpm shell [name]          # run inside the Kehto `paja` host shell
 //
 // `name` is optional when the workspace has exactly one napplet. The shell mode
-// uses @napplet/conformance-cli's --ui runtime (the working local host-shell
-// today; the Kehto `paja` CLI / @kehto/cli is not published yet).
+// runs each napplet's own `shell` script, which launches `kehto paja` wrapping
+// the napplet's Vite dev server.
 import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -43,6 +43,6 @@ if (!napplets.includes(target)) {
   process.exit(1);
 }
 
-const script = shellMode ? 'test:conformance:ui' : 'dev';
+const script = shellMode ? 'shell' : 'dev';
 const result = spawnSync('pnpm', ['--filter', target, script], { stdio: 'inherit', cwd: root });
 process.exit(result.status ?? 0);

@@ -43,13 +43,23 @@ pnpm shell [name]    # run inside a reference host shell, with live reload
 best for layout/styling; the shell's NAP services (identity, relay, storage…)
 aren't present, so SDK calls won't resolve there.
 
-`pnpm shell` serves the napplet in a real `allow-scripts` iframe driven by a
-reference shell (via `@napplet/conformance-cli --ui`), rebuilding on every edit —
-use this to exercise actual shell interactions.
+`pnpm shell` runs the napplet inside Kehto's **paja** host shell (`kehto paja`):
+a real `allow-scripts` iframe driven by the reference runtime, with simulated
+identity/relay/storage so SDK calls actually resolve. It serves the runtime at
+http://127.0.0.1:5197 (top bar / sandboxed napplet / bottom bar) and live-reloads
+through Vite. Tune the simulation with `kehto paja` flags or a `kehto.dev.json`
+(`--identity-mode`, `--relay-mode`, `--storage-mode`, `--config-value`, …).
 
-> **paja:** Kehto's `paja` host shell (`kehto paja` from `@kehto/cli`) is the
-> intended local shell, but that CLI isn't published to npm yet. `pnpm shell`
-> is the working stand-in until it ships.
+> **Two workarounds, both temporary** (remove when upstream fixes them):
+> - `@kehto/cli` and `@kehto/paja` publish `workspace:*` dependency specs that
+>   don't resolve from the registry, so `pnpm-workspace.yaml` pins every `@kehto`
+>   package via `overrides`.
+> - Kehto is built against `@napplet/core` 0.12–0.13 while the napplets use the
+>   current SDK (0.18+). Boot works; if the in-browser NIP-5D handshake misbehaves,
+>   that version skew is the first thing to check.
+
+For protocol conformance testing (a different tool — a pass/fail gate, not an
+interactive shell), use `pnpm --filter <name> test:conformance[:ui]`.
 
 ## Workspace scripts
 

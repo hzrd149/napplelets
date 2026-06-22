@@ -1,2 +1,20 @@
 packages:
   - 'napplets/*'
+
+# esbuild needs its postinstall to fetch the platform binary (vite depends on it).
+onlyBuiltDependencies:
+  - esbuild
+
+# Workaround: @kehto/cli and @kehto/paja ship `workspace:*` dependency specs in
+# their published tarballs, which don't resolve from the registry. Pin every
+# @kehto package to a real version so the paja host-shell chain installs.
+# Remove once upstream republishes with proper version ranges.
+overrides:
+  '@kehto/paja': '0.2.0'
+  '@kehto/acl': '0.12.0'
+  '@kehto/firewall': '0.3.1'
+  '@kehto/nip': '0.4.0'
+  '@kehto/runtime': '0.13.0'
+  '@kehto/services': '0.11.1'
+  '@kehto/shell': '0.13.0'
+  '@kehto/wm': '0.0.1'

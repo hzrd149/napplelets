@@ -9,6 +9,7 @@
     "preview": "vite preview --host 127.0.0.1",
     "type-check": "tsc --noEmit",
     "verify": "pnpm type-check && pnpm build",
+    "shell": "kehto paja --target-url http://127.0.0.1:5173 -- vite --host 127.0.0.1 --port 5173 --strictPort",
     "test:conformance": "pnpm build && napplet-conformance ./dist",
     "test:conformance:ui": "napplet-conformance --ui . --exec \"vite build --watch\""
   },
@@ -17,6 +18,7 @@
     "@napplet/shim": "^0.13.0"
   },
   "devDependencies": {
+    "@kehto/cli": "0.2.0",
     "@napplet/conformance-cli": "^0.2.1",
     "@napplet/vite-plugin": "^0.8.1",
     "typescript": "^5.9.3",
