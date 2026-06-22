@@ -1,0 +1,21 @@
+{
+  "name": "napplelets",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A monorepo of small NIP-5D napplets built on the @napplet packages.",
+  "scripts": {
+    "new": "node scripts/new-napplet.mjs",
+    "dev": "pnpm --filter",
+    "build": "pnpm -r build",
+    "verify": "pnpm -r verify",
+    "type-check": "pnpm -r type-check",
+    "test:conformance": "pnpm -r test:conformance"
+  },
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=10"
+  },
+  "packageManager": "pnpm@10.8.0",
+  "license": "MIT"
+}
