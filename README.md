@@ -13,7 +13,7 @@ built with the published [`@napplet`](https://napplet.run/docs/) packages and th
 ```
 napplelets/
 ├─ napplets/            # one workspace package per napplet
-│  └─ first/            # example napplet (exercises every shell surface)
+│  └─ test/             # example napplet (exercises every shell surface)
 ├─ templates/
 │  └─ napplet/          # clean starter copied by `pnpm new`
 ├─ docs/                # shared NIP-5D authoring context (single source of truth)
@@ -44,8 +44,8 @@ pnpm test:conformance    # NAP conformance check for every napplet
 Run a single napplet's scripts with pnpm's filter:
 
 ```bash
-pnpm --filter first dev
-pnpm --filter first verify
+pnpm --filter test dev
+pnpm --filter test verify
 ```
 
 ## How a napplet works

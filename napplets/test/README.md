@@ -3,9 +3,9 @@
 A NIP-5D napplet in the [napplelets](../../README.md) monorepo.
 
 ```bash
-pnpm --filter first dev               # local dev server
-pnpm --filter first verify            # type-check + single-file build
-pnpm --filter first test:conformance  # NAP conformance check
+pnpm --filter test dev               # local dev server
+pnpm --filter test verify            # type-check + single-file build
+pnpm --filter test test:conformance  # NAP conformance check
 ```
 
 Imports `@napplet/shim` once at the entry point, then uses `@napplet/sdk` for

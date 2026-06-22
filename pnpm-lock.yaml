@@ -8,7 +8,7 @@ importers:
 
   .: {}
 
-  napplets/first:
+  napplets/test:
     dependencies:
       '@napplet/sdk':
         specifier: ^0.12.0
