@@ -27,10 +27,29 @@ napplelets/
 ## Getting started
 
 ```bash
-pnpm install                       # install all workspace packages
-pnpm new my-napplet                # scaffold a new napplet from templates/napplet
-pnpm --filter my-napplet dev       # dev server for one napplet
+pnpm install              # install all workspace packages
+pnpm new my-napplet       # scaffold a new napplet (official @napplet/boilerplate)
+pnpm dev my-napplet       # Vite dev server for one napplet
 ```
+
+## Running a napplet
+
+```bash
+pnpm dev [name]      # Vite dev server — fast UI iteration, no host shell
+pnpm shell [name]    # run inside a reference host shell, with live reload
+```
+
+`name` is optional when there is exactly one napplet. `pnpm dev` is plain Vite,
+best for layout/styling; the shell's NAP services (identity, relay, storage…)
+aren't present, so SDK calls won't resolve there.
+
+`pnpm shell` serves the napplet in a real `allow-scripts` iframe driven by a
+reference shell (via `@napplet/conformance-cli --ui`), rebuilding on every edit —
+use this to exercise actual shell interactions.
+
+> **paja:** Kehto's `paja` host shell (`kehto paja` from `@kehto/cli`) is the
+> intended local shell, but that CLI isn't published to npm yet. `pnpm shell`
+> is the working stand-in until it ships.
 
 ## Workspace scripts
 
@@ -41,7 +60,7 @@ pnpm type-check          # strict TS check across the workspace
 pnpm test:conformance    # NAP conformance check for every napplet
 ```
 
-Run a single napplet's scripts with pnpm's filter:
+Run a single napplet's own scripts with pnpm's filter:
 
 ```bash
 pnpm --filter test dev
