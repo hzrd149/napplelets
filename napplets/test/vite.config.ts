@@ -26,6 +26,15 @@ const configSchema = {
 } satisfies NappletConfigSchema;
 
 export default defineConfig({
+  server: {
+    // In `pnpm shell`, the napplet is loaded inside an `allow-scripts` iframe
+    // with no `allow-same-origin` (opaque origin), so its dev requests back to
+    // this server (`/@vite/client`, `/src/main.ts`, HMR) carry `Origin: null`
+    // and are cross-origin. Vite 6's default CORS only permits localhost
+    // origins, which blocks them. Allow any origin for local dev so the host
+    // shell's iframe can boot the napplet.
+    cors: { origin: '*' },
+  },
   plugins: [
     // Inline all JS/CSS into a single `index.html`. NIP-5D loads a napplet as a
     // single self-contained `/index.html` via `iframe.srcdoc` with
