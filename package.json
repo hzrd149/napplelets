@@ -13,7 +13,11 @@
     "type-check": "turbo run type-check --filter={./napplets/*}",
     "discover": "napplet discover --all",
     "test:conformance": "pnpm build && napplet conformance --all",
+    "login": "napplet keys store --name publisher --prompt-sec && napplet keys use --name publisher",
+    "logout": "napplet keys delete --name publisher",
+    "keys": "napplet keys",
     "deploy": "pnpm build && napplet deploy --all",
+    "deploy:dry": "pnpm build && napplet deploy --all --dry-run",
     "debug": "napplet debug --all",
     "format": "prettier --write .",
     "format:check": "prettier --check ."

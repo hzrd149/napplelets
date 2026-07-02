@@ -7,7 +7,14 @@
     "enabled": true,
     "roots": ["napplets"]
   },
+  "signing": {
+    "mode": "interactive",
+    "keyReference": "publisher"
+  },
   "conformance": {
     "command": "node napplet/packages/conformance-cli/dist/cli.js"
+  },
+  "paja": {
+    "command": "kehto"
   }
 }

@@ -68,7 +68,8 @@ pnpm verify              # type-check + build every napplet
 pnpm type-check          # strict TS check across the workspace
 pnpm discover            # list every built napplet the CLI can see
 pnpm test:conformance    # NAP conformance check for every napplet
-pnpm deploy              # publish every napplet (needs relays/blossom/signer)
+pnpm login               # store an nsec/nbunksec in the OS keychain as the signing key
+pnpm deploy              # publish every napplet (needs relays/blossom + a signer)
 pnpm debug               # read-only deploy/discovery diagnostics
 ```
 
@@ -79,6 +80,22 @@ deploy target (folder name = the `d` tag). The CLI is a Deno tool from the
 `napplet/` submodule (run via the `napplet` launcher), so **Deno must be
 installed**. Set `relays`/`blossomServers` in `.napplet/config.json` before
 deploying.
+
+### Publishing all napplets
+
+Publishing signs each napplet's manifest and uploads its files. Log in once — the
+secret is stored in your OS keychain and referenced from `.napplet/config.json`,
+so subsequent deploys need no secret on the command line:
+
+```bash
+pnpm login               # paste an nsec or nbunksec (Ctrl-D to end)
+pnpm deploy              # builds, then signs + publishes every napplet
+```
+
+`pnpm login` accepts `nsec1…`, `nbunksec1…` (a NIP-46 bunker connection), or
+64-char hex. Prefer not to persist a key? Sign per-run instead with
+`pnpm deploy -- --prompt-sec` or `pnpm deploy -- --sec <secret>`. Manage stored
+keys with `pnpm keys list` / `pnpm keys doctor` / `pnpm logout`.
 
 Run a single napplet's own scripts with pnpm's filter:
 

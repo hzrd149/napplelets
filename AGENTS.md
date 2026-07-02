@@ -40,7 +40,11 @@ pnpm verify               # type-check + build (Turbo)
 pnpm type-check           # strict TS across the napplets (Turbo)
 pnpm discover             # `napplet discover --all` — list built napplets
 pnpm test:conformance     # build, then `napplet conformance --all`
-pnpm deploy               # build, then `napplet deploy --all`
+pnpm login                # store nsec/nbunksec in the OS keychain + set as signing key
+pnpm logout               # remove the stored "publisher" key
+pnpm keys …               # `napplet keys` passthrough (list/doctor/…)
+pnpm deploy               # build, then `napplet deploy --all` (signs from the stored key)
+pnpm deploy:dry           # build + plan/sign only, no upload/publish (`--dry-run`)
 pnpm debug                # `napplet debug --all` — read-only deploy/plan diagnostics
 ```
 
@@ -70,9 +74,25 @@ the submodule CLI source via Deno — **Deno must be installed**. A single root
 `.napplet/config.json` sets `discover.roots: ["napplets"]`; the `--all` commands
 treat every built napplet folder as its own deploy target (folder name = the
 named-site `d` tag, so it must match `^[a-z0-9-]{1,13}$`). Add `relays` and
-`blossomServers` to the root `.napplet/config.json` before `pnpm deploy`. Napplets
-themselves carry no `.napplet` config or CLI scripts — only `dev`/`build`/
-`type-check`/`verify`.
+`blossomServers` to the root `.napplet/config.json` before `pnpm deploy` — network
+deploy fails fast without at least one of each. Napplets themselves carry no
+`.napplet` config or CLI scripts — only `dev`/`build`/`type-check`/`verify`.
+
+**Publishing / signing.** `pnpm deploy` needs a signer. The one-time login stores
+a secret in the OS keychain and points the root config's `signing.keyReference` at
+it, so every later `pnpm deploy` signs without a secret on the command line:
+
+```bash
+pnpm login                # paste an nsec or nbunksec (Ctrl-D to end); stored under "publisher"
+pnpm deploy               # builds, then signs + publishes ALL napplets from the keychain
+```
+
+The signer accepts `nsec1…`, `nbunksec1…` (NIP-46 bunker), or 64-char hex.
+Keychain-free alternatives (no persistence): `pnpm deploy -- --prompt-sec` (paste
+each run) or `pnpm deploy -- --sec <secret>`; CI can set `signing.mode:"ci"` +
+`NAPPLET_CI_SIGNING_KEY`. Keychain support: macOS `security`, Windows Credential
+Manager, Linux libsecret/`secret-tool` (needs a D-Bus session) — check with
+`pnpm keys doctor`.
 
 Per-napplet (use pnpm's filter; `<name>` is the dir under `napplets/`):
 
