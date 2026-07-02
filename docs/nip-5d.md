@@ -29,4 +29,3 @@ Related upstream discussion:
 
 When protocol behavior appears to conflict with a package README, check the
 pinned NIP-5D source and then the current `@napplet` package source.
-

@@ -81,4 +81,3 @@ This boilerplate may document a potential future NAP, but it must not ship
 runtime code that depends on an unaccepted NAP. Until the upstream PR lands and
 published `@napplet` packages expose the surface, keep experiments behind local
 adapters and avoid naming them as supported protocol features.
-

@@ -42,4 +42,3 @@ currently deferred on the NAPs track — not part of the active surface.)
 - `import { relay, storage, identity } from '@napplet/sdk';` for named helpers.
 - `storage.setItem()` for durable key-value app state.
 - `resource.bytes()` for external read-only bytes.
-

@@ -2,7 +2,11 @@
   import { format } from 'timeago.js';
   import { nip19 } from 'nostr-tools';
   import { inc as ipc } from '@napplet/sdk';
-  import { isCanonicalHexPubkey, pubkeyColorStyle, resourceImageBatch as resourceImage } from '@hyprgate/utils';
+  import {
+    isCanonicalHexPubkey,
+    pubkeyColorStyle,
+    resourceImageBatch as resourceImage,
+  } from '@hyprgate/utils';
   import type { NostrEvent } from '@hyprgate/types';
   import type { ProfileContent } from '../lib/profile-metadata';
   import {
@@ -35,7 +39,9 @@
     }
   }
 
-  let authorName = $derived.by(() => profile?.display_name ?? profile?.name ?? shortenPubkey(event.pubkey));
+  let authorName = $derived.by(
+    () => profile?.display_name ?? profile?.name ?? shortenPubkey(event.pubkey),
+  );
   let avatarUrl = $derived.by(() => profile?.picture ?? null);
   let avatarFallback = $derived.by(() => {
     const name = profile?.name ?? profile?.display_name ?? '';
@@ -92,7 +98,9 @@
 </script>
 
 <div
-  class="gm-row flex gap-2 p-2 border-b border-border-dim transition-colors {isRead ? 'opacity-80' : 'bg-accent-green/5'}"
+  class="gm-row flex gap-2 p-2 border-b border-border-dim transition-colors {isRead
+    ? 'opacity-80'
+    : 'bg-accent-green/5'}"
   data-gm-note-id={event.id}
   data-gm-is-read={isRead}
 >
@@ -105,7 +113,12 @@
       aria-label="Open profile for {authorName}"
     >
       {#if avatarUrl != null}
-        <img use:resourceImage={avatarUrl} alt={authorName} class="w-full h-full object-cover" loading="lazy" />
+        <img
+          use:resourceImage={avatarUrl}
+          alt={authorName}
+          class="w-full h-full object-cover"
+          loading="lazy"
+        />
       {:else}
         <span class="text-text-muted text-xs font-mono">{avatarFallback}</span>
       {/if}
@@ -119,7 +132,17 @@
         title="You replied with a GM"
         aria-label="Responded with a GM"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="3"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
           <polyline points="20 6 9 17 4 12" />
         </svg>
       </span>
@@ -147,12 +170,7 @@
 
     <!-- Actions -->
     <div class="flex flex-wrap gap-2 mt-2">
-      <button
-        type="button"
-        class="gm-action"
-        onclick={openNote}
-        data-gm-action="open"
-      >
+      <button type="button" class="gm-action" onclick={openNote} data-gm-action="open">
         Open
       </button>
       <button
@@ -165,12 +183,7 @@
       >
         {quickLabel}
       </button>
-      <button
-        type="button"
-        class="gm-action"
-        onclick={openComposer}
-        data-gm-action="reply"
-      >
+      <button type="button" class="gm-action" onclick={openComposer} data-gm-action="reply">
         GM Reply
       </button>
     </div>
@@ -187,7 +200,10 @@
     color: var(--hg-text-muted, #b8b1a4);
     background: transparent;
     cursor: pointer;
-    transition: color 120ms, border-color 120ms, background 120ms;
+    transition:
+      color 120ms,
+      border-color 120ms,
+      background 120ms;
   }
 
   .gm-action:hover:not(:disabled) {

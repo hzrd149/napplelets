@@ -1,4 +1,4 @@
-import '@napplet/shim';  // installs window.napplet before any component mounts (NIP-5D — no window.nostr)
+import '@napplet/shim'; // installs window.napplet before any component mounts (NIP-5D — no window.nostr)
 
 import '@unocss/reset/tailwind.css';
 import 'virtual:uno.css';

@@ -15,7 +15,7 @@ first to find the smallest set of docs that covers a change.
 A pnpm monorepo of small **NIP-5D napplets** — sandboxed Nostr web applets. Each
 napplet runs inside an `allow-scripts` iframe (loaded via `iframe.srcdoc`, opaque
 origin, no `allow-same-origin`) and delegates all privileged work (signing,
-relays, storage, external bytes) to a host *shell* over the NIP-5D JSON-envelope
+relays, storage, external bytes) to a host _shell_ over the NIP-5D JSON-envelope
 postMessage wire format. One package per napplet under `napplets/`; the shell
 itself is **not** in this repo — only the napplet side of the boundary.
 

@@ -11,7 +11,9 @@
     "build": "turbo run build --filter=...{./napplets/*}",
     "verify": "turbo run type-check build --filter={./napplets/*}",
     "type-check": "turbo run type-check --filter={./napplets/*}",
-    "test:conformance": "turbo run test:conformance --filter={./napplets/*}"
+    "test:conformance": "turbo run test:conformance --filter={./napplets/*}",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "engines": {
     "node": ">=20",
@@ -19,6 +21,8 @@
   },
   "packageManager": "pnpm@10.8.0",
   "devDependencies": {
+    "prettier": "^3.4.2",
+    "prettier-plugin-svelte": "^3.3.2",
     "turbo": "^2.9.14"
   },
   "license": "MIT"

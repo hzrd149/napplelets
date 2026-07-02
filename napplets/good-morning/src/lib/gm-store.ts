@@ -68,8 +68,10 @@ export function hasETag(event: NostrEvent): boolean {
 /** Extract the followed pubkeys (`p` tags) from a kind-3 contact list event. */
 export function contactsFromKind3(event: NostrEvent): string[] {
   return event.tags
-    .filter((tag): tag is [string, string, ...string[]] =>
-      tag[0] === 'p' && typeof tag[1] === 'string' && tag[1].length > 0)
+    .filter(
+      (tag): tag is [string, string, ...string[]] =>
+        tag[0] === 'p' && typeof tag[1] === 'string' && tag[1].length > 0,
+    )
     .map((tag) => tag[1]);
 }
 
@@ -193,7 +195,9 @@ export function createGMStore(notify: () => void): GMStore {
           state.userReplies.set(event.id, event);
           notify();
         },
-        onEose: () => { /* stay live for replies published while the inbox is open */ },
+        onEose: () => {
+          /* stay live for replies published while the inbox is open */
+        },
       },
     );
   }

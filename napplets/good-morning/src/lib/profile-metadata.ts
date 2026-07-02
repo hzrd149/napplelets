@@ -11,7 +11,9 @@ interface NappletShellHandle {
 }
 
 function getShell(): NappletShellHandle | null {
-  return (globalThis as unknown as { napplet?: { shell?: NappletShellHandle } }).napplet?.shell ?? null;
+  return (
+    (globalThis as unknown as { napplet?: { shell?: NappletShellHandle } }).napplet?.shell ?? null
+  );
 }
 
 export interface ProfileContent {
@@ -24,7 +26,11 @@ export interface ProfileContent {
 
 export type ProfileMetadataCallback = (pubkey: string, profile: ProfileContent) => void;
 
-const NOOP_SUBSCRIPTION: Subscription = { close: () => { /* no-op */ } };
+const NOOP_SUBSCRIPTION: Subscription = {
+  close: () => {
+    /* no-op */
+  },
+};
 
 function optionalString(value: unknown): string | undefined {
   return typeof value === 'string' && value.length > 0 ? value : undefined;
@@ -50,7 +56,9 @@ function parseProfileEvent(event: NostrEvent): ProfileContent | null {
 export function subscribeProfileMetadata(
   pubkeys: string[],
   onProfile: ProfileMetadataCallback,
-  onDone: () => void = () => { /* no-op */ },
+  onDone: () => void = () => {
+    /* no-op */
+  },
 ): Subscription {
   const authors = [...new Set(pubkeys.filter((pubkey) => pubkey.length > 0))];
   if (authors.length === 0) {
@@ -104,7 +112,11 @@ export function subscribeProfileMetadata(
       sub.on('eose', handleEose);
       subscription = { close: () => sub.close() };
     } else {
-      subscription = relay.subscribe(filters, (event) => handleEvent(event as NostrEvent), handleEose);
+      subscription = relay.subscribe(
+        filters,
+        (event) => handleEvent(event as NostrEvent),
+        handleEose,
+      );
     }
     if (closeWhenReady) subscription.close();
   })();

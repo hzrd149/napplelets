@@ -5,8 +5,6 @@
   "blossomServers": [],
   "discover": {
     "enabled": true,
-    "roots": [
-      "."
-    ]
+    "roots": ["."]
   }
 }

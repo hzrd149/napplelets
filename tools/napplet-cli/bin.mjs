@@ -43,7 +43,9 @@ const result = spawnSync(
 
 if (result.error) {
   if (result.error.code === 'ENOENT') {
-    console.error('napplet: Deno is required to run @napplet/cli — install it from https://deno.com');
+    console.error(
+      'napplet: Deno is required to run @napplet/cli — install it from https://deno.com',
+    );
     process.exit(127);
   }
   throw result.error;

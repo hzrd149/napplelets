@@ -32,7 +32,9 @@ interface NappletShellHandle {
 }
 
 function getShell(): NappletShellHandle | null {
-  return (globalThis as unknown as { napplet?: { shell?: NappletShellHandle } }).napplet?.shell ?? null;
+  return (
+    (globalThis as unknown as { napplet?: { shell?: NappletShellHandle } }).napplet?.shell ?? null
+  );
 }
 
 export interface PayloadSubscriptionCallbacks {
@@ -91,7 +93,10 @@ export function subscribeForPayload(
   }
 
   function openOutbox(options: OutboxSubscribeOptions): Subscription {
-    const sub = outbox.subscribe(filters, options as unknown as Parameters<typeof outbox.subscribe>[1]);
+    const sub = outbox.subscribe(
+      filters,
+      options as unknown as Parameters<typeof outbox.subscribe>[1],
+    );
     sub.on('event', (event) => callbacks.onEvent(event as NostrEvent));
     sub.on('eose', () => callbacks.onEose());
     return { close: () => sub.close() };
@@ -119,19 +124,21 @@ export function subscribeForPayload(
     }
 
     for (const relayUrl of relayUrls) {
-      subs.push(relay.subscribe(
-        filters,
-        (event) => {
-          if (seenIds.has(event.id)) return;
-          seenIds.add(event.id);
-          callbacks.onEvent(event as NostrEvent);
-        },
-        () => {
-          remainingEose -= 1;
-          maybeEose();
-        },
-        { relay: relayUrl },
-      ));
+      subs.push(
+        relay.subscribe(
+          filters,
+          (event) => {
+            if (seenIds.has(event.id)) return;
+            seenIds.add(event.id);
+            callbacks.onEvent(event as NostrEvent);
+          },
+          () => {
+            remainingEose -= 1;
+            maybeEose();
+          },
+          { relay: relayUrl },
+        ),
+      );
     }
 
     return {

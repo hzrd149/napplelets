@@ -1,7 +1,12 @@
 :root {
   color-scheme: light;
   font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
     sans-serif;
   background: #f4f6f8;
   color: #17212b;
@@ -17,12 +22,12 @@
   --napplet-text-selection: none;
 }
 
-:root[data-accent="green"] {
+:root[data-accent='green'] {
   --accent: #178a52;
   --accent-strong: #116d40;
 }
 
-:root[data-accent="amber"] {
+:root[data-accent='amber'] {
   --accent: #b45309;
   --accent-strong: #92400e;
 }
@@ -36,12 +41,12 @@
   user-select: var(--napplet-text-selection, none);
 }
 
-:where(input, textarea, select, [contenteditable], [data-napplet-select="text"]) {
+:where(input, textarea, select, [contenteditable], [data-napplet-select='text']) {
   -webkit-user-select: text;
   user-select: text;
 }
 
-:where([data-napplet-select="all"]) {
+:where([data-napplet-select='all']) {
   -webkit-user-select: all;
   user-select: all;
 }
@@ -190,11 +195,11 @@ h2 {
   font-weight: 700;
 }
 
-.capability-grid dd[data-state="on"] {
+.capability-grid dd[data-state='on'] {
   color: var(--success);
 }
 
-.capability-grid dd[data-state="off"] {
+.capability-grid dd[data-state='off'] {
   color: var(--muted);
 }
 
@@ -227,7 +232,7 @@ textarea {
 }
 
 .mono {
-  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
 }
 
 .muted {

@@ -93,17 +93,16 @@ export function createGMReferenceOpenPayload(source: string): NoteViewerOpenPayl
  * to the root note. The `e` tag value is the root id, which is exactly what the
  * inbox's isRead check looks for — so publishing this flips the row to replied.
  */
-export function createQuickGMReplyTemplate(
-  event: Pick<NostrEvent, 'id' | 'pubkey'>,
-): { kind: 1; content: string; tags: string[][]; created_at: number } {
+export function createQuickGMReplyTemplate(event: Pick<NostrEvent, 'id' | 'pubkey'>): {
+  kind: 1;
+  content: string;
+  tags: string[][];
+  created_at: number;
+} {
   return {
     kind: 1,
     content: QUICK_GM_CONTENT,
-    tags: [
-      ['e', event.id, '', 'reply'],
-      ['p', event.pubkey],
-      [...GM_CLIENT_TAG],
-    ],
+    tags: [['e', event.id, '', 'reply'], ['p', event.pubkey], [...GM_CLIENT_TAG]],
     created_at: Math.floor(Date.now() / 1000),
   };
 }
@@ -119,7 +118,8 @@ export async function publishQuickGM(event: Pick<NostrEvent, 'id' | 'pubkey'>): 
  * creates/focuses the composer window pre-seeded with this reply context.
  */
 export function createGMReplyComposePayload(
-  event: Pick<NostrEvent, 'id' | 'pubkey' | 'kind'> & Partial<Pick<NostrEvent, 'content' | 'created_at'>>,
+  event: Pick<NostrEvent, 'id' | 'pubkey' | 'kind'> &
+    Partial<Pick<NostrEvent, 'content' | 'created_at'>>,
 ): {
   source: { napplet: typeof GM_NAPPLET_SOURCE };
   intent: 'reply';

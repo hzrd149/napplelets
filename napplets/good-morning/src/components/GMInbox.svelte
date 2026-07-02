@@ -87,8 +87,9 @@
   }
 
   function flushProfileMetadataBatch(): void {
-    const missing = [...queuedProfilePubkeys]
-      .filter((pk) => !loadingPubkeys.has(pk) && !profileMap.has(pk));
+    const missing = [...queuedProfilePubkeys].filter(
+      (pk) => !loadingPubkeys.has(pk) && !profileMap.has(pk),
+    );
     queuedProfilePubkeys.clear();
     if (missing.length === 0) return;
 
@@ -202,7 +203,9 @@
     border: none;
     border-left: 1px solid var(--hg-border-dim, #3a3a3a);
     cursor: pointer;
-    transition: color 120ms, background 120ms;
+    transition:
+      color 120ms,
+      background 120ms;
   }
 
   .gm-filter-btn:first-child {

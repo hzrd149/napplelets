@@ -1,12 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { NostrEvent } from '@hyprgate/types';
-import {
-  buildGMThreads,
-  contactsFromKind3,
-  hasETag,
-  startOfTodaySeconds,
-  chunk,
-} from './gm-store';
+import { buildGMThreads, contactsFromKind3, hasETag, startOfTodaySeconds, chunk } from './gm-store';
 
 function ev(partial: Partial<NostrEvent> & { id: string }): NostrEvent {
   return {
@@ -34,7 +28,12 @@ describe('contactsFromKind3', () => {
       ev({
         id: 'k3',
         kind: 3,
-        tags: [['p', 'pk1'], ['p', 'pk2'], ['e', 'ignore'], ['p', '']],
+        tags: [
+          ['p', 'pk1'],
+          ['p', 'pk2'],
+          ['e', 'ignore'],
+          ['p', ''],
+        ],
       }),
     );
     expect(contacts).toEqual(['pk1', 'pk2']);
@@ -75,7 +74,14 @@ describe('buildGMThreads', () => {
   it('marks a root as read when the user GM-replied to it', () => {
     const root = ev({ id: 'root', tags: [] });
     const gmNotes = new Map([[root.id, root]]);
-    const myReply = ev({ id: 'mine', tags: [['e', 'root'], ['p', root.pubkey]], content: 'GM' });
+    const myReply = ev({
+      id: 'mine',
+      tags: [
+        ['e', 'root'],
+        ['p', root.pubkey],
+      ],
+      content: 'GM',
+    });
     const userReplies = new Map([[myReply.id, myReply]]);
 
     const threads = buildGMThreads(gmNotes, userReplies);
@@ -86,7 +92,10 @@ describe('buildGMThreads', () => {
   it('leaves a root unread when no user reply e-tags it', () => {
     const root = ev({ id: 'root', tags: [] });
     const other = ev({ id: 'other', tags: [] });
-    const gmNotes = new Map([[root.id, root], [other.id, other]]);
+    const gmNotes = new Map([
+      [root.id, root],
+      [other.id, other],
+    ]);
     // A GM reply that points at a DIFFERENT note must not mark `root` read.
     const myReply = ev({ id: 'mine', tags: [['e', 'other']], content: 'gm' });
     const userReplies = new Map([[myReply.id, myReply]]);

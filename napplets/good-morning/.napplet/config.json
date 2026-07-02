@@ -1,12 +1,10 @@
 {
   "version": 1,
   "sourceDir": ".",
-  "relays": [],
-  "blossomServers": [],
+  "relays": ["wss://relay.ditto.pub"],
+  "blossomServers": ["https://cdn.hzrd149.com"],
   "discover": {
     "enabled": true,
-    "roots": [
-      "."
-    ]
+    "roots": ["."]
   }
 }

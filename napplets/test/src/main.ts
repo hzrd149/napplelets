@@ -59,8 +59,7 @@ function setStatus(kind: StatusKind, message: string): void {
 }
 
 function setOutput(value: unknown): void {
-  elements.output.textContent =
-    typeof value === 'string' ? value : JSON.stringify(value, null, 2);
+  elements.output.textContent = typeof value === 'string' ? value : JSON.stringify(value, null, 2);
 }
 
 function getShellSupports(capability: string, protocol?: string): boolean {
@@ -73,9 +72,7 @@ function getShellSupports(capability: string, protocol?: string): boolean {
 }
 
 function featureStatus(capability: string): 'yes' | 'no' {
-  return getShellSupports(capability) || getShellSupports(`nap:${capability}`)
-    ? 'yes'
-    : 'no';
+  return getShellSupports(capability) || getShellSupports(`nap:${capability}`) ? 'yes' : 'no';
 }
 
 function renderCapabilities(): void {
@@ -100,11 +97,7 @@ function renderCapabilities(): void {
   );
 }
 
-async function withTimeout<T>(
-  promise: Promise<T>,
-  label: string,
-  timeoutMs = 5000,
-): Promise<T> {
+async function withTimeout<T>(promise: Promise<T>, label: string, timeoutMs = 5000): Promise<T> {
   let timer = 0;
   const timeout = new Promise<T>((_, reject) => {
     timer = window.setTimeout(() => {
@@ -160,11 +153,7 @@ async function queryRelay(): Promise<void> {
   const values = await readConfigValues();
   const configuredLimit = Number(values.defaultRelayLimit ?? 5);
   const limit = Number.isFinite(configuredLimit) ? configuredLimit : 5;
-  const events = await withTimeout(
-    relay.query({ kinds: [1], limit }),
-    'relay.query',
-    8000,
-  );
+  const events = await withTimeout(relay.query({ kinds: [1], limit }), 'relay.query', 8000);
   setOutput(events.map(summarizeEvent));
   setStatus('ok', `Loaded ${events.length} relay event${events.length === 1 ? '' : 's'}`);
 }
@@ -254,4 +243,3 @@ renderCapabilities();
 subscribeToIdentityChanges();
 subscribeToConfigChanges();
 setOutput('Napplet ready. Use the actions above to exercise each shell surface.');
-
