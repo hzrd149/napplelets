@@ -1,0 +1,3 @@
+[submodule "napplet"]
+	path = napplet
+	url = https://github.com/napplet/web.git
