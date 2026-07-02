@@ -1,0 +1,36 @@
+import { defineConfig } from 'vite';
+import { svelte } from '@sveltejs/vite-plugin-svelte';
+import UnoCSS from '@unocss/vite';
+import { nip5aManifest } from '@napplet/vite-plugin';
+
+export default defineConfig({
+  plugins: [
+    UnoCSS(),
+    svelte(),
+    // The kind-35129 manifest is build-signed from this option. `nappletType`
+    // becomes the manifest `d` tag, so it MUST match the launcher registry dTag
+    // ('good-morning') or the resolver REQs a non-existent manifest.
+    //
+    // Capability ACL: the runtime silently drops service messages for undeclared
+    // domains. We route the GM inbox through NAP-OUTBOX (origin:'outbox'), so
+    // WITHOUT 'outbox' here every outbox.subscribe is dropped and the inbox never
+    // fetches (the FEED-02 failure mode). 'resource' is required for avatar/media
+    // image loading, 'inc' for identity + note:open/profile:open intents.
+    nip5aManifest({
+      nappletType: 'good-morning',
+      requires: ['identity', 'relay', 'inc', 'outbox', 'resource', 'theme'],
+      artifactMode: 'single-file',
+      archetypes: [{ slug: 'good-morning', naps: ['good-morning'] }],
+    }),
+  ],
+  resolve: {
+    dedupe: ['svelte'],
+  },
+  server: {
+    port: 5184,
+    cors: true,
+  },
+  build: {
+    outDir: 'dist',
+  },
+});

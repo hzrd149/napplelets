@@ -5,8 +5,11 @@ applets that run in an `allow-scripts` iframe and delegate signing, storage, and
 relay access to a host shell over the NIP-5D JSON envelope wire format.
 
 Each napplet is a self-contained workspace package under [`napplets/`](./napplets)
-built with the published [`@napplet`](https://napplet.run/docs/) packages and the
-[Kehto](https://kehto.github.io/web/docs/) runtime as the reference host.
+built with the [`@napplet`](https://napplet.run/docs/) packages. Those packages
+(and shared `@hyprgate/*` libraries) are wired in from the `napplet/` and
+`hyprgate/` git submodules as workspace members, so napplets build against live
+submodule source. This is a development workspace — versions are intentionally
+not pinned so napplets are tested against the latest resolved versions.
 
 ## Layout
 
@@ -35,32 +38,17 @@ pnpm dev my-napplet       # Vite dev server for one napplet
 ## Running a napplet
 
 ```bash
-pnpm dev [name]      # Vite dev server — fast UI iteration, no host shell
-pnpm shell [name]    # run inside a reference host shell, with live reload
+pnpm dev [name]      # Vite dev server — fast UI iteration
 ```
 
 `name` is optional when there is exactly one napplet. `pnpm dev` is plain Vite
-on **http://127.0.0.1:3001**, best for layout/styling; the shell's NAP services
-(identity, relay, storage…) aren't present, so SDK calls won't resolve there.
+on **http://127.0.0.1:3001**, best for layout/styling; there is no host shell in
+this workspace, so the NAP services (identity, relay, storage…) aren't present and
+SDK calls won't resolve there.
 
-`pnpm shell` runs the napplet inside Kehto's **paja** host shell (`kehto paja`):
-a real `allow-scripts` iframe driven by the reference runtime, with simulated
-identity/relay/storage so SDK calls actually resolve. Open the shell at
-**http://127.0.0.1:3000** (top bar / sandboxed napplet / bottom bar); the napplet
-itself is served by Vite on **3001** and live-reloads. Tune the simulation with
-`kehto paja` flags or a `kehto.dev.json` (`--identity-mode`, `--relay-mode`,
-`--storage-mode`, `--config-value`, …).
-
-> **Two workarounds, both temporary** (remove when upstream fixes them):
-> - `@kehto/cli` and `@kehto/paja` publish `workspace:*` dependency specs that
->   don't resolve from the registry, so `pnpm-workspace.yaml` pins every `@kehto`
->   package via `overrides`.
-> - Kehto is built against `@napplet/core` 0.12–0.13 while the napplets use the
->   current SDK (0.18+). Boot works; if the in-browser NIP-5D handshake misbehaves,
->   that version skew is the first thing to check.
-
-For protocol conformance testing (a different tool — a pass/fail gate, not an
-interactive shell), use `pnpm --filter <name> test:conformance[:ui]`.
+To exercise a napplet against real NAP services, use conformance testing — a
+pass/fail gate that boots the built napplet in a real `allow-scripts` iframe
+harness: `pnpm --filter <name> test:conformance[:ui]`.
 
 ## Workspace scripts
 
@@ -112,4 +100,3 @@ napplet in the repo:
 ## References
 
 - Napplet spec & packages — https://napplet.run/docs/
-- Kehto reference runtime — https://kehto.github.io/web/docs/

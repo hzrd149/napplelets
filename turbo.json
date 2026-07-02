@@ -1,0 +1,23 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
+    "type-check": {
+      "dependsOn": ["^build"]
+    },
+    "test": {
+      "dependsOn": ["^build"]
+    },
+    "test:conformance": {
+      "dependsOn": ["build"],
+      "cache": false
+    },
+    "@napplet/conformance-cli#build": {
+      "dependsOn": ["^build", "@napplet/conformance-web#build"],
+      "outputs": ["dist/**"]
+    }
+  }
+}

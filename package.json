@@ -7,16 +7,19 @@
   "scripts": {
     "new": "node scripts/new-napplet.mjs",
     "dev": "node scripts/dev.mjs",
-    "shell": "node scripts/dev.mjs --shell",
-    "build": "pnpm -r build",
-    "verify": "pnpm -r verify",
-    "type-check": "pnpm -r type-check",
-    "test:conformance": "pnpm -r test:conformance"
+    "prepare": "turbo run build --filter=...{./napplets/*}",
+    "build": "turbo run build --filter=...{./napplets/*}",
+    "verify": "turbo run type-check build --filter={./napplets/*}",
+    "type-check": "turbo run type-check --filter={./napplets/*}",
+    "test:conformance": "turbo run test:conformance --filter={./napplets/*}"
   },
   "engines": {
     "node": ">=20",
     "pnpm": ">=10"
   },
   "packageManager": "pnpm@10.8.0",
+  "devDependencies": {
+    "turbo": "^2.9.14"
+  },
   "license": "MIT"
 }

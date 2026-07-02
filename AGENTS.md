@@ -33,28 +33,29 @@ itself is **not** in this repo — only the napplet side of the boundary.
 Workspace-wide (run from root):
 
 ```bash
-pnpm install              # link all workspace packages
-pnpm dev [name]           # vite dev server for one napplet (no host shell)
-pnpm shell [name]         # run one napplet inside the Kehto `paja` host shell
-pnpm build                # build every napplet (-r)
-pnpm verify               # type-check + build every napplet
-pnpm type-check           # strict TS across the workspace
-pnpm test:conformance     # NAP conformance for every napplet
+pnpm install              # link all workspace packages (also builds deps via `prepare`)
+pnpm dev [name]           # vite dev server for one napplet
+pnpm build                # build napplets + their deps in order (Turbo)
+pnpm verify               # type-check + build (Turbo)
+pnpm type-check           # strict TS across the napplets (Turbo)
+pnpm test:conformance     # NAP conformance for every napplet (Turbo)
 ```
 
-`pnpm dev`/`pnpm shell` (see `scripts/dev.mjs`) take an optional napplet name —
-omit it when there is exactly one napplet. `pnpm dev` is bare Vite on **:3001**
-(SDK calls don't resolve — no shell); `pnpm shell` launches `kehto paja` on
-**:3000** wrapping Vite on **:3001**, a real `allow-scripts` iframe with simulated
-identity/relay/storage (open http://127.0.0.1:3000). Note: `@kehto/cli`/`@kehto/paja`
-publish broken `workspace:*` deps, so `pnpm-workspace.yaml` `overrides` pins every
-`@kehto` package — remove once upstream republishes.
+The `@napplet/*` and `@hyprgate/*` packages live in the `napplet/` and `hyprgate/`
+git submodules and are wired in as workspace members (see `pnpm-workspace.yaml`),
+so napplets depend on them via `workspace:*` and build against live submodule
+source. **Turbo** (`turbo.json`) runs every task in dependency order — `pnpm build`
+builds each napplet's `@napplet/*`/`@hyprgate/*` dependencies first. This is a
+development workspace: versions are deliberately **not** pinned or overridden, so
+napplets are tested against the real latest resolved versions. There is **no host
+shell** — exercise napplets with `pnpm test:conformance` (a real `allow-scripts`
+iframe harness); `pnpm dev` is bare Vite for UI iteration (SDK calls needing a
+host won't resolve).
 
 Per-napplet (use pnpm's filter; `<name>` is the dir under `napplets/`):
 
 ```bash
 pnpm --filter <name> dev                # vite dev server (127.0.0.1)
-pnpm --filter <name> shell              # kehto paja host shell wrapping vite
 pnpm --filter <name> verify             # type-check + single-file build
 pnpm --filter <name> test:conformance   # build, then napplet-conformance ./dist
 pnpm --filter <name> test:conformance:ui # interactive conformance UI w/ watch build

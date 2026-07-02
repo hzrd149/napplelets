@@ -26,6 +26,15 @@ const configSchema = {
 } satisfies NappletConfigSchema;
 
 export default defineConfig({
+  build: {
+    // A NIP-5D napplet is loaded via `iframe.srcdoc` in the host shell, i.e. it
+    // always runs in the host's (modern) browser — there is no legacy runtime to
+    // support. Vite's default target (es2020/chrome87/…) makes esbuild try to
+    // lower object-rest destructuring emitted by the `@napplet` packages, which
+    // it can't ("Transforming destructuring … is not supported yet"). Target
+    // esnext so the modern syntax passes through untouched.
+    target: 'esnext',
+  },
   server: {
     // In `pnpm shell`, the napplet is loaded inside an `allow-scripts` iframe
     // with no `allow-same-origin` (opaque origin), so its dev requests back to

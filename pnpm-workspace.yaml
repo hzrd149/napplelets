@@ -1,20 +1,31 @@
 packages:
   - 'napplets/*'
+  # The @napplet/* packages live in the `napplet/` git submodule
+  # (github.com/napplet/web). Including its packages here makes them first-class
+  # workspace members, so napplets depend on them via `workspace:*` and always
+  # build against the latest submodule source/branch. The submodule keeps its own
+  # pnpm-workspace.yaml for standalone dev; from this root only these packages are
+  # linked (the docs/web site apps and test fixtures are intentionally excluded).
+  - 'napplet/packages/*'
+  # conformance-cli bundles the conformance-web UI (@napplet/conformance-web);
+  # it must be linked for the conformance-cli build to resolve.
+  - 'napplet/apps/conformance'
+  # Shared libraries from the `hyprgate` git submodule (github.com/hyprgate/gui),
+  # consumed by napplets like `good-morning`. Only the `packages/` folder is wired
+  # in — hyprgate's own apps/napplets/rapplets are intentionally NOT workspace
+  # members, so this repo never builds the whole hyprgate project just to build a
+  # napplet. Most @hyprgate/* packages ship as raw source (no build step); the
+  # importing napplet's bundler compiles them.
+  - 'hyprgate/packages/*'
 
-# esbuild needs its postinstall to fetch the platform binary (vite depends on it).
+# This is a development workspace: we deliberately do NOT pin or override any
+# versions so napplets are always tested against the real, latest resolved
+# versions of `@napplet/*`, `@hyprgate/*`, and their transitive deps. If a real
+# incompatibility surfaces, fix it at the source (submodule or napplet), not with
+# an override here.
+
+# esbuild's postinstall fetches its platform binary (vite depends on it); pnpm 10
+# blocks build scripts by default, so it must be allow-listed. This is a build
+# permission, not a version pin.
 onlyBuiltDependencies:
   - esbuild
-
-# Workaround: @kehto/cli and @kehto/paja ship `workspace:*` dependency specs in
-# their published tarballs, which don't resolve from the registry. Pin every
-# @kehto package to a real version so the paja host-shell chain installs.
-# Remove once upstream republishes with proper version ranges.
-overrides:
-  '@kehto/paja': '0.2.0'
-  '@kehto/acl': '0.12.0'
-  '@kehto/firewall': '0.3.1'
-  '@kehto/nip': '0.4.0'
-  '@kehto/runtime': '0.13.0'
-  '@kehto/services': '0.11.1'
-  '@kehto/shell': '0.13.0'
-  '@kehto/wm': '0.0.1'

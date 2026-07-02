@@ -8,10 +8,6 @@
 import { readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-// Pinned because @kehto/cli ships unusable `workspace:*` deps; the matching
-// version pins live in the root pnpm-workspace.yaml `overrides`.
-const KEHTO_CLI_VERSION = '0.2.0';
-
 function titleFromName(name) {
   return name
     .split('-')
@@ -28,19 +24,13 @@ export async function adoptNapplet(dir, { name, title } = {}) {
     await rm(join(dir, shared), { recursive: true, force: true });
   }
 
-  // 1b. Wire the Kehto `paja` host shell: add @kehto/cli + a `shell` script.
+  // 1b. Pin a memorable dev port (napplet Vite on 3001). There is no host shell
+  // in this workspace — napplets are exercised via `pnpm test:conformance`.
   const pkgPath = join(dir, 'package.json');
   const pkg = JSON.parse(await readFile(pkgPath, 'utf8'));
-  // Pin memorable ports: paja host shell on 3000, napplet Vite on 3001.
   pkg.scripts = {
     ...pkg.scripts,
     dev: 'vite --host 127.0.0.1 --port 3001 --strictPort',
-    shell:
-      'kehto paja --port 3000 --target-url http://127.0.0.1:3001 -- vite --host 127.0.0.1 --port 3001 --strictPort',
-  };
-  pkg.devDependencies = {
-    '@kehto/cli': KEHTO_CLI_VERSION,
-    ...pkg.devDependencies,
   };
   await writeFile(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
 
