@@ -32,23 +32,33 @@ napplelets/
 ```bash
 pnpm install              # install all workspace packages
 pnpm new my-napplet       # scaffold a new napplet (official @napplet/boilerplate)
-pnpm dev my-napplet       # Vite dev server for one napplet
+pnpm dev my-napplet       # Paja dev runtime + Vite HMR for one napplet
 ```
 
 ## Running a napplet
 
 ```bash
-pnpm dev [name]      # Vite dev server — fast UI iteration
+pnpm dev [name]      # Paja dev runtime + live Vite HMR
 ```
 
-`name` is optional when there is exactly one napplet. `pnpm dev` is plain Vite
-on **http://127.0.0.1:3001**, best for layout/styling; there is no host shell in
-this workspace, so the NAP services (identity, relay, storage…) aren't present and
-SDK calls won't resolve there.
+`name` is optional when there is exactly one napplet; with several, `pnpm dev`
+prompts you to pick one. It boots the **Kehto Paja** dev runtime on
+**http://127.0.0.1:5197** and loads the napplet from its live Vite server (on
+**http://127.0.0.1:5173** by default; override with `--port <p>`). Paja provides
+dev adapters for the NAP surface (identity, relay/outbox, storage, config,
+resource, theme, notify, …) and a local dev signer, so SDK calls resolve — and
+because the napplet is loaded from Vite, editing source **hot-reloads** the
+running napplet. Extra flags are forwarded to `kehto paja` to simulate the shell
+(e.g. `pnpm dev my-napplet --theme light`); see `pnpm exec kehto paja --help`.
 
-To exercise a napplet against real NAP services, use conformance testing — a
-pass/fail gate that boots the built napplet in a real `allow-scripts` iframe
-harness: `pnpm test:conformance` (runs every napplet).
+For bare Vite with no runtime (pure layout/styling iteration), use
+`pnpm --filter <name> dev`.
+
+`pnpm dev` uses `iframe.src` for HMR, which is a dev convenience — **not** the
+production loading model. To exercise a napplet the way a real shell loads it,
+use conformance testing — a pass/fail gate that boots the built single-file
+napplet in a real `allow-scripts` iframe harness: `pnpm test:conformance` (runs
+every napplet).
 
 ## Workspace scripts
 

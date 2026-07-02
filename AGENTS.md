@@ -34,7 +34,7 @@ Workspace-wide (run from root):
 
 ```bash
 pnpm install              # link all workspace packages (also builds deps via `prepare`)
-pnpm dev [name]           # vite dev server for one napplet
+pnpm dev [name]           # Paja dev runtime + Vite HMR for one napplet
 pnpm build                # build napplets + their deps in order (Turbo)
 pnpm verify               # type-check + build (Turbo)
 pnpm type-check           # strict TS across the napplets (Turbo)
@@ -51,9 +51,17 @@ source. **Turbo** (`turbo.json`) runs build/type-check in dependency order — `
 build` builds each napplet's `@napplet/*`/`@hyprgate/*` dependencies first (and
 `@napplet/conformance-cli`, used by conformance). This is a development workspace:
 versions are deliberately **not** pinned or overridden, so napplets are tested
-against the real latest resolved versions. There is **no host shell** — exercise
-napplets with `pnpm test:conformance`; `pnpm dev` is bare Vite for UI iteration
-(SDK calls needing a host won't resolve).
+against the real latest resolved versions. This repo ships **no production host
+shell**, but `pnpm dev [name]` boots the **Kehto Paja** dev runtime (via the root
+`@kehto/cli` devDependency, orchestrated by `scripts/dev.mjs`): it hosts the
+napplet in a real Kehto iframe with dev adapters for the whole NAP surface
+(relay/outbox, storage, identity, keys, config, resource, theme, notify, …) and a
+local dev signer, while loading it from the live Vite server so **HMR works** —
+edit napplet source and the running napplet hot-updates with host services live.
+Paja loads via `iframe.src=<vite-url>` (not the built single-file srcdoc), so this
+is a dev convenience, not the production loading model. `pnpm test:conformance`
+remains the real gate (built single-file in a real `allow-scripts` iframe); for
+bare Vite with no runtime, use `pnpm --filter <name> dev`.
 
 **`@napplet/cli` drives testing/deploy from the repo root, in monorepo mode.** It
 is a Deno tool in the `napplet/` submodule with no Node bin, so `tools/napplet-cli`

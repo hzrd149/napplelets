@@ -24,6 +24,7 @@
   },
   "packageManager": "pnpm@10.8.0",
   "devDependencies": {
+    "@kehto/cli": "^0.2.8",
     "@napplelets/napplet-cli": "workspace:*",
     "prettier": "^3.4.2",
     "prettier-plugin-svelte": "^3.3.2",
