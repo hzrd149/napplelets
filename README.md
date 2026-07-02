@@ -48,7 +48,7 @@ SDK calls won't resolve there.
 
 To exercise a napplet against real NAP services, use conformance testing — a
 pass/fail gate that boots the built napplet in a real `allow-scripts` iframe
-harness: `pnpm --filter <name> test:conformance[:ui]`.
+harness: `pnpm test:conformance` (runs every napplet).
 
 ## Workspace scripts
 
@@ -56,8 +56,19 @@ harness: `pnpm --filter <name> test:conformance[:ui]`.
 pnpm build               # build every napplet to a single self-contained index.html
 pnpm verify              # type-check + build every napplet
 pnpm type-check          # strict TS check across the workspace
+pnpm discover            # list every built napplet the CLI can see
 pnpm test:conformance    # NAP conformance check for every napplet
+pnpm deploy              # publish every napplet (needs relays/blossom/signer)
+pnpm debug               # read-only deploy/discovery diagnostics
 ```
+
+Testing and deploy run through **`@napplet/cli`** at the repo root in monorepo
+mode: a single `.napplet/config.json` sets `discover.roots: ["napplets"]`, and the
+scripts above call `napplet … --all`, treating each napplet folder as its own
+deploy target (folder name = the `d` tag). The CLI is a Deno tool from the
+`napplet/` submodule (run via the `napplet` launcher), so **Deno must be
+installed**. Set `relays`/`blossomServers` in `.napplet/config.json` before
+deploying.
 
 Run a single napplet's own scripts with pnpm's filter:
 

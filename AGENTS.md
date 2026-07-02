@@ -38,37 +38,40 @@ pnpm dev [name]           # vite dev server for one napplet
 pnpm build                # build napplets + their deps in order (Turbo)
 pnpm verify               # type-check + build (Turbo)
 pnpm type-check           # strict TS across the napplets (Turbo)
-pnpm test:conformance     # NAP conformance for every napplet (Turbo)
+pnpm discover             # `napplet discover --all` — list built napplets
+pnpm test:conformance     # build, then `napplet conformance --all`
+pnpm deploy               # build, then `napplet deploy --all`
+pnpm debug                # `napplet debug --all` — read-only deploy/plan diagnostics
 ```
 
 The `@napplet/*` and `@hyprgate/*` packages live in the `napplet/` and `hyprgate/`
 git submodules and are wired in as workspace members (see `pnpm-workspace.yaml`),
 so napplets depend on them via `workspace:*` and build against live submodule
-source. **Turbo** (`turbo.json`) runs every task in dependency order — `pnpm build`
-builds each napplet's `@napplet/*`/`@hyprgate/*` dependencies first. This is a
-development workspace: versions are deliberately **not** pinned or overridden, so
-napplets are tested against the real latest resolved versions. There is **no host
-shell** — exercise napplets with `pnpm test:conformance` (a real `allow-scripts`
-iframe harness); `pnpm dev` is bare Vite for UI iteration (SDK calls needing a
-host won't resolve).
+source. **Turbo** (`turbo.json`) runs build/type-check in dependency order — `pnpm
+build` builds each napplet's `@napplet/*`/`@hyprgate/*` dependencies first (and
+`@napplet/conformance-cli`, used by conformance). This is a development workspace:
+versions are deliberately **not** pinned or overridden, so napplets are tested
+against the real latest resolved versions. There is **no host shell** — exercise
+napplets with `pnpm test:conformance`; `pnpm dev` is bare Vite for UI iteration
+(SDK calls needing a host won't resolve).
+
+**`@napplet/cli` drives testing/deploy from the repo root, in monorepo mode.** It
+is a Deno tool in the `napplet/` submodule with no Node bin, so `tools/napplet-cli`
+exposes it as the `napplet` launcher (a root `workspace:*` devDependency) that runs
+the submodule CLI source via Deno — **Deno must be installed**. A single root
+`.napplet/config.json` sets `discover.roots: ["napplets"]`; the `--all` commands
+treat every built napplet folder as its own deploy target (folder name = the
+named-site `d` tag, so it must match `^[a-z0-9-]{1,13}$`). Add `relays` and
+`blossomServers` to the root `.napplet/config.json` before `pnpm deploy`. Napplets
+themselves carry no `.napplet` config or CLI scripts — only `dev`/`build`/
+`type-check`/`verify`.
 
 Per-napplet (use pnpm's filter; `<name>` is the dir under `napplets/`):
 
 ```bash
 pnpm --filter <name> dev                # vite dev server (127.0.0.1)
 pnpm --filter <name> verify             # type-check + single-file build
-pnpm --filter <name> test:conformance   # build, then `napplet conformance`
-pnpm --filter <name> test:conformance:ui # interactive conformance UI w/ watch build
-pnpm --filter <name> deploy             # build, then `napplet deploy`
-pnpm --filter <name> debug              # `napplet debug` (read-only diagnostics)
 ```
-
-Napplet scripts drive testing/deploy through **`@napplet/cli`** — a Deno tool in
-the `napplet/` submodule. It has no Node bin, so `tools/napplet-cli` exposes it as
-the `napplet` launcher (a `workspace:*` devDependency on every napplet); it runs
-the submodule's CLI source via Deno, so **Deno must be installed**. Each napplet
-has a `.napplet/config.json` (created by `napplet init`) — `conformance` auto-
-discovers the built `dist/`; add `relays`/`blossomServers` there before `deploy`.
 
 There is no unit-test runner; **`test:conformance` is the real test gate**. It
 loads the built single-file napplet in a real `allow-scripts` iframe and fails on

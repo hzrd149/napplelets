@@ -7,11 +7,14 @@
   "scripts": {
     "new": "node scripts/new-napplet.mjs",
     "dev": "node scripts/dev.mjs",
-    "prepare": "turbo run build --filter=...{./napplets/*}",
-    "build": "turbo run build --filter=...{./napplets/*}",
+    "prepare": "pnpm build",
+    "build": "turbo run build --filter=...{./napplets/*} --filter=@napplet/conformance-cli",
     "verify": "turbo run type-check build --filter={./napplets/*}",
     "type-check": "turbo run type-check --filter={./napplets/*}",
-    "test:conformance": "turbo run test:conformance --filter={./napplets/*}",
+    "discover": "napplet discover --all",
+    "test:conformance": "pnpm build && napplet conformance --all",
+    "deploy": "pnpm build && napplet deploy --all",
+    "debug": "napplet debug --all",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
@@ -21,6 +24,7 @@
   },
   "packageManager": "pnpm@10.8.0",
   "devDependencies": {
+    "@napplelets/napplet-cli": "workspace:*",
     "prettier": "^3.4.2",
     "prettier-plugin-svelte": "^3.3.2",
     "turbo": "^2.9.14"

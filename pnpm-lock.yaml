@@ -8,6 +8,9 @@ importers:
 
   .:
     devDependencies:
+      '@napplelets/napplet-cli':
+        specifier: workspace:*
+        version: link:tools/napplet-cli
       prettier:
         specifier: ^3.4.2
         version: 3.9.4
@@ -306,15 +309,6 @@ importers:
         specifier: 4.0.2
         version: 4.0.2
     devDependencies:
-      '@napplelets/napplet-cli':
-        specifier: workspace:*
-        version: link:../../tools/napplet-cli
-      '@napplet/conformance':
-        specifier: workspace:*
-        version: link:../../napplet/packages/conformance
-      '@napplet/conformance-cli':
-        specifier: workspace:*
-        version: link:../../napplet/packages/conformance-cli
       '@napplet/vite-plugin':
         specifier: workspace:*
         version: link:../../napplet/packages/vite-plugin
@@ -352,12 +346,6 @@ importers:
         specifier: workspace:*
         version: link:../../napplet/packages/shim
     devDependencies:
-      '@napplelets/napplet-cli':
-        specifier: workspace:*
-        version: link:../../tools/napplet-cli
-      '@napplet/conformance-cli':
-        specifier: workspace:*
-        version: link:../../napplet/packages/conformance-cli
       '@napplet/vite-plugin':
         specifier: workspace:*
         version: link:../../napplet/packages/vite-plugin

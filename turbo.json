@@ -11,10 +11,6 @@
     "test": {
       "dependsOn": ["^build"]
     },
-    "test:conformance": {
-      "dependsOn": ["build"],
-      "cache": false
-    },
     "@napplet/conformance-cli#build": {
       "dependsOn": ["^build", "@napplet/conformance-web#build"],
       "outputs": ["dist/**"]

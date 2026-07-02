@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "relays": [],
+  "blossomServers": [],
+  "defaultTarget": "named",
+  "discover": {
+    "enabled": true,
+    "roots": ["napplets"]
+  },
+  "conformance": {
+    "command": "node napplet/packages/conformance-cli/dist/cli.js"
+  }
+}
