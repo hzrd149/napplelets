@@ -1,5 +1,8 @@
 packages:
   - 'napplets/*'
+  # Local repo tooling (e.g. the `napplet` launcher that runs the @napplet/cli
+  # Deno tool from the napplet/ submodule).
+  - 'tools/*'
   # The @napplet/* packages live in the `napplet/` git submodule
   # (github.com/napplet/web). Including its packages here makes them first-class
   # workspace members, so napplets depend on them via `workspace:*` and always

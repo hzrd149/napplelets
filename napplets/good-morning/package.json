@@ -9,8 +9,10 @@
 		"preview": "vite preview",
 		"type-check": "tsc --noEmit",
 		"test": "vitest run",
-		"conformance": "pnpm build && napplet-conformance dist",
-		"test:conformance": "pnpm conformance"
+		"conformance": "pnpm build && napplet conformance",
+		"test:conformance": "pnpm conformance",
+		"deploy": "pnpm build && napplet deploy",
+		"debug": "napplet debug"
 	},
 	"dependencies": {
 		"@hyprgate/types": "workspace:*",
@@ -23,6 +25,7 @@
 		"timeago.js": "4.0.2"
 	},
 	"devDependencies": {
+		"@napplelets/napplet-cli": "workspace:*",
 		"@napplet/conformance": "workspace:*",
 		"@napplet/conformance-cli": "workspace:*",
 		"@napplet/vite-plugin": "workspace:*",

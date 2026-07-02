@@ -300,6 +300,9 @@ importers:
         specifier: 4.0.2
         version: 4.0.2
     devDependencies:
+      '@napplelets/napplet-cli':
+        specifier: workspace:*
+        version: link:../../tools/napplet-cli
       '@napplet/conformance':
         specifier: workspace:*
         version: link:../../napplet/packages/conformance
@@ -343,6 +346,9 @@ importers:
         specifier: workspace:*
         version: link:../../napplet/packages/shim
     devDependencies:
+      '@napplelets/napplet-cli':
+        specifier: workspace:*
+        version: link:../../tools/napplet-cli
       '@napplet/conformance-cli':
         specifier: workspace:*
         version: link:../../napplet/packages/conformance-cli
@@ -358,6 +364,8 @@ importers:
       vite-plugin-singlefile:
         specifier: ^2.3.3
         version: 2.3.3(rollup@4.62.2)(vite@6.4.3(@types/node@22.20.0)(jiti@2.7.0)(lightningcss@1.32.0))
+
+  tools/napplet-cli: {}
 
 packages:
 

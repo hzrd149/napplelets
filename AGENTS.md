@@ -57,9 +57,18 @@ Per-napplet (use pnpm's filter; `<name>` is the dir under `napplets/`):
 ```bash
 pnpm --filter <name> dev                # vite dev server (127.0.0.1)
 pnpm --filter <name> verify             # type-check + single-file build
-pnpm --filter <name> test:conformance   # build, then napplet-conformance ./dist
+pnpm --filter <name> test:conformance   # build, then `napplet conformance`
 pnpm --filter <name> test:conformance:ui # interactive conformance UI w/ watch build
+pnpm --filter <name> deploy             # build, then `napplet deploy`
+pnpm --filter <name> debug              # `napplet debug` (read-only diagnostics)
 ```
+
+Napplet scripts drive testing/deploy through **`@napplet/cli`** — a Deno tool in
+the `napplet/` submodule. It has no Node bin, so `tools/napplet-cli` exposes it as
+the `napplet` launcher (a `workspace:*` devDependency on every napplet); it runs
+the submodule's CLI source via Deno, so **Deno must be installed**. Each napplet
+has a `.napplet/config.json` (created by `napplet init`) — `conformance` auto-
+discovers the built `dist/`; add `relays`/`blossomServers` there before `deploy`.
 
 There is no unit-test runner; **`test:conformance` is the real test gate**. It
 loads the built single-file napplet in a real `allow-scripts` iframe and fails on

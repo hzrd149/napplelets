@@ -5,7 +5,7 @@
 // This is deliberately written as deterministic replacement rather than regex
 // patching of upstream text, so it stays correct across @napplet/boilerplate
 // versions even if their local doc layout changes.
-import { readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 function titleFromName(name) {
@@ -24,15 +24,42 @@ export async function adoptNapplet(dir, { name, title } = {}) {
     await rm(join(dir, shared), { recursive: true, force: true });
   }
 
-  // 1b. Pin a memorable dev port (napplet Vite on 3001). There is no host shell
-  // in this workspace — napplets are exercised via `pnpm test:conformance`.
+  // 1b. Pin a memorable dev port (napplet Vite on 3001) and drive testing/deploy
+  // through @napplet/cli via the `napplet` launcher (a workspace devDependency).
+  // There is no host shell — napplets are exercised via `pnpm test:conformance`.
   const pkgPath = join(dir, 'package.json');
   const pkg = JSON.parse(await readFile(pkgPath, 'utf8'));
   pkg.scripts = {
     ...pkg.scripts,
     dev: 'vite --host 127.0.0.1 --port 3001 --strictPort',
+    'test:conformance': 'pnpm build && napplet conformance',
+    deploy: 'pnpm build && napplet deploy',
+    debug: 'napplet debug',
+  };
+  pkg.devDependencies = {
+    '@napplelets/napplet-cli': 'workspace:*',
+    ...pkg.devDependencies,
   };
   await writeFile(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
+
+  // 1c. Seed the @napplet/cli config so `napplet conformance`/`deploy` work. The
+  // CLI auto-discovers the built dist/index.html from sourceDir; add relays and
+  // blossomServers here (or `napplet init`) before deploying.
+  await mkdir(join(dir, '.napplet'), { recursive: true });
+  await writeFile(
+    join(dir, '.napplet', 'config.json'),
+    `${JSON.stringify(
+      {
+        version: 1,
+        sourceDir: '.',
+        relays: [],
+        blossomServers: [],
+        discover: { enabled: true, roots: ['.'] },
+      },
+      null,
+      2,
+    )}\n`,
+  );
 
   // 2. Extend the shared base tsconfig instead of carrying a full copy.
   await writeFile(

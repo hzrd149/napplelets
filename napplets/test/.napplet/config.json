@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "sourceDir": ".",
+  "relays": [],
+  "blossomServers": [],
+  "discover": {
+    "enabled": true,
+    "roots": [
+      "."
+    ]
+  }
+}

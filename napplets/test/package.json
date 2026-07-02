@@ -9,14 +9,17 @@
     "preview": "vite preview --host 127.0.0.1",
     "type-check": "tsc --noEmit",
     "verify": "pnpm type-check && pnpm build",
-    "test:conformance": "pnpm build && napplet-conformance ./dist",
-    "test:conformance:ui": "napplet-conformance --ui . --exec \"vite build --watch\""
+    "test:conformance": "pnpm build && napplet conformance",
+    "test:conformance:ui": "napplet-conformance --ui . --exec \"vite build --watch\"",
+    "deploy": "pnpm build && napplet deploy",
+    "debug": "napplet debug"
   },
   "dependencies": {
     "@napplet/sdk": "workspace:*",
     "@napplet/shim": "workspace:*"
   },
   "devDependencies": {
+    "@napplelets/napplet-cli": "workspace:*",
     "@napplet/conformance-cli": "workspace:*",
     "@napplet/vite-plugin": "workspace:*",
     "typescript": "^5.9.3",
