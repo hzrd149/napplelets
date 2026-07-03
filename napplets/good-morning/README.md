@@ -8,7 +8,9 @@ napplet runtime (NIP-5D iframe, NAP-OUTBOX relay routing, shared note renderer).
 
 ## What it does
 
-1. Loads your contacts from your newest **kind-3** follow list.
+1. Loads your contacts from the runtime via **NAP-IDENTITY** (`identity.getFollows()`)
+   — the shell resolves your newest **kind-3** follow list; the napplet never
+   fetches it over the relays itself.
 2. Subscribes to your contacts' **kind-1** notes since **local midnight** and keeps
    the ones that contain a GM (see matching below). Root GMs (no `e` tag) become
    inbox rows, newest first.

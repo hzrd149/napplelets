@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { NostrEvent } from '@hyprgate/types';
-import { buildGMThreads, contactsFromKind3, hasETag, startOfTodaySeconds, chunk } from './gm-store';
+import { buildGMThreads, hasETag, startOfTodaySeconds, chunk } from './gm-store';
 
 function ev(partial: Partial<NostrEvent> & { id: string }): NostrEvent {
   return {
@@ -19,24 +19,6 @@ describe('hasETag', () => {
     expect(hasETag(ev({ id: '1', tags: [['e', 'root']] }))).toBe(true);
     expect(hasETag(ev({ id: '2', tags: [['p', 'x']] }))).toBe(false);
     expect(hasETag(ev({ id: '3', tags: [] }))).toBe(false);
-  });
-});
-
-describe('contactsFromKind3', () => {
-  it('returns p-tag pubkeys only', () => {
-    const contacts = contactsFromKind3(
-      ev({
-        id: 'k3',
-        kind: 3,
-        tags: [
-          ['p', 'pk1'],
-          ['p', 'pk2'],
-          ['e', 'ignore'],
-          ['p', ''],
-        ],
-      }),
-    );
-    expect(contacts).toEqual(['pk1', 'pk2']);
   });
 });
 

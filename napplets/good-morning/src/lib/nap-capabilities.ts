@@ -57,7 +57,7 @@ export const GM_NAP_REQUIREMENTS: NapRequirement[] = [
   {
     domain: IDENTITY_DOMAIN,
     label: 'NAP-IDENTITY',
-    purpose: 'Reads your public key so the inbox knows whose contacts to load.',
+    purpose: 'Reads your public key and follow list (kind 3) so the inbox knows whose GMs to load.',
     severity: 'essential',
   },
   {

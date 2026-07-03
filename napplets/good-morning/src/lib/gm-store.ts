@@ -1,25 +1,26 @@
 // napplets/good-morning/src/lib/gm-store.ts
 //
 // The GM inbox state machine. Mirrors gm-protocol's GMProvider, ported to the
-// hyprgate napplet runtime (NAP-OUTBOX routing instead of an NPool):
+// hyprgate napplet runtime:
 //
-//   1. Load the user's contacts from their newest kind-3 (follow list).
-//   2. Subscribe to kind-1 notes from those contacts since local midnight; keep
-//      the ones that `containsGM` — these are the inbox candidates.
-//   3. Subscribe to the user's OWN kind-1 notes since midnight; a GM that carries
-//      an `e` tag is a GM reply. A root inbox note is "read" (✓) when any of the
-//      user's GM replies e-tags it.
+//   1. Load the user's contacts from the runtime via NAP-IDENTITY
+//      (identity.getFollows()) — the shell owns resolving the newest kind-3, so
+//      the napplet never fetches the follow list itself.
+//   2. Subscribe (NAP-OUTBOX) to kind-1 notes from those contacts since local
+//      midnight; keep the ones that `containsGM` — these are the inbox candidates.
+//   3. Subscribe (NAP-OUTBOX) to the user's OWN kind-1 notes since midnight; a GM
+//      that carries an `e` tag is a GM reply. A root inbox note is "read" (✓) when
+//      any of the user's GM replies e-tags it.
 //
 // Kept as plain mutable TS (no Svelte runes) so it is unit-testable without the
 // Svelte compiler; the component bridges state into `$state` via the notify
 // callback (the canonical feed-store / profile-store pattern).
 
-import type { Subscription } from '@napplet/sdk';
+import { identity, type Subscription } from '@napplet/sdk';
 import type { NostrEvent } from '@hyprgate/types';
 import { containsGM } from './gm-detection';
 import { subscribeForPayload } from './gm-origin';
 
-const KIND_CONTACTS = 3;
 const KIND_TEXT_NOTE = 1;
 /** Relay author-array cap — match gm-protocol's batching of follows. */
 const AUTHOR_BATCH_SIZE = 500;
@@ -63,16 +64,6 @@ export function startOfTodaySeconds(now: Date = new Date()): number {
 /** True when the event carries at least one `e` tag (i.e. it is a reply). */
 export function hasETag(event: NostrEvent): boolean {
   return event.tags.some((tag) => tag[0] === 'e');
-}
-
-/** Extract the followed pubkeys (`p` tags) from a kind-3 contact list event. */
-export function contactsFromKind3(event: NostrEvent): string[] {
-  return event.tags
-    .filter(
-      (tag): tag is [string, string, ...string[]] =>
-        tag[0] === 'p' && typeof tag[1] === 'string' && tag[1].length > 0,
-    )
-    .map((tag) => tag[1]);
 }
 
 /** Split an array into fixed-size chunks. */
@@ -120,15 +111,17 @@ export function createGMStore(notify: () => void): GMStore {
     error: null,
   };
 
-  let contactsSub: Subscription | null = null;
   let ownRepliesSub: Subscription | null = null;
   let gmBatchSubs: Subscription[] = [];
 
   // The inbox window is pinned at init (gm-protocol computes it once at mount
   // too); a window left open across midnight keeps yesterday's `since`.
   let since = startOfTodaySeconds();
-  let bestContactsCreatedAt = 0;
   let pendingBatchEose = 0;
+  // Bumped on every teardown so an in-flight identity.getFollows() resolving
+  // after a reset/destroy or identity switch is discarded instead of mutating
+  // stale state (there is no subscription handle to close on an async query).
+  let contactsLoadToken = 0;
 
   function closeGmBatches(): void {
     for (const sub of gmBatchSubs) sub.close();
@@ -136,8 +129,7 @@ export function createGMStore(notify: () => void): GMStore {
   }
 
   function closeAll(): void {
-    contactsSub?.close();
-    contactsSub = null;
+    contactsLoadToken += 1;
     ownRepliesSub?.close();
     ownRepliesSub = null;
     closeGmBatches();
@@ -202,32 +194,31 @@ export function createGMStore(notify: () => void): GMStore {
     );
   }
 
-  function subscribeContacts(pubkey: string): void {
-    contactsSub = subscribeForPayload(
-      { filters: [{ kinds: [KIND_CONTACTS], authors: [pubkey], limit: 5 }], origin: 'outbox' },
-      {
-        onEvent: (event) => {
-          // Track the newest kind-3 (replaceable): a stale copy from one relay
-          // must not clobber a fresher follow list from another.
-          if (event.kind !== KIND_CONTACTS || event.created_at <= bestContactsCreatedAt) return;
-          bestContactsCreatedAt = event.created_at;
-          const contactPubkeys = contactsFromKind3(event);
-          state.contactCount = contactPubkeys.length;
-          state.contactsLoaded = true;
-          notify();
-          restartGmNotesSubscription(contactPubkeys);
-        },
-        onEose: () => {
-          // No follow list found → settle the empty state so the UI stops
-          // showing a perpetual "loading".
-          if (!state.contactsLoaded) {
-            state.contactsLoaded = true;
-            state.scanning = false;
-            notify();
-          }
-        },
-      },
-    );
+  async function loadContacts(): Promise<void> {
+    // The runtime owns the follow list: NAP-IDENTITY resolves the user's newest
+    // kind-3 for us, so the napplet never fetches or de-dupes it over the relays.
+    const token = contactsLoadToken;
+    let contactPubkeys: string[];
+    try {
+      contactPubkeys = await identity.getFollows();
+    } catch (err) {
+      // Identity query failed → settle so the UI stops showing "loading
+      // contacts…" and surfaces the failure instead of hanging.
+      if (token !== contactsLoadToken) return;
+      state.contactsLoaded = true;
+      state.scanning = false;
+      state.error = err instanceof Error ? err.message : 'failed to load contacts';
+      notify();
+      return;
+    }
+    // Stale resolve (reset/destroy or identity switch happened mid-flight).
+    if (token !== contactsLoadToken) return;
+    state.contactCount = contactPubkeys.length;
+    state.contactsLoaded = true;
+    notify();
+    // restartGmNotesSubscription settles `scanning` to false for an empty
+    // follow list, matching the old "no follow list found" behavior.
+    restartGmNotesSubscription(contactPubkeys);
   }
 
   function reset(): void {
@@ -238,7 +229,6 @@ export function createGMStore(notify: () => void): GMStore {
     state.contactsLoaded = false;
     state.scanning = false;
     state.error = null;
-    bestContactsCreatedAt = 0;
     pendingBatchEose = 0;
     since = startOfTodaySeconds();
   }
@@ -253,7 +243,7 @@ export function createGMStore(notify: () => void): GMStore {
     }
     state.scanning = true;
     notify();
-    subscribeContacts(pubkey);
+    void loadContacts();
     subscribeOwnReplies(pubkey);
   }
 
