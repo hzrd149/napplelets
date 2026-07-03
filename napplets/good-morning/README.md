@@ -32,14 +32,35 @@ Matches the token `gm` or the phrase `good morning` with punctuation/whitespace
 boundaries (so `magma`, `goodmorning`, and `gmail` URLs do **not** match). Keep
 the two copies in sync.
 
+## Runtime capability gate
+
+good-morning doubles as a **runtime/shell debugging napplet**, so before it
+mounts the inbox it probes the host for the NAPs it needs and, if any are
+missing, says so plainly instead of failing into a blank or perpetually
+"loading" screen:
+
+- **Essential** (`identity`, `inc`, `outbox`) — the inbox can't function without
+  them. Missing → a full-surface diagnostic (`MissingNaps` screen variant)
+  listing each absent NAP and what it's for.
+- **Degraded** (`resource`, `theme`) — the inbox still works but loses avatars or
+  theming. Missing → a dismissible warning banner above a working inbox.
+
+Detection uses two signals (see `src/lib/nap-capabilities.ts`): `window.napplet.<domain>`
+presence and `shell.supports(<domain>)` (probed after `shell.ready()`), treating
+a NAP as available when **either** is positive. The inbox is **outbox-only** —
+both note reads and Quick GM publishes route through `NAP-OUTBOX` (there is no
+`NAP-RELAY` fallback), so it's gated essential.
+
 ## Structure
 
+- `src/lib/nap-capabilities.ts` — the runtime NAP probe + essential/degraded
+  classifier (pure `classifyCapabilities` is unit tested).
+- `src/components/MissingNaps.svelte` — the diagnostic screen / warning banner.
 - `src/lib/gm-detection.ts` — the GM regex (+ tests).
 - `src/lib/gm-store.ts` — inbox state machine: contacts → GM notes → replies →
   `buildGMThreads` (roots only, `isRead` derivation). Pure helpers are unit
   tested.
-- `src/lib/gm-origin.ts` — the NAP-OUTBOX / NAP-RELAYS routing seam (adapted from
-  the feed napplet's `feed-origin.ts`).
+- `src/lib/gm-origin.ts` — the NAP-OUTBOX routing seam for inbox subscriptions.
 - `src/lib/profile-metadata.ts` — shared kind-0 loader (kept in sync with feed).
 - `src/lib/gm-actions.ts` — `note:open` payload builders.
 - `src/components/` — `GMInbox` (list + profile batching), `GMRow` (a row),

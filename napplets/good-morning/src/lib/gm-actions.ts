@@ -5,7 +5,7 @@ import {
   createNoteViewerOpenPayload,
   type NoteViewerOpenPayload,
 } from '@hyprgate/utils';
-import { relay } from '@napplet/sdk';
+import { outbox } from '@napplet/sdk';
 import { nip19 } from 'nostr-tools';
 
 /** Source tag emitted on note-viewer intents so the shell can attribute them. */
@@ -107,9 +107,9 @@ export function createQuickGMReplyTemplate(event: Pick<NostrEvent, 'id' | 'pubke
   };
 }
 
-/** Sign + publish a Quick GM reply through the shell (NAP-RELAYS). */
+/** Sign + publish a Quick GM reply through the shell (NAP-OUTBOX). */
 export async function publishQuickGM(event: Pick<NostrEvent, 'id' | 'pubkey'>): Promise<object> {
-  return relay.publish(createQuickGMReplyTemplate(event));
+  return outbox.publish(createQuickGMReplyTemplate(event), { strategy: 'outbox' });
 }
 
 /**

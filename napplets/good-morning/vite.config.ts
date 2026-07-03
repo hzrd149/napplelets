@@ -12,13 +12,13 @@ export default defineConfig({
     // ('good-morning') or the resolver REQs a non-existent manifest.
     //
     // Capability ACL: the runtime silently drops service messages for undeclared
-    // domains. We route the GM inbox through NAP-OUTBOX (origin:'outbox'), so
-    // WITHOUT 'outbox' here every outbox.subscribe is dropped and the inbox never
-    // fetches (the FEED-02 failure mode). 'resource' is required for avatar/media
-    // image loading, 'inc' for identity + note:open/profile:open intents.
+    // domains. We route GM reads and Quick GM publishes through NAP-OUTBOX, so
+    // WITHOUT 'outbox' here the inbox never fetches and Quick GM cannot publish.
+    // 'resource' is required for avatar/media image loading, 'inc' for identity +
+    // note:open/profile:open intents.
     nip5aManifest({
       nappletType: 'good-morning',
-      requires: ['identity', 'relay', 'inc', 'outbox', 'resource', 'theme'],
+      requires: ['identity', 'inc', 'outbox', 'resource', 'theme'],
       artifactMode: 'single-file',
       archetypes: [{ slug: 'good-morning', naps: ['good-morning'] }],
     }),
