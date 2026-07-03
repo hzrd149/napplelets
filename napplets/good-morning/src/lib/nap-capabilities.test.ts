@@ -1,9 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  classifyCapabilities,
-  GM_NAP_REQUIREMENTS,
-  type NapRequirement,
-} from './nap-capabilities';
+import { classifyCapabilities, GM_NAP_REQUIREMENTS, type NapRequirement } from './nap-capabilities';
 
 const REQS: NapRequirement[] = [
   { domain: 'identity', label: 'NAP-IDENTITY', purpose: 'pubkey', severity: 'essential' },
@@ -21,7 +17,12 @@ const none = () => false;
 
 describe('classifyCapabilities', () => {
   it('reports ok when every essential NAP is present via the domain object', () => {
-    const report = classifyCapabilities(REQS, present('identity', 'outbox', 'resource'), none, true);
+    const report = classifyCapabilities(
+      REQS,
+      present('identity', 'outbox', 'resource'),
+      none,
+      true,
+    );
     expect(report.ok).toBe(true);
     expect(report.missing).toHaveLength(0);
     expect(report.missingEssential).toHaveLength(0);
@@ -29,7 +30,12 @@ describe('classifyCapabilities', () => {
 
   it('treats a NAP as available when EITHER signal is positive', () => {
     // outbox only via shell.supports(), identity only via the domain object.
-    const report = classifyCapabilities(REQS, present('identity'), present('outbox', 'resource'), true);
+    const report = classifyCapabilities(
+      REQS,
+      present('identity'),
+      present('outbox', 'resource'),
+      true,
+    );
     expect(report.ok).toBe(true);
     expect(report.missing).toHaveLength(0);
     const outbox = report.statuses.find((s) => s.domain === 'outbox');

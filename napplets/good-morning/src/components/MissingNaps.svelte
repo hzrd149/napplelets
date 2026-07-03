@@ -30,7 +30,9 @@
     >
       <span class="text-accent-amber font-semibold flex-shrink-0">⚠ limited runtime</span>
       <span class="text-text-secondary truncate">
-        {degradedLabels} unavailable — {degraded.length === 1 ? 'that feature is' : 'those features are'}
+        {degradedLabels} unavailable — {degraded.length === 1
+          ? 'that feature is'
+          : 'those features are'}
         degraded.
       </span>
       <div class="flex-1"></div>
@@ -64,13 +66,14 @@
           class="text-accent-amber text-xs leading-relaxed mb-4 border border-border-dim rounded p-2 bg-accent-amber/5"
           data-gm-no-shell
         >
-          No NAP-SHELL handshake was detected (<code>window.napplet.shell</code> is absent), so host
-          services couldn't be probed. This usually means the napplet isn't running inside a NIP-5D
-          shell at all.
+          No NAP-SHELL handshake was detected (<code>window.napplet.shell</code> is absent), so host services
+          couldn't be probed. This usually means the napplet isn't running inside a NIP-5D shell at all.
         </p>
       {/if}
 
-      <div class="text-text-muted text-xs uppercase tracking-wide mt-4 mb-2">Required — missing</div>
+      <div class="text-text-muted text-xs uppercase tracking-wide mt-4 mb-2">
+        Required — missing
+      </div>
       <ul class="flex flex-col gap-2">
         {#each essential as nap (nap.domain)}
           <li
