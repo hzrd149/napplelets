@@ -151,7 +151,13 @@ export function createGMStore(notify: () => void): GMStore {
 
     for (const batch of batches) {
       const sub = subscribeForPayload(
-        { filters: [{ kinds: [KIND_TEXT_NOTE], authors: batch, since }], origin: 'outbox' },
+        {
+          filters: [{ kinds: [KIND_TEXT_NOTE], authors: batch, since }],
+          origin: 'outbox',
+          // Explicit author hint = this batch of contacts, so the shell resolves
+          // their write relays for outbox routing (NAP-OUTBOX).
+          authors: batch,
+        },
         {
           onEvent: (event) => {
             if (event.kind !== KIND_TEXT_NOTE) return;
@@ -177,7 +183,12 @@ export function createGMStore(notify: () => void): GMStore {
 
   function subscribeOwnReplies(pubkey: string): void {
     ownRepliesSub = subscribeForPayload(
-      { filters: [{ kinds: [KIND_TEXT_NOTE], authors: [pubkey], since }], origin: 'outbox' },
+      {
+        filters: [{ kinds: [KIND_TEXT_NOTE], authors: [pubkey], since }],
+        origin: 'outbox',
+        // Route the user's own notes via their write relays (NAP-OUTBOX).
+        authors: [pubkey],
+      },
       {
         onEvent: (event) => {
           if (event.kind !== KIND_TEXT_NOTE) return;

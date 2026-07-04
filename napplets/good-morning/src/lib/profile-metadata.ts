@@ -95,7 +95,10 @@ export function subscribeProfileMetadata(
     onProfile(event.pubkey, profile);
   }
 
+  let doneFired = false;
   function handleEose(): void {
+    if (doneFired) return;
+    doneFired = true;
     onDone();
   }
 
@@ -106,8 +109,18 @@ export function subscribeProfileMetadata(
     const shell = getShell();
     await shell?.ready();
     if (closed) return;
-    const sub = outbox.subscribe(filters, { strategy: 'outbox', live: true });
-    sub.on('event', (result) => handleEvent(result.event as NostrEvent));
+    const sub = outbox.subscribe(filters, {
+      strategy: 'outbox',
+      live: true,
+      // Explicit author hint so the shell routes each kind-0 lookup to that
+      // author's write relays (NAP-OUTBOX) instead of re-deriving from filters.
+      authors,
+    });
+    // NAP-OUTBOX hands `on('event')` the NostrEvent directly (cb(event, relay)),
+    // not a `{ event }` wrapper. `eose` is the end-of-stored-events signal that
+    // settles the "done" callback; a live sub fires it then stays open.
+    sub.on('event', (event) => handleEvent(event as NostrEvent));
+    sub.on('eose', handleEose);
     sub.on('closed', handleEose);
     subscription = { close: () => sub.close() };
     if (closeWhenReady) subscription.close();
