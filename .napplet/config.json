@@ -9,6 +9,10 @@
     "enabled": true,
     "roots": ["napplets"]
   },
+  "signing": {
+    "mode": "interactive",
+    "keyReference": "hzrd149"
+  },
   "conformance": {
     "command": "node napplet/packages/conformance-cli/dist/cli.js"
   },
