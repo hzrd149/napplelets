@@ -94,11 +94,11 @@ importers:
         specifier: workspace:*
         version: link:../types
       '@napplet/nap':
-        specifier: 0.26.0
-        version: 0.26.0(json-schema-to-ts@3.1.1)
+        specifier: 0.25.0
+        version: 0.25.0(json-schema-to-ts@3.1.1)
       '@napplet/sdk':
-        specifier: 0.23.0
-        version: 0.23.0(json-schema-to-ts@3.1.1)
+        specifier: 0.22.0
+        version: 0.22.0(json-schema-to-ts@3.1.1)
       '@sandwichfarm/encoded-entities':
         specifier: ^0.1.1
         version: 0.1.1(nostr-tools@2.23.3(typescript@5.9.3))
@@ -961,8 +961,19 @@ packages:
       '@emnapi/core': ^1.7.1
       '@emnapi/runtime': ^1.7.1
 
+  '@napplet/core@0.25.0':
+    resolution: {integrity: sha512-XRaVCRpzqW8+A8NsZYWYlxg2vXDbmHVgtjSGGS6OS6500CffZjFeG/SOJO1pRKtNnIG4aU57ti7lYi/Bh7POag==}
+
   '@napplet/core@0.26.0':
     resolution: {integrity: sha512-xeNGsgH11xHXiad/Ol5wtu83gcsUqQIHASE9RMgN+7eOTBOciaF2aBXTyFkAR4qLaAugk7MBA0JLuaZLorBHYQ==}
+
+  '@napplet/nap@0.25.0':
+    resolution: {integrity: sha512-KluR6AWs9BBj5FOoJjS4tHycqddAUaXdKIPE098VaBULIPl1JgzIhKLvgky5QcRM2kX/unbpbuOdO9iXheYZDg==}
+    peerDependencies:
+      json-schema-to-ts: ^3.1.1
+    peerDependenciesMeta:
+      json-schema-to-ts:
+        optional: true
 
   '@napplet/nap@0.26.0':
     resolution: {integrity: sha512-SHS72Wj1fzhqMp4YcDGMx1a87bSLPWhBAAi4H2rDKopdCUh9iKvbMGCgMFNeITyWuookl3cetsXmt0K83Mi/XQ==}
@@ -972,8 +983,8 @@ packages:
       json-schema-to-ts:
         optional: true
 
-  '@napplet/sdk@0.23.0':
-    resolution: {integrity: sha512-8HZaOYp1cgIYeP5va3SbLTBvHX9G/gYyYK9EYLmX2LUx07ypKVHAFcZ2BLn8Jt2Ja2iBNrHGBRYyuLlqMfJXgg==}
+  '@napplet/sdk@0.22.0':
+    resolution: {integrity: sha512-F3d68JOsiyQLeQE3ep7B//PWVCgMYp2/VaX5mgZKvecqcJfihj/ia5+iohFxOn3aYZCjOXR2Zpc7EztkPuVL0A==}
 
   '@noble/ciphers@2.1.1':
     resolution: {integrity: sha512-bysYuiVfhxNJuldNXlFEitTVdNnYUc+XNJZd7Qm2a5j1vZHgY+fazadNFWFaMK/2vye0JVlxV3gHmC0WDfAOQw==}
@@ -2916,7 +2927,15 @@ snapshots:
       '@tybys/wasm-util': 0.10.3
     optional: true
 
+  '@napplet/core@0.25.0': {}
+
   '@napplet/core@0.26.0': {}
+
+  '@napplet/nap@0.25.0(json-schema-to-ts@3.1.1)':
+    dependencies:
+      '@napplet/core': 0.25.0
+    optionalDependencies:
+      json-schema-to-ts: 3.1.1
 
   '@napplet/nap@0.26.0(json-schema-to-ts@3.1.1)':
     dependencies:
@@ -2924,10 +2943,10 @@ snapshots:
     optionalDependencies:
       json-schema-to-ts: 3.1.1
 
-  '@napplet/sdk@0.23.0(json-schema-to-ts@3.1.1)':
+  '@napplet/sdk@0.22.0(json-schema-to-ts@3.1.1)':
     dependencies:
-      '@napplet/core': 0.26.0
-      '@napplet/nap': 0.26.0(json-schema-to-ts@3.1.1)
+      '@napplet/core': 0.25.0
+      '@napplet/nap': 0.25.0(json-schema-to-ts@3.1.1)
     transitivePeerDependencies:
       - json-schema-to-ts
 

@@ -1,23 +1,13 @@
 {
   "version": 1,
   "sourceDir": ".",
-  "relays": [
-    "wss://relay.ditto.pub"
-  ],
-  "blossomServers": [
-    "https://cdn.hzrd149.com"
-  ],
+  "relays": ["wss://relay.ditto.pub"],
+  "blossomServers": ["https://cdn.hzrd149.com"],
   "defaultTarget": "named",
   "named": [],
   "discover": {
     "enabled": true,
-    "roots": [
-      "napplets"
-    ]
-  },
-  "signing": {
-    "mode": "interactive",
-    "keyReference": "publisher"
+    "roots": ["napplets"]
   },
   "conformance": {
     "command": "node napplet/packages/conformance-cli/dist/cli.js"

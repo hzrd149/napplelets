@@ -14,3 +14,5 @@ pnpm-lock.yaml
 
 # Symlink (its target AGENTS.md is formatted directly)
 CLAUDE.md
+.agents
+.claude

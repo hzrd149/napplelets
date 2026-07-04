@@ -124,9 +124,7 @@ export function subscribeForPayload(
       // authors' write relays (NAP-OUTBOX) instead of re-deriving them. Copy to
       // a plain array so a reactive $state source can't post a Proxy across the
       // iframe (same DataCloneError guard as withExtraProps on the filters).
-      ...(payload.authors && payload.authors.length > 0
-        ? { authors: [...payload.authors] }
-        : {}),
+      ...(payload.authors && payload.authors.length > 0 ? { authors: [...payload.authors] } : {}),
     });
 
     if (closeWhenReady) subscription.close();
