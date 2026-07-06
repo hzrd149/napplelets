@@ -1,20 +1,17 @@
 // napplets/good-morning/src/lib/gm-origin.ts
 // The single origin-routing seam for the GM inbox.
 //
-// subscribeForPayload turns a set of filters into a NAP-OUTBOX read and returns a
-// uniform { close } handle. NAP-OUTBOX has no `eose` (napplet/naps#32), so the
-// read is two legs over the same filters/options:
+// subscribeForPayload turns a set of filters into ONE subscription and returns a
+// uniform { close } handle:
 //
-//   origin:'outbox'  → outbox.query(filters, { authors }) for the initial stored
-//                      scan (resolution = "scan settled") + a live
-//                      outbox.subscribe(filters, { authors }) tail for new events.
+//   origin:'outbox'  → NAP-OUTBOX discovery: outbox.subscribe(filters,
+//                      { strategy:'outbox', live:true }).
 //
 // The supports('outbox') gate MUST be read AFTER await shell.ready() — it is
 // false until the shell handshake settles (profile-metadata.ts pattern).
 
 import { outbox, type Subscription } from '@napplet/sdk';
 import type { NostrEvent, NostrFilter } from '@hyprgate/types';
-import { napLog, napNote } from './debug-log';
 
 /** The minimal payload the GM inbox routes (a subset of FeedIntentPayload). */
 export interface OriginSubscribePayload {
@@ -43,18 +40,12 @@ function getShell(): NappletShellHandle | null {
 
 export interface PayloadSubscriptionCallbacks {
   onEvent(event: NostrEvent): void;
-  /**
-   * Fired once the initial one-shot outbox.query() for this payload resolves —
-   * i.e. the stored-events scan has settled. NAP-OUTBOX no longer emits an `eose`
-   * on the live subscription (removed in napplet/naps#32), so the bounded query
-   * IS the "scan done" signal; the live subscription then streams any GMs
-   * published while the inbox stays open.
-   */
-  onScanSettled(): void;
+  onEose(): void;
 }
 
-/** Read options shared by the initial query and the live subscription. */
-interface OutboxReadOptions {
+interface OutboxSubscribeOptions {
+  strategy: 'outbox';
+  live: boolean;
   /** Explicit author hints so the shell can route to the right write relays. */
   authors?: string[];
 }
@@ -80,17 +71,8 @@ function withExtraProps(
 }
 
 /**
- * Build a uniform { close } subscription from a payload. Opens AFTER the
- * shell.ready() gate resolves; an early close() is honored.
- *
- * NAP-OUTBOX has no `eose` signal (napplet/naps#32), so the read is split into
- * two legs that share one set of filters/options:
- *   - a one-shot `outbox.query()` for the initial stored-events scan — its
- *     resolution is the "scan settled" signal (`onScanSettled`);
- *   - a live `outbox.subscribe()` tail so GMs published while the inbox is open
- *     still stream in via `onEvent`.
- * Both legs feed `onEvent`; any overlap is harmless because callers dedupe
- * incoming events by id.
+ * Build a uniform { close } subscription from a payload. The subscription opens
+ * after the shell.ready() gate resolves; an early close() is honored.
  */
 export function subscribeForPayload(
   payload: OriginSubscribePayload,
@@ -98,79 +80,54 @@ export function subscribeForPayload(
   extraFilterProps?: Record<string, unknown>,
 ): Subscription {
   const filters = withExtraProps(payload.filters, extraFilterProps);
-  // Forward explicit author hints so the shell routes each filter to the authors'
-  // write relays (NAP-OUTBOX) instead of re-deriving them. Copy to a plain array
-  // so a reactive $state source can't post a Proxy across the iframe (same
-  // DataCloneError guard as withExtraProps on the filters).
-  const options: OutboxReadOptions =
-    payload.authors && payload.authors.length > 0 ? { authors: [...payload.authors] } : {};
 
   let subscription: Subscription | null = null;
   let closed = false;
+  let closeWhenReady = false;
 
   function close(): void {
     if (closed) return;
     closed = true;
-    // Null until the live leg opens; the async block below re-checks `closed`
-    // right after opening, so a close() that lands before then still tears down.
-    subscription?.close();
-    subscription = null;
+    if (subscription) {
+      subscription.close();
+    } else {
+      closeWhenReady = true;
+    }
+  }
+
+  function openOutbox(options: OutboxSubscribeOptions): Subscription {
+    const sub = outbox.subscribe(
+      filters,
+      options as unknown as Parameters<typeof outbox.subscribe>[1],
+    );
+    // NAP-OUTBOX delivers the NostrEvent directly as the first `on('event')`
+    // arg (the shell posts `cb(event, relay)`), NOT a `{ event }` wrapper.
+    sub.on('event', (event) => callbacks.onEvent(event as NostrEvent));
+    // End-of-stored-events is its own signal. A live subscription fires `eose`
+    // after the initial burst and stays open, so this is what settles the
+    // inbox's scan state; `closed` only fires on teardown (non-live fallback).
+    sub.on('eose', () => callbacks.onEose());
+    sub.on('closed', () => {
+      if (!options.live) callbacks.onEose();
+    });
+    return { close: () => sub.close() };
   }
 
   void (async () => {
     const shell = getShell();
-    // Gate on the shell handshake before opening — trace whether it ever settles.
-    const readyCall = napLog('NAP-SHELL', 'ready', { caller: 'gm-origin.subscribeForPayload' });
-    try {
-      await shell?.ready();
-      readyCall.ok(shell ? 'settled' : 'no shell — opening anyway');
-    } catch (err) {
-      readyCall.fail(err);
-      throw err;
-    }
-    if (closed) {
-      napNote('NAP-OUTBOX', 'subscription closed before shell.ready settled — skipping open');
-      return;
-    }
-
-    // Live tail first: open the streaming subscription before the one-shot scan so
-    // a GM published between the query snapshot and the subscription opening is not
-    // missed. Overlap is harmless — callers dedupe incoming notes by event id.
-    const liveCall = napLog('NAP-OUTBOX', 'subscribe', { filters, options });
-    const sub = outbox.subscribe(filters, options);
-    // NAP-OUTBOX delivers a RelayEventResult (`{ event, sidecar? }`), so the raw
-    // event is at `result.event` (napplet/naps#32), NOT the callback arg itself.
-    sub.on('event', (result) => {
-      if (closed) return;
-      liveCall.event(result.event);
-      callbacks.onEvent(result.event);
+    await shell?.ready();
+    if (closed) return;
+    subscription = openOutbox({
+      strategy: 'outbox',
+      live: true,
+      // Forward explicit author hints so the shell routes each filter to the
+      // authors' write relays (NAP-OUTBOX) instead of re-deriving them. Copy to
+      // a plain array so a reactive $state source can't post a Proxy across the
+      // iframe (same DataCloneError guard as withExtraProps on the filters).
+      ...(payload.authors && payload.authors.length > 0 ? { authors: [...payload.authors] } : {}),
     });
-    sub.on('closed', (reason) => liveCall.info('closed', { reason }));
-    subscription = {
-      close: () => {
-        liveCall.info('close');
-        sub.close();
-      },
-    };
-    if (closed) {
-      sub.close();
-      return;
-    }
 
-    // Initial bounded scan: the one-shot query resolves once the shell has
-    // collected the stored events (or its budget elapses). That resolution is
-    // what settles the inbox's scan state now that there is no `eose`.
-    const scanCall = napLog('NAP-OUTBOX', 'query', { filters, options });
-    try {
-      const { events, incomplete } = await outbox.query(filters, options);
-      if (closed) return;
-      scanCall.ok({ events: events.length, incomplete });
-      for (const result of events) callbacks.onEvent(result.event);
-    } catch (err) {
-      scanCall.fail(err);
-    } finally {
-      if (!closed) callbacks.onScanSettled();
-    }
+    if (closeWhenReady) subscription.close();
   })();
 
   return { close };

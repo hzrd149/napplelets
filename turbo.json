@@ -3,8 +3,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**"],
-      "env": ["SOURCE_MAPS"]
+      "outputs": ["dist/**"]
     },
     "type-check": {
       "dependsOn": ["^build"]

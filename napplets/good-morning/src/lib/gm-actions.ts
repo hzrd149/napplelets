@@ -7,7 +7,6 @@ import {
 } from '@hyprgate/utils';
 import { outbox } from '@napplet/sdk';
 import { nip19 } from 'nostr-tools';
-import { napLog } from './debug-log';
 
 /** Source tag emitted on note-viewer intents so the shell can attribute them. */
 export const GM_NAPPLET_SOURCE = 'good-morning' as const;
@@ -110,16 +109,7 @@ export function createQuickGMReplyTemplate(event: Pick<NostrEvent, 'id' | 'pubke
 
 /** Sign + publish a Quick GM reply through the shell (NAP-OUTBOX). */
 export async function publishQuickGM(event: Pick<NostrEvent, 'id' | 'pubkey'>): Promise<object> {
-  const template = createQuickGMReplyTemplate(event);
-  const call = napLog('NAP-OUTBOX', 'publish', { template, replyTo: event.id });
-  try {
-    const result = await outbox.publish(template);
-    call.ok(result);
-    return result;
-  } catch (err) {
-    call.fail(err);
-    throw err;
-  }
+  return outbox.publish(createQuickGMReplyTemplate(event), { strategy: 'outbox' });
 }
 
 /**

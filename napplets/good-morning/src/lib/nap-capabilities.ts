@@ -32,7 +32,6 @@ import {
   RESOURCE_DOMAIN,
   THEME_DOMAIN,
 } from '@napplet/sdk';
-import { napLog, napNote } from './debug-log';
 
 export type NapSeverity = 'essential' | 'degraded';
 
@@ -182,22 +181,12 @@ function shellSupports(shell: NappletShellHandle | null, domain: string): boolea
 const SHELL_READY_TIMEOUT_MS = 5000;
 
 async function awaitShellReady(shell: NappletShellHandle | null): Promise<void> {
-  if (!shell?.ready) {
-    napNote('NAP-SHELL', 'ready skipped — no shell.ready() (runtime handshake absent)');
-    return;
-  }
-  const call = napLog('NAP-SHELL', 'ready', { caller: 'probeNapCapabilities' });
+  if (!shell?.ready) return;
   // Swallow a rejected ready(): a failed handshake still lets us probe (and
   // report) the degraded surface rather than hang the diagnostic.
-  const ready = Promise.resolve(shell.ready()).then(
-    () => call.ok('settled'),
-    (err) => call.fail(err),
-  );
+  const ready = Promise.resolve(shell.ready()).catch(() => undefined);
   const timeout = new Promise<void>((resolve) => {
-    setTimeout(() => {
-      call.info('timeout', `no settle within ${SHELL_READY_TIMEOUT_MS}ms`);
-      resolve();
-    }, SHELL_READY_TIMEOUT_MS);
+    setTimeout(resolve, SHELL_READY_TIMEOUT_MS);
   });
   await Promise.race([ready, timeout]);
 }
@@ -212,27 +201,10 @@ export async function probeNapCapabilities(
 ): Promise<CapabilityReport> {
   const shell = getShell();
   await awaitShellReady(shell);
-  const report = classifyCapabilities(
+  return classifyCapabilities(
     requirements,
     domainIsPresent,
-    (domain) => {
-      // NAP-SHELL capability query, per domain — logs the two signals the
-      // classifier ORs together (window.napplet[domain] vs shell.supports()).
-      const supported = shellSupports(shell, domain);
-      napNote('NAP-SHELL', `supports(${domain})`, {
-        shellSupports: supported,
-        domainPresent: domainIsPresent(domain),
-      });
-      return supported;
-    },
+    (domain) => shellSupports(shell, domain),
     shell != null,
   );
-  napNote('NAP-SHELL', 'capability report', {
-    ok: report.ok,
-    shellPresent: report.shellPresent,
-    available: report.statuses.filter((s) => s.available).map((s) => s.domain),
-    missingEssential: report.missingEssential.map((s) => s.label),
-    missingDegraded: report.missingDegraded.map((s) => s.label),
-  });
-  return report;
 }

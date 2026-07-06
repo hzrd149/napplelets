@@ -20,7 +20,6 @@ import { identity, type Subscription } from '@napplet/sdk';
 import type { NostrEvent } from '@hyprgate/types';
 import { containsGM } from './gm-detection';
 import { subscribeForPayload } from './gm-origin';
-import { napLog, napNote } from './debug-log';
 
 const KIND_TEXT_NOTE = 1;
 /** Relay author-array cap — match gm-protocol's batching of follows. */
@@ -118,7 +117,7 @@ export function createGMStore(notify: () => void): GMStore {
   // The inbox window is pinned at init (gm-protocol computes it once at mount
   // too); a window left open across midnight keeps yesterday's `since`.
   let since = startOfTodaySeconds();
-  let pendingBatchScans = 0;
+  let pendingBatchEose = 0;
   // Bumped on every teardown so an in-flight identity.getFollows() resolving
   // after a reset/destroy or identity switch is discarded instead of mutating
   // stale state (there is no subscription handle to close on an async query).
@@ -140,21 +139,14 @@ export function createGMStore(notify: () => void): GMStore {
     closeGmBatches();
 
     if (contactPubkeys.length === 0) {
-      napNote('store', 'no contacts → nothing to scan (inbox will be empty)');
       state.scanning = false;
       notify();
       return;
     }
 
     const batches = chunk(contactPubkeys, AUTHOR_BATCH_SIZE);
-    pendingBatchScans = batches.length;
+    pendingBatchEose = batches.length;
     state.scanning = true;
-    napNote('store', 'opening GM-note subscriptions', {
-      contacts: contactPubkeys.length,
-      batches: batches.length,
-      since,
-      sinceISO: new Date(since * 1000).toISOString(),
-    });
     notify();
 
     for (const batch of batches) {
@@ -168,32 +160,17 @@ export function createGMStore(notify: () => void): GMStore {
         },
         {
           onEvent: (event) => {
-            // Why an incoming note does or doesn't reach the inbox — this is the
-            // key filter to watch when notes stream in but none render.
             if (event.kind !== KIND_TEXT_NOTE) return;
             if (!containsGM(event.content)) return;
-            if (state.gmNotes.has(event.id)) {
-              napNote('store', 'GM note ignored (duplicate)', { id: event.id });
-              return;
-            }
+            if (state.gmNotes.has(event.id)) return;
             state.gmNotes.set(event.id, event);
-            napNote('store', 'GM note accepted', {
-              id: event.id,
-              pubkey: event.pubkey,
-              total: state.gmNotes.size,
-            });
             notify();
           },
-          onScanSettled: () => {
-            // The initial one-shot scan for this batch settled; the outbox tail
-            // stays live so GMs that land after the burst still stream in. The
-            // inbox flips out of "scanning" once every batch's scan has settled.
-            if (pendingBatchScans > 0) pendingBatchScans -= 1;
-            if (pendingBatchScans === 0 && state.scanning) {
-              napNote('store', 'GM-note scan settled', {
-                gmNotes: state.gmNotes.size,
-                contacts: state.contactCount,
-              });
+          onEose: () => {
+            // Do NOT close on EOSE — the outbox subscription stays live so GMs
+            // that land after the initial burst still stream into the inbox.
+            if (pendingBatchEose > 0) pendingBatchEose -= 1;
+            if (pendingBatchEose === 0 && state.scanning) {
               state.scanning = false;
               notify();
             }
@@ -219,13 +196,9 @@ export function createGMStore(notify: () => void): GMStore {
           if (!containsGM(event.content) || !hasETag(event)) return;
           if (state.userReplies.has(event.id)) return;
           state.userReplies.set(event.id, event);
-          napNote('store', 'own GM reply accepted', {
-            id: event.id,
-            total: state.userReplies.size,
-          });
           notify();
         },
-        onScanSettled: () => {
+        onEose: () => {
           /* stay live for replies published while the inbox is open */
         },
       },
@@ -237,14 +210,11 @@ export function createGMStore(notify: () => void): GMStore {
     // kind-3 for us, so the napplet never fetches or de-dupes it over the relays.
     const token = contactsLoadToken;
     let contactPubkeys: string[];
-    const call = napLog('NAP-IDENTITY', 'getFollows');
     try {
       contactPubkeys = await identity.getFollows();
-      call.ok({ count: contactPubkeys.length });
     } catch (err) {
       // Identity query failed → settle so the UI stops showing "loading
       // contacts…" and surfaces the failure instead of hanging.
-      call.fail(err);
       if (token !== contactsLoadToken) return;
       state.contactsLoaded = true;
       state.scanning = false;
@@ -253,12 +223,7 @@ export function createGMStore(notify: () => void): GMStore {
       return;
     }
     // Stale resolve (reset/destroy or identity switch happened mid-flight).
-    if (token !== contactsLoadToken) {
-      napNote('NAP-IDENTITY', 'getFollows resolved after teardown — discarding', {
-        count: contactPubkeys.length,
-      });
-      return;
-    }
+    if (token !== contactsLoadToken) return;
     state.contactCount = contactPubkeys.length;
     state.contactsLoaded = true;
     notify();
@@ -275,7 +240,7 @@ export function createGMStore(notify: () => void): GMStore {
     state.contactsLoaded = false;
     state.scanning = false;
     state.error = null;
-    pendingBatchScans = 0;
+    pendingBatchEose = 0;
     since = startOfTodaySeconds();
   }
 
