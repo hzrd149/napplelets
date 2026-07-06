@@ -18,6 +18,8 @@ export default defineConfig({
     // note:open/profile:open intents.
     nip5aManifest({
       nappletType: 'good-morning',
+      title: "GM Protocol",
+      description: 'Say good morning to your friends every day',
       requires: ['identity', 'inc', 'outbox', 'resource', 'theme'],
       artifactMode: 'single-file',
       archetypes: [{ slug: 'good-morning', naps: ['good-morning'] }],
