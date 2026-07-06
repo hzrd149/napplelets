@@ -5,6 +5,7 @@
   import { createGMStore, buildGMThreads, type GMThread } from '../lib/gm-store';
   import { subscribeProfileMetadata, type ProfileContent } from '../lib/profile-metadata';
   import GMRow from './GMRow.svelte';
+  import GMGallery from './GMGallery.svelte';
 
   interface Props {
     /** The logged-in user's pubkey. Null renders the empty state. */
@@ -63,6 +64,17 @@
         ? threads.filter((t) => t.isRead)
         : threads.filter((t) => !t.isRead),
   );
+
+  // ── List / gallery view toggle ────────────────────────────────────────────
+  // The gallery view shows each GM's first image with the note content as the
+  // caption/alt underneath — a way to browse the day's GMs as an image wall.
+  type GMView = 'list' | 'gallery';
+  let view = $state<GMView>('list');
+
+  const VIEWS: { id: GMView; label: string }[] = [
+    { id: 'list', label: 'List' },
+    { id: 'gallery', label: 'Gallery' },
+  ];
 
   // ── Profile metadata (same batched pattern as the feed napplet) ───────────
   let profileMap = $state(new Map<string, ProfileContent>());
@@ -133,6 +145,7 @@
   data-gm-pending={pendingCount}
   data-gm-thread-count={threads.length}
   data-gm-filter={filter}
+  data-gm-view={view}
   data-gm-visible-count={visibleThreads.length}
 >
   <!-- Header -->
@@ -140,6 +153,22 @@
     <span class="text-sm font-semibold font-mono text-accent-green">GM</span>
     <span class="text-text-muted text-xs">{contactCount} contacts</span>
     <div class="flex-1"></div>
+
+    <!-- List / gallery view toggle (radio group) -->
+    <div class="gm-filter flex" role="radiogroup" aria-label="View mode">
+      {#each VIEWS as option (option.id)}
+        <button
+          type="button"
+          role="radio"
+          aria-checked={view === option.id}
+          class="gm-filter-btn {view === option.id ? 'is-active' : ''}"
+          data-gm-view-option={option.id}
+          onclick={() => (view = option.id)}
+        >
+          {option.label}
+        </button>
+      {/each}
+    </div>
 
     <!-- Replied / unreplied filter (radio group) -->
     <div class="gm-filter flex" role="radiogroup" aria-label="Filter GMs">
@@ -171,6 +200,8 @@
       <div class="p-4 text-text-muted font-mono text-sm">
         {filter === 'replied' ? 'no replied GMs yet' : 'no unreplied GMs — all caught up'}
       </div>
+    {:else if view === 'gallery'}
+      <GMGallery threads={visibleThreads} />
     {:else}
       {#each visibleThreads as thread (thread.note.id)}
         <GMRow

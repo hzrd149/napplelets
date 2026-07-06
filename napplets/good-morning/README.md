@@ -21,6 +21,13 @@ napplet runtime (NIP-5D iframe, NAP-OUTBOX relay routing, shared note renderer).
 4. Clicking a row emits `note:open` (NAP-04); the shell opens/focuses the
    **Note Reader** napplet where you reply inline. Avatars and names emit
    `profile:open`.
+5. A **List / Gallery** toggle in the header switches the inbox between the
+   default row list and a **gallery** of the day's GM images: each tile is the
+   first image resource found in a GM note (inline image URL or blossom/NAP-RESOURCE
+   pointer), with the note content shown as the caption/`alt` underneath. Notes
+   with no image are omitted from the gallery. Clicking a tile emits the same
+   `note:open` intent. Both the replied/unreplied filter and the gallery honor
+   the same `visibleThreads`.
 
 ### GM matching
 
@@ -63,10 +70,13 @@ both note reads and Quick GM publishes route through `NAP-OUTBOX` (there is no
   `buildGMThreads` (roots only, `isRead` derivation). Pure helpers are unit
   tested.
 - `src/lib/gm-origin.ts` — the NAP-OUTBOX routing seam for inbox subscriptions.
+- `src/lib/gm-media.ts` — extracts the first image source from a note's content
+  (via `@hyprgate/utils` `extractNoteContentEmbeds`) for the gallery view (+ tests).
 - `src/lib/profile-metadata.ts` — shared kind-0 loader (kept in sync with feed).
 - `src/lib/gm-actions.ts` — `note:open` payload builders.
-- `src/components/` — `GMInbox` (list + profile batching), `GMRow` (a row),
-  `GMNoteContent` (thin adapter over `@hyprgate/napplet-ui` NoteContent).
+- `src/components/` — `GMInbox` (list/gallery view toggle + profile batching),
+  `GMRow` (a list row), `GMGallery` (the image-wall view), `GMNoteContent` (thin
+  adapter over `@hyprgate/napplet-ui` NoteContent).
 
 ## Develop
 
