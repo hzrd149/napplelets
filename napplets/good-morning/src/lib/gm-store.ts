@@ -118,7 +118,7 @@ export function createGMStore(notify: () => void): GMStore {
   // The inbox window is pinned at init (gm-protocol computes it once at mount
   // too); a window left open across midnight keeps yesterday's `since`.
   let since = startOfTodaySeconds();
-  let pendingBatchEose = 0;
+  let pendingBatchScans = 0;
   // Bumped on every teardown so an in-flight identity.getFollows() resolving
   // after a reset/destroy or identity switch is discarded instead of mutating
   // stale state (there is no subscription handle to close on an async query).
@@ -147,7 +147,7 @@ export function createGMStore(notify: () => void): GMStore {
     }
 
     const batches = chunk(contactPubkeys, AUTHOR_BATCH_SIZE);
-    pendingBatchEose = batches.length;
+    pendingBatchScans = batches.length;
     state.scanning = true;
     napNote('store', 'opening GM-note subscriptions', {
       contacts: contactPubkeys.length,
@@ -184,11 +184,12 @@ export function createGMStore(notify: () => void): GMStore {
             });
             notify();
           },
-          onEose: () => {
-            // Do NOT close on EOSE — the outbox subscription stays live so GMs
-            // that land after the initial burst still stream into the inbox.
-            if (pendingBatchEose > 0) pendingBatchEose -= 1;
-            if (pendingBatchEose === 0 && state.scanning) {
+          onScanSettled: () => {
+            // The initial one-shot scan for this batch settled; the outbox tail
+            // stays live so GMs that land after the burst still stream in. The
+            // inbox flips out of "scanning" once every batch's scan has settled.
+            if (pendingBatchScans > 0) pendingBatchScans -= 1;
+            if (pendingBatchScans === 0 && state.scanning) {
               napNote('store', 'GM-note scan settled', {
                 gmNotes: state.gmNotes.size,
                 contacts: state.contactCount,
@@ -224,7 +225,7 @@ export function createGMStore(notify: () => void): GMStore {
           });
           notify();
         },
-        onEose: () => {
+        onScanSettled: () => {
           /* stay live for replies published while the inbox is open */
         },
       },
@@ -274,7 +275,7 @@ export function createGMStore(notify: () => void): GMStore {
     state.contactsLoaded = false;
     state.scanning = false;
     state.error = null;
-    pendingBatchEose = 0;
+    pendingBatchScans = 0;
     since = startOfTodaySeconds();
   }
 

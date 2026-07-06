@@ -113,7 +113,7 @@ export async function publishQuickGM(event: Pick<NostrEvent, 'id' | 'pubkey'>): 
   const template = createQuickGMReplyTemplate(event);
   const call = napLog('NAP-OUTBOX', 'publish', { template, replyTo: event.id });
   try {
-    const result = await outbox.publish(template, { strategy: 'outbox' });
+    const result = await outbox.publish(template);
     call.ok(result);
     return result;
   } catch (err) {
