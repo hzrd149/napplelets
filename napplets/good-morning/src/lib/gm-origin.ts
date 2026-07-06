@@ -101,15 +101,12 @@ export function subscribeForPayload(
     // Trace the NAP-OUTBOX subscription: the call (filters + routing options) and
     // every response leg (streamed events, eose, closed) share one sequence tag.
     const call = napLog('NAP-OUTBOX', 'subscribe', { filters, options });
-    const sub = outbox.subscribe(
-      filters,
-      options as unknown as Parameters<typeof outbox.subscribe>[1],
-    );
+    const sub = outbox.subscribe(filters, options);
     // NAP-OUTBOX delivers the NostrEvent directly as the first `on('event')`
     // arg (the shell posts `cb(event, relay)`), NOT a `{ event }` wrapper.
     sub.on('event', (event) => {
       call.event(event);
-      callbacks.onEvent(event as NostrEvent);
+      callbacks.onEvent(event);
     });
     // End-of-stored-events is its own signal. A live subscription fires `eose`
     // after the initial burst and stays open, so this is what settles the
