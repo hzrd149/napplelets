@@ -1,20 +1,51 @@
 <script lang="ts">
+  import { nip19 } from 'nostr-tools';
   import { inc as ipc } from '@napplet/sdk';
   import { resourceImageBatch as resourceImage } from '@hyprgate/utils';
   import type { GMThread } from '../lib/gm-store';
+  import type { ProfileContent } from '../lib/profile-metadata';
   import { buildGalleryItems } from '../lib/gm-media';
   import { createGMNoteOpenPayload, NOTE_VIEWER_OPEN_TOPIC } from '../lib/gm-actions';
 
   interface Props {
     /** The GM threads to show as a gallery (already filtered by the inbox). */
     threads: GMThread[];
+    /** Author profile metadata, keyed by pubkey, for the floating avatars. */
+    profiles: Map<string, ProfileContent>;
   }
 
-  let { threads }: Props = $props();
+  let { threads, profiles }: Props = $props();
 
   // Only GMs that carry an image become gallery tiles; the note content rides
   // along as the alt/caption under each one.
   let items = $derived(buildGalleryItems(threads.map((t) => t.note)));
+
+  // note.id → isRead, so each tile can show the "responded" check for a GM we
+  // already replied to (mirrors the big check in the list row).
+  let readByNoteId = $derived(new Map(threads.map((t) => [t.note.id, t.isRead])));
+
+  function shortenPubkey(pubkey: string): string {
+    try {
+      return nip19.npubEncode(pubkey).slice(0, 16) + '...';
+    } catch {
+      return pubkey.slice(0, 12) + '...';
+    }
+  }
+
+  function authorName(pubkey: string): string {
+    const profile = profiles.get(pubkey);
+    return profile?.display_name ?? profile?.name ?? shortenPubkey(pubkey);
+  }
+
+  function avatarUrl(pubkey: string): string | null {
+    return profiles.get(pubkey)?.picture ?? null;
+  }
+
+  function avatarFallback(pubkey: string): string {
+    const profile = profiles.get(pubkey);
+    const name = profile?.name ?? profile?.display_name ?? '';
+    return name.slice(0, 2).toUpperCase() || pubkey.slice(0, 2).toUpperCase();
+  }
 
   // Open the note in the shell's note viewer (same intent the list rows emit).
   function openNote(event: GMThread['note']): void {
@@ -38,6 +69,47 @@
           aria-label="Open GM note"
         >
           <img use:resourceImage={item.imageSource} alt={item.note.content} loading="lazy" />
+
+          <!-- Author avatar floating in the upper-left corner (decorative — the
+               whole tile opens the note). -->
+          <span
+            class="gm-tile-avatar"
+            title={authorName(item.note.pubkey)}
+            data-gm-author-pubkey={item.note.pubkey}
+          >
+            {#if avatarUrl(item.note.pubkey) != null}
+              <img
+                use:resourceImage={avatarUrl(item.note.pubkey)}
+                alt={authorName(item.note.pubkey)}
+                loading="lazy"
+              />
+            {:else}
+              <span class="gm-tile-avatar-fallback">{avatarFallback(item.note.pubkey)}</span>
+            {/if}
+          </span>
+
+          <!-- Responded check in the lower-right corner when we've GM'd back. -->
+          {#if readByNoteId.get(item.note.id)}
+            <span
+              class="gm-tile-check"
+              title="You replied with a GM"
+              aria-label="Responded with a GM"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </span>
+          {/if}
         </button>
         <figcaption class="gm-tile-caption" title={item.note.content}>
           {item.note.content}
@@ -63,6 +135,7 @@
   }
 
   .gm-tile-image {
+    position: relative;
     display: block;
     width: 100%;
     aspect-ratio: 1 / 1;
@@ -75,6 +148,53 @@
     transition:
       border-color 120ms,
       transform 120ms;
+  }
+
+  /* Overlays ride above the image but never intercept the tile's click. */
+  .gm-tile-avatar,
+  .gm-tile-check {
+    position: absolute;
+    z-index: 1;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .gm-tile-avatar {
+    top: 6px;
+    left: 6px;
+    width: 28px;
+    height: 28px;
+    border-radius: 9999px;
+    border: 2px solid var(--hg-bg-base, #14110c);
+    background: var(--hg-bg-surface, #1a1a1a);
+    box-shadow: 0 1px 3px rgb(0 0 0 / 45%);
+  }
+
+  .gm-tile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .gm-tile-avatar-fallback {
+    font-size: 10px;
+    font-family: var(--hg-font-mono, monospace);
+    color: var(--hg-text-muted, #b8b1a4);
+  }
+
+  .gm-tile-check {
+    right: 6px;
+    bottom: 6px;
+    width: 24px;
+    height: 24px;
+    border-radius: 9999px;
+    color: var(--hg-bg-base, #14110c);
+    background: var(--hg-accent-green, #9be564);
+    box-shadow: 0 1px 3px rgb(0 0 0 / 45%);
   }
 
   .gm-tile-image:hover {

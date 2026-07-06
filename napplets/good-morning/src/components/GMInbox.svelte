@@ -201,7 +201,7 @@
         {filter === 'replied' ? 'no replied GMs yet' : 'no unreplied GMs — all caught up'}
       </div>
     {:else if view === 'gallery'}
-      <GMGallery threads={visibleThreads} />
+      <GMGallery threads={visibleThreads} profiles={profileMap} />
     {:else}
       {#each visibleThreads as thread (thread.note.id)}
         <GMRow
