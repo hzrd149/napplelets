@@ -69,18 +69,16 @@ export function subscribeProfileMetadata(
   const latestByPubkey = new Map<string, number>();
   let subscription: Subscription | null = null;
   let closed = false;
-  let closeWhenReady = false;
 
   // Set up the close guard synchronously so an early close() (before the
-  // shell.ready() gate resolves) is honored once the subscription opens.
+  // shell.ready() gate resolves) is honored once the subscription opens. The
+  // async block re-checks `closed` right after opening, so a close() that lands
+  // first still tears the subscription down.
   function close(): void {
     if (closed) return;
     closed = true;
-    if (subscription) {
-      subscription.close();
-    } else {
-      closeWhenReady = true;
-    }
+    subscription?.close();
+    subscription = null;
   }
 
   function handleEvent(event: NostrEvent): void {
@@ -96,34 +94,43 @@ export function subscribeProfileMetadata(
   }
 
   let doneFired = false;
-  function handleEose(): void {
+  function handleDone(): void {
     if (doneFired) return;
     doneFired = true;
     onDone();
   }
 
   const filters = authors.map((author) => ({ kinds: [0], authors: [author], limit: 1 }));
-  // Open the subscription AFTER shell.ready() so the handshake is settled and
-  // shell.supports('outbox') reflects the runtime's registered NAP services.
+  // Open AFTER shell.ready() so the handshake is settled and shell.supports('outbox')
+  // reflects the runtime's registered NAP services. NAP-OUTBOX has no `eose`
+  // (napplet/naps#32): a one-shot query is the initial read (its resolution fires
+  // `onDone`) and a live subscription tails any profile updates while the inbox
+  // stays open.
   void (async () => {
     const shell = getShell();
     await shell?.ready();
     if (closed) return;
-    const sub = outbox.subscribe(filters, {
-      strategy: 'outbox',
-      live: true,
-      // Explicit author hint so the shell routes each kind-0 lookup to that
-      // author's write relays (NAP-OUTBOX) instead of re-deriving from filters.
-      authors,
-    });
-    // NAP-OUTBOX hands `on('event')` the NostrEvent directly (cb(event, relay)),
-    // not a `{ event }` wrapper. `eose` is the end-of-stored-events signal that
-    // settles the "done" callback; a live sub fires it then stays open.
-    sub.on('event', (event) => handleEvent(event as NostrEvent));
-    sub.on('eose', handleEose);
-    sub.on('closed', handleEose);
+    // Explicit author hint so the shell routes each kind-0 lookup to that author's
+    // write relays (NAP-OUTBOX) instead of re-deriving from filters.
+    const options = { authors };
+    const sub = outbox.subscribe(filters, options);
+    // NAP-OUTBOX delivers a RelayEventResult (`{ event, sidecar? }`); the raw
+    // event is at `result.event`, not the callback arg itself.
+    sub.on('event', (result) => handleEvent(result.event));
     subscription = { close: () => sub.close() };
-    if (closeWhenReady) subscription.close();
+    if (closed) {
+      sub.close();
+      return;
+    }
+    try {
+      const { events } = await outbox.query(filters, options);
+      if (closed) return;
+      for (const result of events) handleEvent(result.event);
+    } catch {
+      /* best-effort: the live subscription may still deliver profiles */
+    } finally {
+      if (!closed) handleDone();
+    }
   })();
 
   return { close };
