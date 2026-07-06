@@ -20,6 +20,7 @@ import { identity, type Subscription } from '@napplet/sdk';
 import type { NostrEvent } from '@hyprgate/types';
 import { containsGM } from './gm-detection';
 import { subscribeForPayload } from './gm-origin';
+import { napLog, napNote } from './debug-log';
 
 const KIND_TEXT_NOTE = 1;
 /** Relay author-array cap — match gm-protocol's batching of follows. */
@@ -139,6 +140,7 @@ export function createGMStore(notify: () => void): GMStore {
     closeGmBatches();
 
     if (contactPubkeys.length === 0) {
+      napNote('store', 'no contacts → nothing to scan (inbox will be empty)');
       state.scanning = false;
       notify();
       return;
@@ -147,6 +149,12 @@ export function createGMStore(notify: () => void): GMStore {
     const batches = chunk(contactPubkeys, AUTHOR_BATCH_SIZE);
     pendingBatchEose = batches.length;
     state.scanning = true;
+    napNote('store', 'opening GM-note subscriptions', {
+      contacts: contactPubkeys.length,
+      batches: batches.length,
+      since,
+      sinceISO: new Date(since * 1000).toISOString(),
+    });
     notify();
 
     for (const batch of batches) {
@@ -160,10 +168,20 @@ export function createGMStore(notify: () => void): GMStore {
         },
         {
           onEvent: (event) => {
+            // Why an incoming note does or doesn't reach the inbox — this is the
+            // key filter to watch when notes stream in but none render.
             if (event.kind !== KIND_TEXT_NOTE) return;
             if (!containsGM(event.content)) return;
-            if (state.gmNotes.has(event.id)) return;
+            if (state.gmNotes.has(event.id)) {
+              napNote('store', 'GM note ignored (duplicate)', { id: event.id });
+              return;
+            }
             state.gmNotes.set(event.id, event);
+            napNote('store', 'GM note accepted', {
+              id: event.id,
+              pubkey: event.pubkey,
+              total: state.gmNotes.size,
+            });
             notify();
           },
           onEose: () => {
@@ -171,6 +189,10 @@ export function createGMStore(notify: () => void): GMStore {
             // that land after the initial burst still stream into the inbox.
             if (pendingBatchEose > 0) pendingBatchEose -= 1;
             if (pendingBatchEose === 0 && state.scanning) {
+              napNote('store', 'GM-note scan settled', {
+                gmNotes: state.gmNotes.size,
+                contacts: state.contactCount,
+              });
               state.scanning = false;
               notify();
             }
@@ -196,6 +218,10 @@ export function createGMStore(notify: () => void): GMStore {
           if (!containsGM(event.content) || !hasETag(event)) return;
           if (state.userReplies.has(event.id)) return;
           state.userReplies.set(event.id, event);
+          napNote('store', 'own GM reply accepted', {
+            id: event.id,
+            total: state.userReplies.size,
+          });
           notify();
         },
         onEose: () => {
@@ -210,11 +236,14 @@ export function createGMStore(notify: () => void): GMStore {
     // kind-3 for us, so the napplet never fetches or de-dupes it over the relays.
     const token = contactsLoadToken;
     let contactPubkeys: string[];
+    const call = napLog('NAP-IDENTITY', 'getFollows');
     try {
       contactPubkeys = await identity.getFollows();
+      call.ok({ count: contactPubkeys.length });
     } catch (err) {
       // Identity query failed → settle so the UI stops showing "loading
       // contacts…" and surfaces the failure instead of hanging.
+      call.fail(err);
       if (token !== contactsLoadToken) return;
       state.contactsLoaded = true;
       state.scanning = false;
@@ -223,7 +252,12 @@ export function createGMStore(notify: () => void): GMStore {
       return;
     }
     // Stale resolve (reset/destroy or identity switch happened mid-flight).
-    if (token !== contactsLoadToken) return;
+    if (token !== contactsLoadToken) {
+      napNote('NAP-IDENTITY', 'getFollows resolved after teardown — discarding', {
+        count: contactPubkeys.length,
+      });
+      return;
+    }
     state.contactCount = contactPubkeys.length;
     state.contactsLoaded = true;
     notify();

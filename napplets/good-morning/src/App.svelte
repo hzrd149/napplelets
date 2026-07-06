@@ -11,6 +11,7 @@
   import GMInbox from './components/GMInbox.svelte';
   import MissingNaps from './components/MissingNaps.svelte';
   import { probeNapCapabilities, type CapabilityReport } from './lib/nap-capabilities';
+  import { napLog, napNote } from './lib/debug-log';
 
   let pubkey: string | null = $state(null);
   // null while the runtime probe is in flight. good-morning is used to debug
@@ -32,16 +33,23 @@
     });
 
     const handleIdentityChanged = (raw: unknown) => {
+      napNote('NAP-INC', 'identity:changed broadcast received', raw);
       const identityChange = parseIdentityChangedPayload(raw);
       if (identityChange) pubkey = identityChange.pubkey;
     };
+    napNote('NAP-INC', `on(${IDENTITY_CHANGED_TOPIC})`);
     const canonicalSub = ipc.on(IDENTITY_CHANGED_TOPIC, handleIdentityChanged);
+    napNote('NAP-INC', `on(${LEGACY_AUTH_IDENTITY_CHANGED_TOPIC})`);
     const legacySub = ipc.on(LEGACY_AUTH_IDENTITY_CHANGED_TOPIC, handleIdentityChanged);
 
+    // waitForPublicKey polls identity.getPublicKey() (NAP-IDENTITY) until it
+    // resolves; trace the resolved key and any polling errors.
+    const pkCall = napLog('NAP-IDENTITY', 'getPublicKey');
     void waitForPublicKey(identity, {
       signal: controller.signal,
-      onError: (err) => console.error('[good-morning/App] getPublicKey failed:', err),
+      onError: (err) => pkCall.fail(err),
     }).then((pk) => {
+      pkCall.ok(pk);
       if (!controller.signal.aborted && !pubkey && pk) pubkey = pk;
     });
 

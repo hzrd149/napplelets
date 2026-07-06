@@ -12,6 +12,7 @@
 
 import { outbox, type Subscription } from '@napplet/sdk';
 import type { NostrEvent, NostrFilter } from '@hyprgate/types';
+import { napLog, napNote } from './debug-log';
 
 /** The minimal payload the GM inbox routes (a subset of FeedIntentPayload). */
 export interface OriginSubscribePayload {
@@ -92,31 +93,58 @@ export function subscribeForPayload(
       subscription.close();
     } else {
       closeWhenReady = true;
+      napNote('NAP-OUTBOX', 'close() before shell.ready — deferred until open');
     }
   }
 
   function openOutbox(options: OutboxSubscribeOptions): Subscription {
+    // Trace the NAP-OUTBOX subscription: the call (filters + routing options) and
+    // every response leg (streamed events, eose, closed) share one sequence tag.
+    const call = napLog('NAP-OUTBOX', 'subscribe', { filters, options });
     const sub = outbox.subscribe(
       filters,
       options as unknown as Parameters<typeof outbox.subscribe>[1],
     );
     // NAP-OUTBOX delivers the NostrEvent directly as the first `on('event')`
     // arg (the shell posts `cb(event, relay)`), NOT a `{ event }` wrapper.
-    sub.on('event', (event) => callbacks.onEvent(event as NostrEvent));
+    sub.on('event', (event) => {
+      call.event(event);
+      callbacks.onEvent(event as NostrEvent);
+    });
     // End-of-stored-events is its own signal. A live subscription fires `eose`
     // after the initial burst and stays open, so this is what settles the
     // inbox's scan state; `closed` only fires on teardown (non-live fallback).
-    sub.on('eose', () => callbacks.onEose());
+    sub.on('eose', () => {
+      call.info('eose');
+      callbacks.onEose();
+    });
     sub.on('closed', () => {
+      call.info('closed', { live: options.live });
       if (!options.live) callbacks.onEose();
     });
-    return { close: () => sub.close() };
+    return {
+      close: () => {
+        call.info('close');
+        sub.close();
+      },
+    };
   }
 
   void (async () => {
     const shell = getShell();
-    await shell?.ready();
-    if (closed) return;
+    // Gate on the shell handshake before opening — trace whether it ever settles.
+    const readyCall = napLog('NAP-SHELL', 'ready', { caller: 'gm-origin.subscribeForPayload' });
+    try {
+      await shell?.ready();
+      readyCall.ok(shell ? 'settled' : 'no shell — opening anyway');
+    } catch (err) {
+      readyCall.fail(err);
+      throw err;
+    }
+    if (closed) {
+      napNote('NAP-OUTBOX', 'subscription closed before shell.ready settled — skipping open');
+      return;
+    }
     subscription = openOutbox({
       strategy: 'outbox',
       live: true,

@@ -16,6 +16,7 @@
     COMPOSER_OPEN_TOPIC,
     NOTE_VIEWER_OPEN_TOPIC,
   } from '../lib/gm-actions';
+  import { napNote } from '../lib/debug-log';
   import GMNoteContent from './GMNoteContent.svelte';
 
   interface Props {
@@ -53,6 +54,7 @@
   function openNote(): void {
     const payload = createGMNoteOpenPayload(event);
     if (!payload) return;
+    napNote('NAP-INC', `emit(${NOTE_VIEWER_OPEN_TOPIC})`, payload);
     ipc.emit(NOTE_VIEWER_OPEN_TOPIC, [], JSON.stringify(payload));
   }
 
@@ -62,21 +64,24 @@
     if (quickState === 'sending' || isRead) return;
     quickState = 'sending';
     try {
+      // publishQuickGM already traces the NAP-OUTBOX publish call + result.
       await publishQuickGM(event);
       quickState = 'sent';
-    } catch (error) {
-      console.error('[good-morning] Quick GM publish failed:', error);
+    } catch {
       quickState = 'error';
     }
   }
 
   // Open the composer napplet so the user can write their own reply.
   function openComposer(): void {
-    ipc.emit(COMPOSER_OPEN_TOPIC, [], JSON.stringify(createGMReplyComposePayload(event)));
+    const payload = createGMReplyComposePayload(event);
+    napNote('NAP-INC', `emit(${COMPOSER_OPEN_TOPIC})`, payload);
+    ipc.emit(COMPOSER_OPEN_TOPIC, [], JSON.stringify(payload));
   }
 
   function openProfile(): void {
     if (!isCanonicalHexPubkey(event.pubkey)) return;
+    napNote('NAP-INC', 'emit(profile:open)', { pubkey: event.pubkey });
     ipc.emit('profile:open', [], JSON.stringify({ pubkey: event.pubkey }));
   }
 

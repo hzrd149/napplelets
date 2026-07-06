@@ -4,6 +4,7 @@
   import type { Subscription } from '@napplet/sdk';
   import { createGMStore, buildGMThreads, type GMThread } from '../lib/gm-store';
   import { subscribeProfileMetadata, type ProfileContent } from '../lib/profile-metadata';
+  import { napLog } from '../lib/debug-log';
   import GMRow from './GMRow.svelte';
 
   interface Props {
@@ -95,15 +96,24 @@
 
     for (const pk of missing) loadingPubkeys.add(pk);
 
+    // Trace the profile NAP-OUTBOX subscription here (its module is kept
+    // byte-identical across napplets, so it stays uninstrumented).
+    const call = napLog('NAP-OUTBOX', 'subscribe(profiles)', { pubkeys: missing });
     try {
-      const subscription = subscribeProfileMetadata(missing, (pk, metadata) => {
-        // Immutable Map at the Svelte boundary so rows drop the npub fallback
-        // once metadata arrives.
-        profileMap = new Map(profileMap).set(pk, metadata);
-        loadingPubkeys.delete(pk);
-      });
+      const subscription = subscribeProfileMetadata(
+        missing,
+        (pk, metadata) => {
+          call.event({ pubkey: pk, name: metadata.display_name ?? metadata.name });
+          // Immutable Map at the Svelte boundary so rows drop the npub fallback
+          // once metadata arrives.
+          profileMap = new Map(profileMap).set(pk, metadata);
+          loadingPubkeys.delete(pk);
+        },
+        () => call.info('done'),
+      );
       profileSubscriptions.add(subscription);
-    } catch {
+    } catch (err) {
+      call.fail(err);
       for (const pk of missing) loadingPubkeys.delete(pk);
     }
   }
