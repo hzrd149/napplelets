@@ -42,9 +42,6 @@ describe('buildGalleryItems', () => {
     ];
     const items = buildGalleryItems(notes);
     expect(items.map((i) => i.note.id)).toEqual(['1', '3']);
-    expect(items.map((i) => i.imageSource)).toEqual([
-      'https://a.com/1.jpg',
-      'https://a.com/3.png',
-    ]);
+    expect(items.map((i) => i.imageSource)).toEqual(['https://a.com/1.jpg', 'https://a.com/3.png']);
   });
 });

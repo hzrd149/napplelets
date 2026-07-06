@@ -37,11 +37,7 @@
           data-gm-note-id={item.note.id}
           aria-label="Open GM note"
         >
-          <img
-            use:resourceImage={item.imageSource}
-            alt={item.note.content}
-            loading="lazy"
-          />
+          <img use:resourceImage={item.imageSource} alt={item.note.content} loading="lazy" />
         </button>
         <figcaption class="gm-tile-caption" title={item.note.content}>
           {item.note.content}
