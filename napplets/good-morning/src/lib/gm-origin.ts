@@ -14,7 +14,6 @@
 
 import { outbox, type Subscription } from '@napplet/sdk';
 import type { NostrEvent, NostrFilter } from '@hyprgate/types';
-import { napLog, napNote } from './debug-log';
 
 /** The minimal payload the GM inbox routes (a subset of FeedIntentPayload). */
 export interface OriginSubscribePayload {
@@ -119,36 +118,22 @@ export function subscribeForPayload(
 
   void (async () => {
     const shell = getShell();
-    // Gate on the shell handshake before opening — trace whether it ever settles.
-    const readyCall = napLog('NAP-SHELL', 'ready', { caller: 'gm-origin.subscribeForPayload' });
-    try {
-      await shell?.ready();
-      readyCall.ok(shell ? 'settled' : 'no shell — opening anyway');
-    } catch (err) {
-      readyCall.fail(err);
-      throw err;
-    }
-    if (closed) {
-      napNote('NAP-OUTBOX', 'subscription closed before shell.ready settled — skipping open');
-      return;
-    }
+    // Gate on the shell handshake before opening.
+    await shell?.ready();
+    if (closed) return;
 
     // Live tail first: open the streaming subscription before the one-shot scan so
     // a GM published between the query snapshot and the subscription opening is not
     // missed. Overlap is harmless — callers dedupe incoming notes by event id.
-    const liveCall = napLog('NAP-OUTBOX', 'subscribe', { filters, options });
     const sub = outbox.subscribe(filters, options);
     // NAP-OUTBOX delivers a RelayEventResult (`{ event, sidecar? }`), so the raw
     // event is at `result.event` (napplet/naps#32), NOT the callback arg itself.
     sub.on('event', (result) => {
       if (closed) return;
-      liveCall.event(result.event);
       callbacks.onEvent(result.event);
     });
-    sub.on('closed', (reason) => liveCall.info('closed', { reason }));
     subscription = {
       close: () => {
-        liveCall.info('close');
         sub.close();
       },
     };
@@ -160,14 +145,12 @@ export function subscribeForPayload(
     // Initial bounded scan: the one-shot query resolves once the shell has
     // collected the stored events (or its budget elapses). That resolution is
     // what settles the inbox's scan state now that there is no `eose`.
-    const scanCall = napLog('NAP-OUTBOX', 'query', { filters, options });
     try {
-      const { events, incomplete } = await outbox.query(filters, options);
+      const { events } = await outbox.query(filters, options);
       if (closed) return;
-      scanCall.ok({ events: events.length, incomplete });
       for (const result of events) callbacks.onEvent(result.event);
-    } catch (err) {
-      scanCall.fail(err);
+    } catch {
+      // Scan failed; still settle below so the inbox stops "scanning".
     } finally {
       if (!closed) callbacks.onScanSettled();
     }
