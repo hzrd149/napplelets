@@ -2,12 +2,12 @@
   import { onMount } from 'svelte';
   import { inc, identity } from '@napplet/sdk';
   const ipc = inc;
-  import { waitForPublicKey } from '../../../hyprgate/packages/utils/src/identity-client';
+  import { waitForPublicKey } from '@hyprgate/utils/identity-client';
   import {
     IDENTITY_CHANGED_TOPIC,
     LEGACY_AUTH_IDENTITY_CHANGED_TOPIC,
     parseIdentityChangedPayload,
-  } from '../../../hyprgate/packages/utils/src/nub-topics';
+  } from '@hyprgate/utils/nub-topics';
   import GMInbox from './components/GMInbox.svelte';
   import MissingNaps from './components/MissingNaps.svelte';
   import { probeNapCapabilities, type CapabilityReport } from './lib/nap-capabilities';

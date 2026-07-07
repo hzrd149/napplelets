@@ -2,7 +2,7 @@ import '@napplet/shim'; // installs window.napplet before any component mounts (
 
 import '@unocss/reset/tailwind.css';
 import 'virtual:uno.css';
-import { installBuiltInThemeClient } from '../../../hyprgate/packages/utils/src/theme-client';
+import { installBuiltInThemeClient } from '@hyprgate/utils/theme-client';
 import { mount } from 'svelte';
 import App from './App.svelte';
 
