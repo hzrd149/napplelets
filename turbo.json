@@ -10,10 +10,6 @@
     },
     "test": {
       "dependsOn": ["^build"]
-    },
-    "@napplet/conformance-cli#build": {
-      "dependsOn": ["^build", "@napplet/conformance-web#build"],
-      "outputs": ["dist/**"]
     }
   }
 }

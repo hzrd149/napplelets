@@ -13,9 +13,6 @@
     "mode": "interactive",
     "keyReference": "hzrd149"
   },
-  "conformance": {
-    "command": "node napplet/packages/conformance-cli/dist/cli.js"
-  },
   "paja": {
     "command": "kehto"
   }

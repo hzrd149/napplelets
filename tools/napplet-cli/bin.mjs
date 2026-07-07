@@ -1,28 +1,10 @@
 #!/usr/bin/env node
 // Launcher for @napplet/cli.
 //
-// @napplet/cli is a Deno tool (no Node bin) that lives in the `napplet/` git
-// submodule. Running it straight from source means napplets always exercise the
-// latest submodule CLI. This launcher is linked into every napplet as the
-// `napplet` bin (via a workspace devDependency), so package scripts can call
-// e.g. `napplet conformance` / `napplet deploy` and it runs in the napplet's own
-// working directory.
+// @napplet/cli is a Deno tool published to JSR. This launcher is linked into the
+// root workspace as the `napplet` bin, so scripts can call e.g. `napplet
+// conformance` / `napplet deploy` without depending on the napplet/ submodule.
 import { spawnSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-
-// import.meta.url resolves to this real file even when invoked through the
-// node_modules/.bin symlink, so the submodule path is stable regardless of which
-// napplet runs it.
-const cli = fileURLToPath(new URL('../../napplet/packages/cli/src/cli.ts', import.meta.url));
-
-if (!existsSync(cli)) {
-  console.error(
-    `napplet: @napplet/cli source not found at ${cli}.\n` +
-      'Ensure the napplet/ git submodule is initialized: git submodule update --init.',
-  );
-  process.exit(1);
-}
 
 // Permissions mirror @napplet/cli's own shebang (read/write/run/env/net) — enough
 // for conformance, discover, debug, deploy, and keys.
@@ -30,12 +12,15 @@ const result = spawnSync(
   'deno',
   [
     'run',
+    '--no-lock',
+    '--minimum-dependency-age=0',
+    '--node-modules-dir=auto',
     '--allow-read',
     '--allow-write',
     '--allow-run',
     '--allow-env',
     '--allow-net',
-    cli,
+    'jsr:@napplet/cli/cli',
     ...process.argv.slice(2),
   ],
   { stdio: 'inherit' },

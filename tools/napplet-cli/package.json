@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Launcher exposing @napplet/cli (a Deno tool in the napplet/ submodule) as the `napplet` bin so napplet package scripts can run it.",
+  "description": "Launcher exposing @napplet/cli from JSR as the `napplet` bin so napplet package scripts can run it.",
   "bin": {
     "napplet": "./bin.mjs"
   },

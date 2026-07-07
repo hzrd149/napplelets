@@ -12,7 +12,7 @@
 // The supports('outbox') gate MUST be read AFTER await shell.ready() — it is
 // false until the shell handshake settles (profile-metadata.ts pattern).
 
-import { outbox, type Subscription } from '@napplet/sdk';
+import { outbox, type RelayEventResult, type Subscription } from '@napplet/sdk';
 import type { NostrEvent, NostrFilter } from '@hyprgate/types';
 
 /** The minimal payload the GM inbox routes (a subset of FeedIntentPayload). */
@@ -128,7 +128,7 @@ export function subscribeForPayload(
     const sub = outbox.subscribe(filters, options);
     // NAP-OUTBOX delivers a RelayEventResult (`{ event, sidecar? }`), so the raw
     // event is at `result.event` (napplet/naps#32), NOT the callback arg itself.
-    sub.on('event', (result) => {
+    sub.on('event', (result: RelayEventResult) => {
       if (closed) return;
       callbacks.onEvent(result.event);
     });

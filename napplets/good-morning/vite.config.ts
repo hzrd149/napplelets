@@ -31,6 +31,7 @@ export default defineConfig({
     cors: true,
   },
   build: {
+    modulePreload: { polyfill: false },
     outDir: 'dist',
   },
 });

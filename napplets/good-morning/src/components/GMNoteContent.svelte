@@ -2,7 +2,7 @@
   // Thin adapter over the shared @hyprgate/napplet-ui note renderer — supplies
   // the GM napplet's navigation wiring (open a profile / reference / link).
   import { inc as ipc, link } from '@napplet/sdk';
-  import { isCanonicalHexPubkey } from '@hyprgate/utils';
+  import { isCanonicalHexPubkey } from '../../../../hyprgate/packages/utils/src/nub-topics';
   import NoteContent from '@hyprgate/napplet-ui/NoteContent.svelte';
   import { createGMReferenceOpenPayload, NOTE_VIEWER_OPEN_TOPIC } from '../lib/gm-actions';
 

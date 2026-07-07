@@ -8,7 +8,7 @@
     "new": "node scripts/new-napplet.mjs",
     "dev": "node scripts/dev.mjs",
     "prepare": "pnpm build",
-    "build": "turbo run build --filter=...{./napplets/*} --filter=@napplet/conformance-cli",
+    "build": "turbo run build --filter=...{./napplets/*}",
     "verify": "turbo run type-check build --filter={./napplets/*}",
     "type-check": "turbo run type-check --filter={./napplets/*}",
     "discover": "napplet discover --all",
@@ -26,10 +26,11 @@
     "node": ">=20",
     "pnpm": ">=10"
   },
-  "packageManager": "pnpm@10.8.0",
+  "packageManager": "pnpm@11.10.0",
   "devDependencies": {
     "@kehto/cli": "^0.2.8",
     "@napplelets/napplet-cli": "workspace:*",
+    "@napplet/conformance-cli": "^0.2.14",
     "prettier": "^3.4.2",
     "prettier-plugin-svelte": "^3.3.2",
     "turbo": "^2.9.14"

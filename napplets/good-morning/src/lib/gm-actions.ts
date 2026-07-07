@@ -1,12 +1,13 @@
 import type { NostrEvent } from '@hyprgate/types';
 import {
-  COMPOSER_OPEN_TOPIC,
-  NOTE_VIEWER_OPEN_TOPIC,
   createNoteViewerOpenPayload,
   type NoteViewerOpenPayload,
-} from '@hyprgate/utils';
+} from '../../../../hyprgate/packages/utils/src/note-viewer-protocol';
 import { outbox } from '@napplet/sdk';
-import { nip19 } from 'nostr-tools';
+import * as nip19 from 'nostr-tools/nip19';
+
+export const COMPOSER_OPEN_TOPIC = 'compose:open' as const;
+export const NOTE_VIEWER_OPEN_TOPIC = 'note:open' as const;
 
 /** Source tag emitted on note-viewer intents so the shell can attribute them. */
 export const GM_NAPPLET_SOURCE = 'good-morning' as const;
@@ -138,5 +139,3 @@ export function createGMReplyComposePayload(
     },
   };
 }
-
-export { COMPOSER_OPEN_TOPIC, NOTE_VIEWER_OPEN_TOPIC };

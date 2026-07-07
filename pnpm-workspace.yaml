@@ -1,18 +1,7 @@
 packages:
   - 'napplets/*'
-  # Local repo tooling (e.g. the `napplet` launcher that runs the @napplet/cli
-  # Deno tool from the napplet/ submodule).
+  # Local repo tooling (e.g. the `napplet` launcher that runs @napplet/cli from JSR).
   - 'tools/*'
-  # The @napplet/* packages live in the `napplet/` git submodule
-  # (github.com/napplet/web). Including its packages here makes them first-class
-  # workspace members, so napplets depend on them via `workspace:*` and always
-  # build against the latest submodule source/branch. The submodule keeps its own
-  # pnpm-workspace.yaml for standalone dev; from this root only these packages are
-  # linked (the docs/web site apps and test fixtures are intentionally excluded).
-  - 'napplet/packages/*'
-  # conformance-cli bundles the conformance-web UI (@napplet/conformance-web);
-  # it must be linked for the conformance-cli build to resolve.
-  - 'napplet/apps/conformance'
   # Shared libraries from the `hyprgate` git submodule (github.com/hyprgate/gui),
   # consumed by napplets like `good-morning`. Only the `packages/` folder is wired
   # in — hyprgate's own apps/napplets/rapplets are intentionally NOT workspace
@@ -21,11 +10,27 @@ packages:
   # importing napplet's bundler compiles them.
   - 'hyprgate/packages/*'
 
+allowBuilds:
+  esbuild: true
+
+minimumReleaseAgeExclude:
+  - '@napplet/conformance-cli@0.2.14'
+  - '@napplet/conformance@0.12.3'
+  - '@napplet/core@0.27.1'
+  - '@napplet/nap@0.27.2'
+  - '@napplet/sdk@0.24.2'
+  - '@napplet/shim@0.26.5'
+  - '@napplet/vite-plugin@0.11.0'
+  - '@jsr/napplet__core@0.27.1'
+  - '@jsr/napplet__nap@0.27.2'
+  - '@jsr/napplet__sdk@0.24.2'
+  - '@jsr/napplet__shim@0.26.5'
+  - '@jsr/napplet__vite-plugin@0.11.0'
+
 # This is a development workspace: we deliberately do NOT pin or override any
 # versions so napplets are always tested against the real, latest resolved
-# versions of `@napplet/*`, `@hyprgate/*`, and their transitive deps. If a real
-# incompatibility surfaces, fix it at the source (submodule or napplet), not with
-# an override here.
+# versions of `@napplet/*` from JSR, `@hyprgate/*`, and their transitive deps. If
+# a real incompatibility surfaces, fix it at the source, not with an override here.
 
 # esbuild's postinstall fetches its platform binary (vite depends on it); pnpm 10
 # blocks build scripts by default, so it must be allow-listed. This is a build

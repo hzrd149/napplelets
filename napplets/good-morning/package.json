@@ -14,14 +14,14 @@
     "@hyprgate/types": "workspace:*",
     "@hyprgate/napplet-ui": "workspace:*",
     "@hyprgate/utils": "workspace:*",
-    "@napplet/sdk": "workspace:*",
-    "@napplet/shim": "workspace:*",
+    "@napplet/sdk": "^0.24.2",
+    "@napplet/shim": "^0.26.5",
     "nostr-tools": "2.23.3",
     "svelte": "^5.54.1",
     "timeago.js": "4.0.2"
   },
   "devDependencies": {
-    "@napplet/vite-plugin": "workspace:*",
+    "@napplet/vite-plugin": "^0.11.0",
     "@sveltejs/vite-plugin-svelte": "^7.0.0",
     "@unocss/reset": "^66.6.7",
     "@unocss/vite": "^66.6.7",

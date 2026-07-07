@@ -1,4 +1,4 @@
-import { outbox, type Subscription } from '@napplet/sdk';
+import { outbox, type RelayEventResult, type Subscription } from '@napplet/sdk';
 import type { NostrEvent } from '@hyprgate/types';
 
 /**
@@ -116,7 +116,7 @@ export function subscribeProfileMetadata(
     const sub = outbox.subscribe(filters, options);
     // NAP-OUTBOX delivers a RelayEventResult (`{ event, sidecar? }`); the raw
     // event is at `result.event`, not the callback arg itself.
-    sub.on('event', (result) => handleEvent(result.event));
+    sub.on('event', (result: RelayEventResult) => handleEvent(result.event));
     subscription = { close: () => sub.close() };
     if (closed) {
       sub.close();

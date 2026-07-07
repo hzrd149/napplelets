@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { nip19 } from 'nostr-tools';
+  import * as nip19 from 'nostr-tools/nip19';
   import { inc as ipc } from '@napplet/sdk';
-  import { resourceImageBatch as resourceImage } from '@hyprgate/utils';
+  import { resourceImageBatch as resourceImage } from '../../../../hyprgate/packages/utils/src/resource-client';
   import type { GMThread } from '../lib/gm-store';
   import type { ProfileContent } from '../lib/profile-metadata';
   import { buildGalleryItems } from '../lib/gm-media';

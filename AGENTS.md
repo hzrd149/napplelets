@@ -48,16 +48,16 @@ pnpm deploy:dry           # build + plan/sign only, no upload/publish (`--dry-ru
 pnpm debug                # `napplet debug --all` — read-only deploy/plan diagnostics
 ```
 
-The `@napplet/*` and `@hyprgate/*` packages live in the `napplet/` and `hyprgate/`
-git submodules and are wired in as workspace members (see `pnpm-workspace.yaml`),
-so napplets depend on them via `workspace:*` and build against live submodule
-source. **Turbo** (`turbo.json`) runs build/type-check in dependency order — `pnpm
-build` builds each napplet's `@napplet/*`/`@hyprgate/*` dependencies first (and
-`@napplet/conformance-cli`, used by conformance). This is a development workspace:
-versions are deliberately **not** pinned or overridden, so napplets are tested
-against the real latest resolved versions. This repo ships **no production host
-shell**, but `pnpm dev [name]` boots the **Kehto Paja** dev runtime (via the root
-`@kehto/cli` devDependency, orchestrated by `scripts/dev.mjs`): it hosts the
+The napplets use the published `@napplet/*` packages from JSR through pnpm's npm
+compatibility aliases (`npm:@jsr/napplet__*`). The `@hyprgate/*` packages still
+come from the `hyprgate/` git submodule and are wired in as workspace members
+(see `pnpm-workspace.yaml`). **Turbo** (`turbo.json`) runs build/type-check in
+dependency order — `pnpm build` builds each napplet's workspace dependencies
+first. This is a development workspace: versions are deliberately **not** pinned
+or overridden, so napplets are tested against the real latest resolved versions.
+This repo ships **no production host shell**, but `pnpm dev [name]` boots the
+**Kehto Paja** dev runtime (via the root `@kehto/cli` devDependency,
+orchestrated by `scripts/dev.mjs`): it hosts the
 napplet in a real Kehto iframe with dev adapters for the whole NAP surface
 (relay/outbox, storage, identity, keys, config, resource, theme, notify, …) and a
 local dev signer, while loading it from the live Vite server so **HMR works** —
@@ -68,9 +68,9 @@ remains the real gate (built single-file in a real `allow-scripts` iframe); for
 bare Vite with no runtime, use `pnpm --filter <name> dev`.
 
 **`@napplet/cli` drives testing/deploy from the repo root, in monorepo mode.** It
-is a Deno tool in the `napplet/` submodule with no Node bin, so `tools/napplet-cli`
-exposes it as the `napplet` launcher (a root `workspace:*` devDependency) that runs
-the submodule CLI source via Deno — **Deno must be installed**. A single root
+is a Deno tool published to JSR with no Node bin, so `tools/napplet-cli` exposes
+it as the `napplet` launcher (a root `workspace:*` devDependency) that runs
+`jsr:@napplet/cli/cli` via Deno — **Deno must be installed**. A single root
 `.napplet/config.json` sets `discover.roots: ["napplets"]`; the `--all` commands
 treat every built napplet folder as its own deploy target (folder name = the
 named-site `d` tag, so it must match `^[a-z0-9-]{1,13}$`). Add `relays` and

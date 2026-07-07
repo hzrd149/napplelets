@@ -6,9 +6,9 @@ relay access to a host shell over the NIP-5D JSON envelope wire format.
 
 Each napplet is a self-contained workspace package under [`napplets/`](./napplets)
 built with the [`@napplet`](https://napplet.run/docs/) packages. Those packages
-(and shared `@hyprgate/*` libraries) are wired in from the `napplet/` and
-`hyprgate/` git submodules as workspace members, so napplets build against live
-submodule source. This is a development workspace — versions are intentionally
+come from JSR through pnpm's npm compatibility aliases (`npm:@jsr/napplet__*`).
+Shared `@hyprgate/*` libraries are wired in from the `hyprgate/` git submodule as
+workspace members. This is a development workspace — versions are intentionally
 not pinned so napplets are tested against the latest resolved versions.
 
 ## Layout
@@ -76,10 +76,9 @@ pnpm debug               # read-only deploy/discovery diagnostics
 Testing and deploy run through **`@napplet/cli`** at the repo root in monorepo
 mode: a single `.napplet/config.json` sets `discover.roots: ["napplets"]`, and the
 scripts above call `napplet … --all`, treating each napplet folder as its own
-deploy target (folder name = the `d` tag). The CLI is a Deno tool from the
-`napplet/` submodule (run via the `napplet` launcher), so **Deno must be
-installed**. Set `relays`/`blossomServers` in `.napplet/config.json` before
-deploying.
+deploy target (folder name = the `d` tag). The CLI is a Deno tool from JSR (run
+via the `napplet` launcher), so **Deno must be installed**. Set
+`relays`/`blossomServers` in `.napplet/config.json` before deploying.
 
 ### Publishing all napplets
 

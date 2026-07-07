@@ -6,7 +6,7 @@
 // image). The returned `source` is fed straight into the `resourceImageBatch`
 // action, which knows how to resolve both a plain URL and a resource pointer.
 
-import { extractNoteContentEmbeds } from '@hyprgate/utils';
+import { extractNoteContentEmbeds } from '../../../../hyprgate/packages/utils/src/note-content';
 import type { NostrEvent } from '@hyprgate/types';
 
 /**
