@@ -18,7 +18,8 @@ interface Candidate {
   block: Exclude<NoteContentBlock, { type: 'text' }>;
 }
 
-const NIP19_RE = /\b(?:nostr:)?((?:npub|nprofile|note|nevent|naddr)1[023456789acdefghjklmnpqrstuvwxyz]+)\b/gi;
+const NIP19_RE =
+  /\b(?:nostr:)?((?:npub|nprofile|note|nevent|naddr)1[023456789acdefghjklmnpqrstuvwxyz]+)\b/gi;
 const URL_RE = /\bhttps?:\/\/[^\s<>"']+/gi;
 const BLOSSOM_RE = /\bblossom:sha256:[0-9a-f]{64}\b/gi;
 const CUSTOM_EMOJI_TOKEN_RE = /:([A-Za-z0-9_-]+):/g;
@@ -35,13 +36,17 @@ export interface ExtractNoteContentEmbedsOptions {
   includeResources?: boolean;
 }
 
-export function parseNoteContent(content: string, emojiTags: readonly (readonly string[])[] = []): NoteContentBlock[] {
+export function parseNoteContent(
+  content: string,
+  emojiTags: readonly (readonly string[])[] = [],
+): NoteContentBlock[] {
   const candidates = collectCandidates(content, emojiTags);
   const blocks: NoteContentBlock[] = [];
   let cursor = 0;
   for (const candidate of candidates) {
     if (candidate.start < cursor) continue;
-    if (candidate.start > cursor) blocks.push({ type: 'text', value: content.slice(cursor, candidate.start) });
+    if (candidate.start > cursor)
+      blocks.push({ type: 'text', value: content.slice(cursor, candidate.start) });
     blocks.push(candidate.block);
     cursor = candidate.end;
   }
@@ -79,7 +84,10 @@ export function extractNoteContentEmbeds(
   return embeds;
 }
 
-function collectCandidates(content: string, emojiTags: readonly (readonly string[])[]): Candidate[] {
+function collectCandidates(
+  content: string,
+  emojiTags: readonly (readonly string[])[],
+): Candidate[] {
   const candidates: Candidate[] = [];
   const emojis = parseCustomEmojiTags(emojiTags);
 
@@ -89,7 +97,11 @@ function collectCandidates(content: string, emojiTags: readonly (readonly string
     if (!shortcode || !imageUrl) continue;
     const source = match[0]!;
     const start = match.index ?? 0;
-    candidates.push({ start, end: start + source.length, block: { type: 'emoji', value: shortcode, source, imageUrl } });
+    candidates.push({
+      start,
+      end: start + source.length,
+      block: { type: 'emoji', value: shortcode, source, imageUrl },
+    });
   }
 
   for (const match of content.matchAll(NIP19_RE)) {
@@ -107,16 +119,24 @@ function collectCandidates(content: string, emojiTags: readonly (readonly string
     const raw = match[0]!;
     const value = raw.replace(/[),.;!?]+$/g, '');
     const start = match.index ?? 0;
-    candidates.push({ start, end: start + value.length, block: mediaBlockForUrl(value) ?? { type: 'url', value, source: value } });
+    candidates.push({
+      start,
+      end: start + value.length,
+      block: mediaBlockForUrl(value) ?? { type: 'url', value, source: value },
+    });
   }
 
   for (const match of content.matchAll(BLOSSOM_RE)) {
     const value = match[0]!.toLowerCase();
     const start = match.index ?? 0;
-    candidates.push({ start, end: start + match[0]!.length, block: { type: 'resource', mediaType: 'image', value, source: value } });
+    candidates.push({
+      start,
+      end: start + match[0]!.length,
+      block: { type: 'resource', mediaType: 'image', value, source: value },
+    });
   }
 
-  return candidates.sort((a, b) => a.start - b.start || (b.end - b.start) - (a.end - a.start));
+  return candidates.sort((a, b) => a.start - b.start || b.end - b.start - (a.end - a.start));
 }
 
 function parseCustomEmojiTags(tags: readonly (readonly string[])[]): Map<string, string> {
@@ -124,7 +144,12 @@ function parseCustomEmojiTags(tags: readonly (readonly string[])[]): Map<string,
   for (const tag of tags) {
     const shortcode = tag[1];
     const imageUrl = tag[2];
-    if (tag[0] === 'emoji' && typeof shortcode === 'string' && typeof imageUrl === 'string' && CUSTOM_EMOJI_SHORTCODE_RE.test(shortcode)) {
+    if (
+      tag[0] === 'emoji' &&
+      typeof shortcode === 'string' &&
+      typeof imageUrl === 'string' &&
+      CUSTOM_EMOJI_SHORTCODE_RE.test(shortcode)
+    ) {
       emojis.set(shortcode, imageUrl);
     }
   }
@@ -138,7 +163,12 @@ function decodeNip19Block(encoded: string, source: string): Candidate['block'] |
     if (decoded.type === 'note') return { type: 'event', value: decoded.data, source };
     if (decoded.type === 'nprofile') return { type: 'profile', value: decoded.data.pubkey, source };
     if (decoded.type === 'nevent') return { type: 'event', value: decoded.data.id, source };
-    if (decoded.type === 'naddr') return { type: 'address', value: `${decoded.data.kind}:${decoded.data.pubkey}:${decoded.data.identifier}`, source };
+    if (decoded.type === 'naddr')
+      return {
+        type: 'address',
+        value: `${decoded.data.kind}:${decoded.data.pubkey}:${decoded.data.identifier}`,
+        source,
+      };
     return null;
   } catch {
     return null;

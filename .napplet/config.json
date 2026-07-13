@@ -11,9 +11,15 @@
   },
   "signing": {
     "mode": "interactive",
-    "keyReference": "hzrd149"
+    "keyReference": "266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5",
+    "pubkey": "266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5",
+    "relays": ["wss://bucket.coracle.social"]
+  },
+  "conformance": {
+    "command": "napplet-conformance"
   },
   "paja": {
     "command": "kehto"
-  }
+  },
+  "bunkerPubkey": "266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5"
 }

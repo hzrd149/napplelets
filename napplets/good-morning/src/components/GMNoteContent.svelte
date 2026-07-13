@@ -27,7 +27,15 @@
   }
 
   function handleLinkClick(event: MouseEvent, url: string): void {
-    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    )
+      return;
     event.preventDefault();
     void openLink(url);
   }
@@ -52,11 +60,19 @@
         {block.source.replace(/^nostr:/, '').slice(0, 24)}...
       </button>
     {:else if block.type === 'url'}
-      <a class="gm-inline-link" href={block.value} onclick={(event) => handleLinkClick(event, block.value)}>
+      <a
+        class="gm-inline-link"
+        href={block.value}
+        onclick={(event) => handleLinkClick(event, block.value)}
+      >
         {block.value}
       </a>
     {:else if block.type === 'media' && block.mediaType === 'image'}
-      <a class="gm-inline-link" href={block.value} onclick={(event) => handleLinkClick(event, block.value)}>
+      <a
+        class="gm-inline-link"
+        href={block.value}
+        onclick={(event) => handleLinkClick(event, block.value)}
+      >
         {block.value}
       </a>
     {:else if block.type === 'resource'}
@@ -64,7 +80,12 @@
         <img use:resourceImage={block.source} alt="GM attachment" loading="lazy" />
       </span>
     {:else if block.type === 'emoji'}
-      <img class="gm-inline-emoji" use:resourceImage={block.imageUrl} alt={block.source} loading="lazy" />
+      <img
+        class="gm-inline-emoji"
+        use:resourceImage={block.imageUrl}
+        alt={block.source}
+        loading="lazy"
+      />
     {:else}
       {block.source}
     {/if}

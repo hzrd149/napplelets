@@ -14,18 +14,29 @@ export interface WaitForPublicKeyOptions {
 
 const DEFAULT_INTERVAL_MS = 300;
 
-function isUsablePubkey(pubkey: unknown, isValidPubkey?: (pubkey: string) => boolean): pubkey is string {
-  return typeof pubkey === 'string' && pubkey.length > 0 && (isValidPubkey ? isValidPubkey(pubkey) : true);
+function isUsablePubkey(
+  pubkey: unknown,
+  isValidPubkey?: (pubkey: string) => boolean,
+): pubkey is string {
+  return (
+    typeof pubkey === 'string' &&
+    pubkey.length > 0 &&
+    (isValidPubkey ? isValidPubkey(pubkey) : true)
+  );
 }
 
 function wait(ms: number, signal?: AbortSignal): Promise<void> {
   if (signal?.aborted) return Promise.resolve();
   return new Promise((resolve) => {
     const timeout = window.setTimeout(resolve, ms);
-    signal?.addEventListener('abort', () => {
-      window.clearTimeout(timeout);
-      resolve();
-    }, { once: true });
+    signal?.addEventListener(
+      'abort',
+      () => {
+        window.clearTimeout(timeout);
+        resolve();
+      },
+      { once: true },
+    );
   });
 }
 
@@ -37,11 +48,12 @@ export async function waitForPublicKey(
   const startedAt = Date.now();
   let attempts = 0;
   const identityChangeWaiters = new Set<() => void>();
-  const identityChangeSub = typeof identity.onChanged === 'function'
-    ? identity.onChanged(() => {
-        for (const resolve of identityChangeWaiters) resolve();
-      })
-    : null;
+  const identityChangeSub =
+    typeof identity.onChanged === 'function'
+      ? identity.onChanged(() => {
+          for (const resolve of identityChangeWaiters) resolve();
+        })
+      : null;
 
   const waitForRetry = (ms: number): Promise<void> => {
     if (options.signal?.aborted) return Promise.resolve();

@@ -15,10 +15,15 @@ export interface NoteViewerOpenPayload {
 
 const LOWER_HEX_64 = /^[0-9a-f]{64}$/;
 
-export function createNoteViewerOpenPayload(input: NoteViewerOpenPayload): NoteViewerOpenPayload | null {
+export function createNoteViewerOpenPayload(
+  input: NoteViewerOpenPayload,
+): NoteViewerOpenPayload | null {
   if (!isValidOpenTarget(input.target)) return null;
-  const relays = input.relays?.filter((relay, index, all) => relay.length > 0 && all.indexOf(relay) === index);
-  const target = relays && relays.length > 0 ? withRelayHintedNip19(input.target, relays) : input.target;
+  const relays = input.relays?.filter(
+    (relay, index, all) => relay.length > 0 && all.indexOf(relay) === index,
+  );
+  const target =
+    relays && relays.length > 0 ? withRelayHintedNip19(input.target, relays) : input.target;
   return {
     target,
     ...(relays && relays.length > 0 ? { relays } : {}),
@@ -29,14 +34,23 @@ export function createNoteViewerOpenPayload(input: NoteViewerOpenPayload): NoteV
 
 function isValidOpenTarget(value: NoteViewerOpenTarget): boolean {
   if (value.type === 'event') {
-    return LOWER_HEX_64.test(value.id)
-      && (value.kind === undefined || Number.isInteger(value.kind))
-      && (value.pubkey === undefined || LOWER_HEX_64.test(value.pubkey));
+    return (
+      LOWER_HEX_64.test(value.id) &&
+      (value.kind === undefined || Number.isInteger(value.kind)) &&
+      (value.pubkey === undefined || LOWER_HEX_64.test(value.pubkey))
+    );
   }
-  return Number.isInteger(value.kind) && LOWER_HEX_64.test(value.pubkey) && typeof value.identifier === 'string';
+  return (
+    Number.isInteger(value.kind) &&
+    LOWER_HEX_64.test(value.pubkey) &&
+    typeof value.identifier === 'string'
+  );
 }
 
-function withRelayHintedNip19(target: NoteViewerOpenTarget, relays: string[]): NoteViewerOpenTarget {
+function withRelayHintedNip19(
+  target: NoteViewerOpenTarget,
+  relays: string[],
+): NoteViewerOpenTarget {
   try {
     if (target.type === 'event') {
       return {

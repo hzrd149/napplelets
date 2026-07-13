@@ -1,8 +1,5 @@
 import type { NostrEvent } from './nostr';
-import {
-  createNoteViewerOpenPayload,
-  type NoteViewerOpenPayload,
-} from './note-viewer-protocol';
+import { createNoteViewerOpenPayload, type NoteViewerOpenPayload } from './note-viewer-protocol';
 export { NOTE_VIEWER_OPEN_TOPIC } from './note-viewer-protocol';
 import { outbox } from '@napplet/sdk';
 import * as nip19 from 'nostr-tools/nip19';

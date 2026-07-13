@@ -28,12 +28,12 @@
   },
   "packageManager": "pnpm@11.10.0",
   "devDependencies": {
-    "@kehto/cli": "^0.2.8",
+    "@kehto/cli": "^0.2.16",
     "@napplelets/napplet-cli": "workspace:*",
-    "@napplet/conformance-cli": "^0.2.14",
-    "prettier": "^3.4.2",
-    "prettier-plugin-svelte": "^3.3.2",
-    "turbo": "^2.9.14"
+    "@napplet/conformance-cli": "^0.2.15",
+    "prettier": "^3.9.5",
+    "prettier-plugin-svelte": "^3.5.2",
+    "turbo": "^2.10.4"
   },
   "license": "MIT"
 }

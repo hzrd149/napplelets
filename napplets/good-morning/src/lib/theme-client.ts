@@ -46,7 +46,10 @@ function applyCssVariables(values: Record<string, string>): void {
     const match = /^#([0-9a-f]{6})$/i.exec(value.trim());
     if (!match) continue;
     const hex = match[1]!;
-    style.setProperty(`${name}-rgb`, `${parseInt(hex.slice(0, 2), 16)} ${parseInt(hex.slice(2, 4), 16)} ${parseInt(hex.slice(4, 6), 16)}`);
+    style.setProperty(
+      `${name}-rgb`,
+      `${parseInt(hex.slice(0, 2), 16)} ${parseInt(hex.slice(2, 4), 16)} ${parseInt(hex.slice(4, 6), 16)}`,
+    );
   }
 }
 
@@ -67,7 +70,9 @@ function variablesForTheme(theme: unknown): Record<string, string> {
 
 export function installBuiltInThemeClient(): { close(): void } {
   applyCssVariables(FALLBACK_VARIABLES);
-  void themeGet().then((theme) => applyCssVariables(variablesForTheme(theme))).catch(() => undefined);
+  void themeGet()
+    .then((theme) => applyCssVariables(variablesForTheme(theme)))
+    .catch(() => undefined);
   try {
     const sub = themeOnChanged((theme) => applyCssVariables(variablesForTheme(theme)));
     return { close: () => sub.close() };
