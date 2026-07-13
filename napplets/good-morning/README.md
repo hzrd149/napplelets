@@ -54,11 +54,11 @@ missing, says so plainly instead of failing into a blank or perpetually
 - **Degraded** (`resource`, `theme`) — the inbox still works but loses avatars or
   theming. Missing → a dismissible warning banner above a working inbox.
 
-Detection uses two signals (see `src/lib/nap-capabilities.ts`): `window.napplet.<domain>`
-presence and `shell.supports(<domain>)` (probed after `shell.ready()`), treating
-a NAP as available when **either** is positive. The inbox is **outbox-only** —
-both note reads and Quick GM publishes route through `NAP-OUTBOX` (there is no
-`NAP-RELAY` fallback), so it's gated essential.
+Detection checks `window.napplet.<domain>` presence (see
+`src/lib/nap-capabilities.ts`) — a domain object being installed means the
+runtime exposes that NAP; absence means it's unavailable. The inbox is
+**outbox-only** — both note reads and Quick GM publishes route through
+`NAP-OUTBOX` (there is no `NAP-RELAY` fallback), so it's gated essential.
 
 ## Structure
 

@@ -1,9 +1,5 @@
 import { themeGet, themeOnChanged } from '@napplet/sdk';
-
-interface ThemeLike {
-  colors?: Record<string, string>;
-  fonts?: Record<string, string>;
-}
+import type { Theme } from '@napplet/sdk';
 
 const FALLBACK_VARIABLES: Record<string, string> = {
   '--hg-bg-base': '#14110c',
@@ -23,21 +19,17 @@ const FALLBACK_VARIABLES: Record<string, string> = {
   '--hg-font-mono': "ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace",
 };
 
-const COLOR_KEYS = {
-  bgBase: '--hg-bg-base',
-  bgSurface: '--hg-bg-surface',
-  bgElevated: '--hg-bg-elevated',
-  bgOverlay: '--hg-bg-overlay',
-  borderDefault: '--hg-border-default',
-  borderMuted: '--hg-border-dim',
-  textPrimary: '--hg-text-primary',
-  textSecondary: '--hg-text-secondary',
-  textMuted: '--hg-text-muted',
-  textDim: '--hg-text-dim',
-  accentPrimary: '--hg-accent-green',
-  accentWarning: '--hg-accent-amber',
-  accentDanger: '--hg-accent-red',
-} as const;
+/**
+ * Map the 3 NAP-THEME colors onto the semantically equivalent CSS variables.
+ * NAP-THEME provides only `background`, `text`, and `primary` — the remaining
+ * 10 slots (surfaces, borders, secondary text, amber/red accents) have no
+ * shell-side equivalent and stay as fallback defaults.
+ */
+const THEME_COLOR_MAP: Record<'background' | 'text' | 'primary', string> = {
+  background: '--hg-bg-base',
+  text: '--hg-text-primary',
+  primary: '--hg-accent-green',
+};
 
 function applyCssVariables(values: Record<string, string>): void {
   const style = document.documentElement.style;
@@ -53,30 +45,30 @@ function applyCssVariables(values: Record<string, string>): void {
   }
 }
 
-function variablesForTheme(theme: unknown): Record<string, string> {
-  if (typeof theme !== 'object' || theme === null) return {};
-  const input = theme as ThemeLike;
+function variablesForTheme(theme: Theme): Record<string, string> {
   const variables: Record<string, string> = {};
-  for (const [key, variable] of Object.entries(COLOR_KEYS)) {
-    const value = input.colors?.[key];
-    if (typeof value === 'string' && value.trim()) variables[variable] = value;
+  for (const [themeKey, cssVar] of Object.entries(THEME_COLOR_MAP)) {
+    const value = theme.colors[themeKey as keyof typeof THEME_COLOR_MAP];
+    if (typeof value === 'string' && value.trim()) variables[cssVar] = value;
   }
-  const body = input.fonts?.body;
-  const mono = input.fonts?.mono;
-  if (typeof body === 'string' && body.trim()) variables['--hg-font-body'] = body;
-  if (typeof mono === 'string' && mono.trim()) variables['--hg-font-mono'] = mono;
+  // NAP-THEME fonts are { name, url } objects — use the family name. Loading
+  // the font file at `url` requires NAP-RESOURCE + @font-face injection, which
+  // is a separate concern; the name alone works when the font is system-installed.
+  const bodyFont = theme.fonts?.body?.name;
+  if (typeof bodyFont === 'string' && bodyFont.trim()) variables['--hg-font-body'] = bodyFont;
   return variables;
 }
 
 export function installBuiltInThemeClient(): { close(): void } {
   applyCssVariables(FALLBACK_VARIABLES);
+
+  const napplet = (globalThis as unknown as { napplet?: { theme?: unknown } }).napplet;
+  if (!napplet?.theme) return { close: () => undefined };
+
   void themeGet()
     .then((theme) => applyCssVariables(variablesForTheme(theme)))
     .catch(() => undefined);
-  try {
-    const sub = themeOnChanged((theme) => applyCssVariables(variablesForTheme(theme)));
-    return { close: () => sub.close() };
-  } catch {
-    return { close: () => undefined };
-  }
+
+  const sub = themeOnChanged((theme) => applyCssVariables(variablesForTheme(theme)));
+  return { close: () => sub.close() };
 }

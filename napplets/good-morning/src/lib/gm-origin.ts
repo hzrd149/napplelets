@@ -9,8 +9,11 @@
 //                      scan (resolution = "scan settled") + a live
 //                      outbox.subscribe(filters, { authors }) tail for new events.
 //
-// The supports('outbox') gate MUST be read AFTER await shell.ready() — it is
-// false until the shell handshake settles (profile-metadata.ts pattern).
+// The SDK owns readiness/transport: outbox.subscribe/query read
+// window.napplet.outbox at call time, and the shim's sendEnvelope handles
+// clone-safe postMessage (default 'auto' mode snapshots reactive proxies on
+// DataCloneError), so app code passes plain objects and lets the boundary own
+// the rest.
 
 import { outbox, type RelayEventResult, type Subscription } from '@napplet/sdk';
 import type { NostrEvent, NostrFilter } from './nostr';
@@ -26,18 +29,6 @@ export interface OriginSubscribePayload {
    * authors from the filters. Mirrors OutboxSubscribeOptions.authors.
    */
   authors?: string[];
-}
-
-/** Minimal shape of the shim-installed shell handshake we depend on. */
-interface NappletShellHandle {
-  ready(): Promise<unknown>;
-  supports(domain: string, protocol?: string): boolean;
-}
-
-function getShell(): NappletShellHandle | null {
-  return (
-    (globalThis as unknown as { napplet?: { shell?: NappletShellHandle } }).napplet?.shell ?? null
-  );
 }
 
 export interface PayloadSubscriptionCallbacks {
@@ -59,28 +50,21 @@ interface OutboxReadOptions {
 }
 
 /**
- * Apply caller-supplied per-leg props onto every filter, returning PLAIN,
- * structured-cloneable filter objects.
- *
- * The deep clone is load-bearing, not cosmetic: filters built from Svelte
- * `$state` are reactive Proxies, and the SDK posts them across the iframe via
- * `postMessage`, which throws `DataCloneError` on a Proxy and silently drops the
- * subscription (the FEED-02 root cause). A JSON round-trip strips the Proxy.
+ * Apply caller-supplied per-leg props onto every filter, returning plain filter
+ * objects. The shim's sendEnvelope normalizes reactive proxies before they cross
+ * the iframe boundary (clone mode 'auto'), so a plain spread is sufficient here.
  */
 function withExtraProps(
   filters: NostrFilter[],
   extra: Record<string, unknown> | undefined,
 ): NostrFilter[] {
-  const merged =
-    extra && Object.keys(extra).length > 0
-      ? filters.map((filter) => ({ ...filter, ...extra }))
-      : filters;
-  return JSON.parse(JSON.stringify(merged)) as NostrFilter[];
+  if (!extra || Object.keys(extra).length === 0) return filters;
+  return filters.map((filter) => ({ ...filter, ...extra }));
 }
 
 /**
- * Build a uniform { close } subscription from a payload. Opens AFTER the
- * shell.ready() gate resolves; an early close() is honored.
+ * Build a uniform { close } subscription from a payload. Opens synchronously;
+ * an early close() is honored.
  *
  * NAP-OUTBOX has no `eose` signal (napplet/naps#32), so the read is split into
  * two legs that share one set of filters/options:
@@ -98,9 +82,8 @@ export function subscribeForPayload(
 ): Subscription {
   const filters = withExtraProps(payload.filters, extraFilterProps);
   // Forward explicit author hints so the shell routes each filter to the authors'
-  // write relays (NAP-OUTBOX) instead of re-deriving them. Copy to a plain array
-  // so a reactive $state source can't post a Proxy across the iframe (same
-  // DataCloneError guard as withExtraProps on the filters).
+  // write relays (NAP-OUTBOX) instead of re-deriving them. A plain array copy is
+  // enough — the shim handles clone-safety at the boundary.
   const options: OutboxReadOptions =
     payload.authors && payload.authors.length > 0 ? { authors: [...payload.authors] } : {};
 
@@ -110,41 +93,36 @@ export function subscribeForPayload(
   function close(): void {
     if (closed) return;
     closed = true;
-    // Null until the live leg opens; the async block below re-checks `closed`
-    // right after opening, so a close() that lands before then still tears down.
+    // Null until the live leg opens; the open below re-checks `closed` right
+    // after opening, so a close() that lands before then still tears down.
     subscription?.close();
     subscription = null;
   }
 
-  void (async () => {
-    const shell = getShell();
-    // Gate on the shell handshake before opening.
-    await shell?.ready();
+  // Live tail first: open the streaming subscription before the one-shot scan so
+  // a GM published between the query snapshot and the subscription opening is not
+  // missed. Overlap is harmless — callers dedupe incoming notes by event id.
+  const sub = outbox.subscribe(filters, options);
+  // NAP-OUTBOX delivers a RelayEventResult (`{ event, sidecar? }`), so the raw
+  // event is at `result.event` (napplet/naps#32), NOT the callback arg itself.
+  sub.on('event', (result: RelayEventResult) => {
     if (closed) return;
-
-    // Live tail first: open the streaming subscription before the one-shot scan so
-    // a GM published between the query snapshot and the subscription opening is not
-    // missed. Overlap is harmless — callers dedupe incoming notes by event id.
-    const sub = outbox.subscribe(filters, options);
-    // NAP-OUTBOX delivers a RelayEventResult (`{ event, sidecar? }`), so the raw
-    // event is at `result.event` (napplet/naps#32), NOT the callback arg itself.
-    sub.on('event', (result: RelayEventResult) => {
-      if (closed) return;
-      callbacks.onEvent(result.event);
-    });
-    subscription = {
-      close: () => {
-        sub.close();
-      },
-    };
-    if (closed) {
+    callbacks.onEvent(result.event);
+  });
+  subscription = {
+    close: () => {
       sub.close();
-      return;
-    }
+    },
+  };
+  if (closed) {
+    sub.close();
+    return { close };
+  }
 
-    // Initial bounded scan: the one-shot query resolves once the shell has
-    // collected the stored events (or its budget elapses). That resolution is
-    // what settles the inbox's scan state now that there is no `eose`.
+  // Initial bounded scan: the one-shot query resolves once the shell has
+  // collected the stored events (or its budget elapses). That resolution is
+  // what settles the inbox's scan state now that there is no `eose`.
+  void (async () => {
     try {
       const { events } = await outbox.query(filters, options);
       if (closed) return;

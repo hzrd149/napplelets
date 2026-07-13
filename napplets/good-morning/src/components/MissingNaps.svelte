@@ -61,16 +61,6 @@
         debugging napplet, so instead of failing silently it lists exactly what's missing.
       </p>
 
-      {#if !report.shellPresent}
-        <p
-          class="text-accent-amber text-xs leading-relaxed mb-4 border border-border-dim rounded p-2 bg-accent-amber/5"
-          data-gm-no-shell
-        >
-          No NAP-SHELL handshake was detected (<code>window.napplet.shell</code> is absent), so host services
-          couldn't be probed. This usually means the napplet isn't running inside a NIP-5D shell at all.
-        </p>
-      {/if}
-
       <div class="text-text-muted text-xs uppercase tracking-wide mt-4 mb-2">
         Required — missing
       </div>

@@ -1,42 +1,37 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { inc, identity } from '@napplet/sdk';
-  const ipc = inc;
+  import { identity } from '@napplet/sdk';
   import { waitForPublicKey } from './lib/identity-client';
-  import {
-    IDENTITY_CHANGED_TOPIC,
-    LEGACY_AUTH_IDENTITY_CHANGED_TOPIC,
-    parseIdentityChangedPayload,
-  } from './lib/intent-topics';
   import GMInbox from './components/GMInbox.svelte';
   import MissingNaps from './components/MissingNaps.svelte';
   import { probeNapCapabilities, type CapabilityReport } from './lib/nap-capabilities';
 
   let pubkey: string | null = $state(null);
-  // null while the runtime probe is in flight. good-morning is used to debug
-  // runtimes, so it gates on its required NAPs FIRST: a runtime missing an
-  // essential NAP gets a diagnostic instead of a silent blank/loading screen.
-  let report: CapabilityReport | null = $state(null);
+  // good-morning is used to debug runtimes, so it gates on its required NAPs
+  // FIRST: a runtime missing an essential NAP gets a diagnostic instead of a
+  // silent blank/loading screen. Domain presence is synchronous on the
+  // NappletGlobal surface, so the probe resolves immediately.
+  let report: CapabilityReport | null = $state(probeNapCapabilities());
 
-  // Identity comes from two sources (same as the feed napplet): the polled
-  // identity.getPublicKey() and live inc 'identity:changed' broadcasts. Use
-  // onMount (not $effect) so on() callbacks writing $state don't re-trigger setup.
+  // Identity comes from two sources: the polled identity.getPublicKey() and the
+  // live NAP-IDENTITY `onChanged` push. Use onMount (not $effect) so the on()
+  // callback writing $state doesn't re-trigger setup.
   onMount(() => {
     const controller = new AbortController();
 
-    // Probe the host NAP surface before wiring identity. The identity poll below
-    // is harmless when NAP-IDENTITY is absent (it just never resolves); the
-    // report is what decides whether we render the inbox or the diagnostic.
-    void probeNapCapabilities().then((result) => {
-      if (!controller.signal.aborted) report = result;
-    });
-
-    const handleIdentityChanged = (raw: unknown) => {
-      const identityChange = parseIdentityChangedPayload(raw);
-      if (identityChange) pubkey = identityChange.pubkey;
+    const handleIdentityChanged = (nextPubkey: string) => {
+      if (controller.signal.aborted) return;
+      pubkey = nextPubkey;
     };
-    const canonicalSub = ipc.on(IDENTITY_CHANGED_TOPIC, handleIdentityChanged);
-    const legacySub = ipc.on(LEGACY_AUTH_IDENTITY_CHANGED_TOPIC, handleIdentityChanged);
+    // NAP-IDENTITY owns identity-change notifications; the handler receives the
+    // hex pubkey directly (no INC payload to parse).
+    let identitySub: { close(): void } | null = null;
+    try {
+      identitySub = identity.onChanged(handleIdentityChanged);
+    } catch {
+      // NAP-IDENTITY absent — the capability probe already surfaces that.
+      identitySub = null;
+    }
 
     void waitForPublicKey(identity, {
       signal: controller.signal,
@@ -47,8 +42,7 @@
 
     return () => {
       controller.abort();
-      canonicalSub.close();
-      legacySub.close();
+      identitySub?.close();
     };
   });
 </script>

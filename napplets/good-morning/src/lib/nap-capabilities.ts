@@ -13,17 +13,12 @@
 //   * `degraded`  — the inbox still works but loses something (avatars, theme).
 //                   Missing → an inline warning banner.
 //
-// Two detection signals, both already used elsewhere in this repo:
-//   1. `window.napplet[domain]` presence — the @napplet/sdk helpers read this at
-//      call time, so an absent object means the call cannot be made at all
-//      (NappletGlobal docs: "absence means the domain is unavailable").
-//   2. `shell.supports(domain)` — the NAP-SHELL capability check (the same probe
-//      the `test` napplet's featureStatus() and gm-origin.ts use). Only
-//      meaningful AFTER shell.ready() settles.
-//
-// A NAP counts as available when EITHER signal is positive; it is reported
-// missing only when BOTH are negative — leniency avoids false alarms in runtimes
-// that install the domain object but do not implement supports().
+// Detection follows the current NAP model: a domain is available when
+// `window.napplet.<domain>` is an installed object (the @napplet/sdk helpers
+// read the same property at call time — "absence means the domain is
+// unavailable"). There is no `shell.supports()` / `shell.ready()` probing: the
+// NappletGlobal surface has no `shell` property, and readiness/transport is
+// owned by the SDK plumbing, not by app code.
 
 import {
   IDENTITY_DOMAIN,
@@ -36,7 +31,7 @@ import {
 export type NapSeverity = 'essential' | 'degraded';
 
 export interface NapRequirement {
-  /** window.napplet key AND shell.supports() capability name. */
+  /** window.napplet key for the domain. */
   domain: string;
   /** Human label shown in the diagnostic, e.g. "NAP-IDENTITY". */
   label: string;
@@ -90,9 +85,7 @@ export const GM_NAP_REQUIREMENTS: NapRequirement[] = [
 export interface NapCapabilityStatus extends NapRequirement {
   /** window.napplet[domain] is an installed object. */
   domainPresent: boolean;
-  /** shell.supports(domain) reported the capability. */
-  shellSupports: boolean;
-  /** domainPresent || shellSupports. */
+  /** domainPresent. */
   available: boolean;
 }
 
@@ -105,15 +98,12 @@ export interface CapabilityReport {
   missingEssential: NapCapabilityStatus[];
   /** Unavailable NAPs that only degrade the inbox. */
   missingDegraded: NapCapabilityStatus[];
-  /** window.napplet.shell (the NAP-SHELL handshake) was detected. */
-  shellPresent: boolean;
   /** Every essential NAP is available. */
   ok: boolean;
 }
 
-/** Probe predicates — the classifier is pure over these two signals. */
+/** Probe predicate — the classifier is pure over this single signal. */
 export type DomainProbe = (domain: string) => boolean;
-export type SupportsProbe = (domain: string) => boolean;
 
 /**
  * Pure classification of the probed surface. Exported (and unit-tested) without
@@ -122,13 +112,10 @@ export type SupportsProbe = (domain: string) => boolean;
 export function classifyCapabilities(
   requirements: NapRequirement[],
   hasDomain: DomainProbe,
-  supports: SupportsProbe,
-  shellPresent: boolean,
 ): CapabilityReport {
   const statuses = requirements.map<NapCapabilityStatus>((req) => {
     const domainPresent = hasDomain(req.domain);
-    const shellSupports = supports(req.domain);
-    return { ...req, domainPresent, shellSupports, available: domainPresent || shellSupports };
+    return { ...req, domainPresent, available: domainPresent };
   });
   const missing = statuses.filter((status) => !status.available);
   return {
@@ -136,26 +123,14 @@ export function classifyCapabilities(
     missing,
     missingEssential: missing.filter((status) => status.severity === 'essential'),
     missingDegraded: missing.filter((status) => status.severity === 'degraded'),
-    shellPresent,
     ok: missing.every((status) => status.severity !== 'essential'),
   };
 }
 
-// ── Runtime probes (impure) ─────────────────────────────────────────────────
-
-/** Minimal shape of the shim-installed NAP-SHELL handshake we depend on. */
-interface NappletShellHandle {
-  ready?(): Promise<unknown>;
-  supports?(domain: string, protocol?: string): boolean;
-}
+// ── Runtime probe (impure) ───────────────────────────────────────────────────
 
 function getNapplet(): Record<string, unknown> | null {
   return (globalThis as unknown as { napplet?: Record<string, unknown> }).napplet ?? null;
-}
-
-function getShell(): NappletShellHandle | null {
-  const napplet = getNapplet() as { shell?: NappletShellHandle } | null;
-  return napplet?.shell ?? null;
 }
 
 /** True when window.napplet[domain] is an installed (non-null) object. */
@@ -165,46 +140,12 @@ function domainIsPresent(domain: string): boolean {
 }
 
 /**
- * shell.supports(domain) OR shell.supports('nap:'+domain), guarded against a
- * throwing/absent shell — mirrors the `test` napplet's featureStatus().
+ * Probe the live runtime for the NAPs good-morning needs. Domain presence is
+ * synchronous on the NappletGlobal surface, so this resolves immediately — no
+ * shell handshake to wait on.
  */
-function shellSupports(shell: NappletShellHandle | null, domain: string): boolean {
-  if (!shell?.supports) return false;
-  try {
-    return Boolean(shell.supports(domain) || shell.supports(`nap:${domain}`));
-  } catch {
-    return false;
-  }
-}
-
-/** Cap on how long we wait for a slow/absent shell.ready() before probing. */
-const SHELL_READY_TIMEOUT_MS = 5000;
-
-async function awaitShellReady(shell: NappletShellHandle | null): Promise<void> {
-  if (!shell?.ready) return;
-  // Swallow a rejected ready(): a failed handshake still lets us probe (and
-  // report) the degraded surface rather than hang the diagnostic.
-  const ready = Promise.resolve(shell.ready()).catch(() => undefined);
-  const timeout = new Promise<void>((resolve) => {
-    setTimeout(resolve, SHELL_READY_TIMEOUT_MS);
-  });
-  await Promise.race([ready, timeout]);
-}
-
-/**
- * Probe the live runtime for the NAPs good-morning needs. Resolves AFTER
- * shell.ready() (or a timeout) so shell.supports() reflects the settled
- * handshake.
- */
-export async function probeNapCapabilities(
+export function probeNapCapabilities(
   requirements: NapRequirement[] = GM_NAP_REQUIREMENTS,
-): Promise<CapabilityReport> {
-  const shell = getShell();
-  await awaitShellReady(shell);
-  return classifyCapabilities(
-    requirements,
-    domainIsPresent,
-    (domain) => shellSupports(shell, domain),
-    shell != null,
-  );
+): CapabilityReport {
+  return classifyCapabilities(requirements, domainIsPresent);
 }

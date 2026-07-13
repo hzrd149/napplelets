@@ -17,56 +17,41 @@ const none = () => false;
 
 describe('classifyCapabilities', () => {
   it('reports ok when every essential NAP is present via the domain object', () => {
-    const report = classifyCapabilities(
-      REQS,
-      present('identity', 'outbox', 'resource'),
-      none,
-      true,
-    );
+    const report = classifyCapabilities(REQS, present('identity', 'outbox', 'resource'));
     expect(report.ok).toBe(true);
     expect(report.missing).toHaveLength(0);
     expect(report.missingEssential).toHaveLength(0);
   });
 
-  it('treats a NAP as available when EITHER signal is positive', () => {
-    // outbox only via shell.supports(), identity only via the domain object.
-    const report = classifyCapabilities(
-      REQS,
-      present('identity'),
-      present('outbox', 'resource'),
-      true,
-    );
-    expect(report.ok).toBe(true);
-    expect(report.missing).toHaveLength(0);
+  it('marks a NAP available when its domain object is present', () => {
+    const report = classifyCapabilities(REQS, present('identity', 'outbox', 'resource'));
     const outbox = report.statuses.find((s) => s.domain === 'outbox');
-    expect(outbox?.domainPresent).toBe(false);
-    expect(outbox?.shellSupports).toBe(true);
+    expect(outbox?.domainPresent).toBe(true);
     expect(outbox?.available).toBe(true);
   });
 
   it('flags a missing essential NAP and marks the report not ok', () => {
-    const report = classifyCapabilities(REQS, present('outbox', 'resource'), none, true);
+    const report = classifyCapabilities(REQS, present('outbox', 'resource'));
     expect(report.ok).toBe(false);
     expect(report.missingEssential.map((s) => s.domain)).toEqual(['identity']);
     expect(report.missingDegraded).toHaveLength(0);
   });
 
   it('separates degraded gaps from essential ones and stays ok', () => {
-    const report = classifyCapabilities(REQS, present('identity', 'outbox'), none, true);
+    const report = classifyCapabilities(REQS, present('identity', 'outbox'));
     expect(report.ok).toBe(true);
     expect(report.missingEssential).toHaveLength(0);
     expect(report.missingDegraded.map((s) => s.domain)).toEqual(['resource']);
   });
 
   it('reports everything missing when the runtime is empty', () => {
-    const report = classifyCapabilities(REQS, none, none, false);
+    const report = classifyCapabilities(REQS, none);
     expect(report.ok).toBe(false);
     expect(report.missing).toHaveLength(REQS.length);
-    expect(report.shellPresent).toBe(false);
   });
 
   it('carries the requirement metadata through onto each status', () => {
-    const report = classifyCapabilities(REQS, none, none, true);
+    const report = classifyCapabilities(REQS, none);
     const identity = report.missingEssential.find((s) => s.domain === 'identity');
     expect(identity?.label).toBe('NAP-IDENTITY');
     expect(identity?.purpose).toBe('pubkey');

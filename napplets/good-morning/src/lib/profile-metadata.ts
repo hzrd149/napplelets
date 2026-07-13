@@ -5,16 +5,6 @@ import type { NostrEvent } from './nostr';
  * Shared kind-0 profile-metadata subscription. Kept byte-identical with the
  * feed/live-chat copies (anti-drift) — change all of them together.
  */
-interface NappletShellHandle {
-  ready(): Promise<unknown>;
-  supports(domain: string, protocol?: string): boolean;
-}
-
-function getShell(): NappletShellHandle | null {
-  return (
-    (globalThis as unknown as { napplet?: { shell?: NappletShellHandle } }).napplet?.shell ?? null
-  );
-}
 
 export interface ProfileContent {
   name?: string;
@@ -71,9 +61,9 @@ export function subscribeProfileMetadata(
   let closed = false;
 
   // Set up the close guard synchronously so an early close() (before the
-  // shell.ready() gate resolves) is honored once the subscription opens. The
-  // async block re-checks `closed` right after opening, so a close() that lands
-  // first still tears the subscription down.
+  // subscription opens) is honored once it opens. The open below re-checks
+  // `closed` right after opening, so a close() that lands first still tears the
+  // subscription down.
   function close(): void {
     if (closed) return;
     closed = true;
@@ -101,27 +91,23 @@ export function subscribeProfileMetadata(
   }
 
   const filters = authors.map((author) => ({ kinds: [0], authors: [author], limit: 1 }));
-  // Open AFTER shell.ready() so the handshake is settled and shell.supports('outbox')
-  // reflects the runtime's registered NAP services. NAP-OUTBOX has no `eose`
-  // (napplet/naps#32): a one-shot query is the initial read (its resolution fires
-  // `onDone`) and a live subscription tails any profile updates while the inbox
-  // stays open.
+  // Explicit author hint so the shell routes each kind-0 lookup to that author's
+  // write relays (NAP-OUTBOX) instead of re-deriving from filters. NAP-OUTBOX has
+  // no `eose` (napplet/naps#32): a one-shot query is the initial read (its
+  // resolution fires `onDone`) and a live subscription tails any profile updates
+  // while the inbox stays open. The SDK owns readiness/transport; open
+  // synchronously and let the shim handle clone-safety at the boundary.
+  const options = { authors };
+  const sub = outbox.subscribe(filters, options);
+  // NAP-OUTBOX delivers a RelayEventResult (`{ event, sidecar? }`); the raw
+  // event is at `result.event`, not the callback arg itself.
+  sub.on('event', (result: RelayEventResult) => handleEvent(result.event));
+  subscription = { close: () => sub.close() };
+  if (closed) {
+    sub.close();
+    return { close };
+  }
   void (async () => {
-    const shell = getShell();
-    await shell?.ready();
-    if (closed) return;
-    // Explicit author hint so the shell routes each kind-0 lookup to that author's
-    // write relays (NAP-OUTBOX) instead of re-deriving from filters.
-    const options = { authors };
-    const sub = outbox.subscribe(filters, options);
-    // NAP-OUTBOX delivers a RelayEventResult (`{ event, sidecar? }`); the raw
-    // event is at `result.event`, not the callback arg itself.
-    sub.on('event', (result: RelayEventResult) => handleEvent(result.event));
-    subscription = { close: () => sub.close() };
-    if (closed) {
-      sub.close();
-      return;
-    }
     try {
       const { events } = await outbox.query(filters, options);
       if (closed) return;
