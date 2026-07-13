@@ -15,10 +15,11 @@ export default defineConfig({
     // domains. We route GM reads and Quick GM publishes through NAP-OUTBOX, so
     // WITHOUT 'outbox' here the inbox never fetches and Quick GM cannot publish.
     // 'resource' is required for avatar/media image loading, 'inc' for identity +
-    // note:open/profile:open intents.
+    // note:open/profile:open intents, 'link' for opening external URLs via the
+    // shell-owned opener (NAP-LINK).
     nip5aManifest({
       nappletType: 'good-morning',
-      requires: ['identity', 'inc', 'outbox', 'resource', 'theme'],
+      requires: ['identity', 'inc', 'outbox', 'resource', 'theme', 'link'],
       artifactMode: 'single-file',
       archetypes: [{ slug: 'good-morning', naps: ['good-morning'] }],
     }),

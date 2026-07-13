@@ -5,12 +5,12 @@ type ActionReturn<Parameter> = {
   destroy?(): void;
 };
 
-interface ResourceImageBatchOptions {
+interface ResourceMediaBatchOptions {
   source: string | null | undefined;
   chunkSize?: number;
 }
 
-type ResourceImageBatchParameter = string | null | undefined | ResourceImageBatchOptions;
+type ResourceMediaBatchParameter = string | null | undefined | ResourceMediaBatchOptions;
 
 /**
  * Handle shape returned by resourceBytesAsObjectURL. The SDK's published type
@@ -18,14 +18,17 @@ type ResourceImageBatchParameter = string | null | undefined | ResourceImageBatc
  * promise (documented as a "shim-specific extension" in the d.ts docstring) that
  * resolves with the object URL once the shell-side fetch completes. The `url`
  * field is "" until that resolves — so awaiting `ready` is the only way to
- * actually get bytes onto the <img>. Without this, the handle resolves
- * synchronously with an empty url and the image never loads.
+ * actually get bytes onto the element. Without this, the handle resolves
+ * synchronously with an empty url and the media never loads.
  */
 interface ResourceObjectUrlHandle {
   url: string;
   revoke(): void;
   ready?: Promise<string>;
 }
+
+/** Element types that expose a settable `src` attribute. */
+type MediaElement = HTMLImageElement | HTMLVideoElement;
 
 const ABSOLUTE_SCHEME_RE = /^[a-zA-Z][a-zA-Z0-9+.-]*:/;
 
@@ -45,17 +48,21 @@ function shouldUseResourceNap(source: string): boolean {
   }
 }
 
-function readSource(parameter: ResourceImageBatchParameter): string | null {
+function readSource(parameter: ResourceMediaBatchParameter): string | null {
   if (typeof parameter === 'object' && parameter !== null && 'source' in parameter) {
     return normalizeSource(parameter.source);
   }
   return normalizeSource(parameter);
 }
 
-export function resourceImageBatch(
-  node: HTMLImageElement,
-  parameter: ResourceImageBatchParameter,
-): ActionReturn<ResourceImageBatchParameter> {
+/**
+ * Shared Svelte action body for routing external media bytes through NAP-RESOURCE.
+ * Works for any element with a settable `src` attribute (<img>, <video>).
+ */
+function createResourceMediaAction(
+  node: MediaElement,
+  parameter: ResourceMediaBatchParameter,
+): ActionReturn<ResourceMediaBatchParameter> {
   let currentSource: string | null = null;
   let objectUrl: string | null = null;
   let token = 0;
@@ -70,7 +77,7 @@ export function resourceImageBatch(
     else node.removeAttribute('src');
   }
 
-  function setParameter(nextParameter: ResourceImageBatchParameter): void {
+  function setParameter(nextParameter: ResourceMediaBatchParameter): void {
     const nextSource = readSource(nextParameter);
     if (nextSource === currentSource) return;
     currentSource = nextSource;
@@ -86,11 +93,10 @@ export function resourceImageBatch(
       return;
     }
 
-    // External bytes flow ONLY through NAP-RESOURCE. Do not set <img src> to
-    // the raw URL — the sandboxed iframe has no network access, so a raw
-    // https:// src would either fail or bypass the shell's resource policy.
-    // Leave the src unset until the shell-resolved object URL is ready; on
-    // failure, leave it unset so the caller's fallback UI (initials/alt) shows.
+    // External bytes flow ONLY through NAP-RESOURCE. Do not set src to the raw
+    // URL — the sandboxed iframe has no network access, so a raw https:// src
+    // would either fail or bypass the shell's resource policy. Leave src unset
+    // until the shell-resolved object URL is ready; on failure, leave it unset.
     setResolvedSource(null);
     const requestToken = token;
     // resourceBytesAsObjectURL returns synchronously with url:"" and a hidden
@@ -122,4 +128,20 @@ export function resourceImageBatch(
       node.removeAttribute('src');
     },
   };
+}
+
+/** Svelte action: route an <img>'s external src through NAP-RESOURCE. */
+export function resourceImageBatch(
+  node: HTMLImageElement,
+  parameter: ResourceMediaBatchParameter,
+): ActionReturn<ResourceMediaBatchParameter> {
+  return createResourceMediaAction(node, parameter);
+}
+
+/** Svelte action: route a <video>'s external src through NAP-RESOURCE. */
+export function resourceVideoBatch(
+  node: HTMLVideoElement,
+  parameter: ResourceMediaBatchParameter,
+): ActionReturn<ResourceMediaBatchParameter> {
+  return createResourceMediaAction(node, parameter);
 }

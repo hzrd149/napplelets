@@ -2,7 +2,7 @@
   import { inc as ipc, link } from '@napplet/sdk';
   import { isCanonicalHexPubkey } from '../lib/intent-topics';
   import { parseNoteContent } from '../lib/note-content';
-  import { resourceImageBatch as resourceImage } from '../lib/resource-image';
+  import { resourceImageBatch as resourceImage, resourceVideoBatch as resourceVideo } from '../lib/resource-image';
   import { createGMReferenceOpenPayload, NOTE_VIEWER_OPEN_TOPIC } from '../lib/gm-actions';
 
   interface Props {
@@ -68,13 +68,13 @@
         {block.value}
       </a>
     {:else if block.type === 'media' && block.mediaType === 'image'}
-      <a
-        class="gm-inline-link"
-        href={block.value}
-        onclick={(event) => handleLinkClick(event, block.value)}
-      >
-        {block.value}
-      </a>
+      <span class="gm-inline-resource">
+        <img use:resourceImage={block.value} alt="GM image" loading="lazy" />
+      </span>
+    {:else if block.type === 'media' && block.mediaType === 'video'}
+      <span class="gm-inline-resource">
+        <video use:resourceVideo={block.value} controls preload="auto" />
+      </span>
     {:else if block.type === 'resource'}
       <span class="gm-inline-resource">
         <img use:resourceImage={block.source} alt="GM attachment" loading="lazy" />
@@ -113,7 +113,8 @@
     margin-top: 6px;
   }
 
-  .gm-inline-resource img {
+  .gm-inline-resource img,
+  .gm-inline-resource video {
     max-width: min(100%, 360px);
     max-height: 260px;
     border-radius: 6px;

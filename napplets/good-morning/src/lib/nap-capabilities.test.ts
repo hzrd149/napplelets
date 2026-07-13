@@ -62,7 +62,7 @@ describe('classifyCapabilities', () => {
 describe('GM_NAP_REQUIREMENTS', () => {
   it('covers the domains declared in vite.config requires', () => {
     const domains = GM_NAP_REQUIREMENTS.map((r) => r.domain).sort();
-    expect(domains).toEqual(['identity', 'inc', 'outbox', 'resource', 'theme'].sort());
+    expect(domains).toEqual(['identity', 'inc', 'link', 'outbox', 'resource', 'theme'].sort());
   });
 
   it('marks identity, inc, and outbox essential', () => {

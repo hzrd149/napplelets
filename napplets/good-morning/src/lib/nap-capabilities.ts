@@ -23,6 +23,7 @@
 import {
   IDENTITY_DOMAIN,
   INC_DOMAIN,
+  LINK_DOMAIN,
   OUTBOX_DOMAIN,
   RESOURCE_DOMAIN,
   THEME_DOMAIN,
@@ -78,6 +79,12 @@ export const GM_NAP_REQUIREMENTS: NapRequirement[] = [
     domain: THEME_DOMAIN,
     label: 'NAP-THEME',
     purpose: 'Applies the host shell theme. Falls back to built-in colors when absent.',
+    severity: 'degraded',
+  },
+  {
+    domain: LINK_DOMAIN,
+    label: 'NAP-LINK',
+    purpose: 'Opens external URLs through the shell-owned opener. Links are dead without it.',
     severity: 'degraded',
   },
 ];
