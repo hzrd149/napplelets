@@ -1,13 +1,11 @@
 // Extract the first displayable image from a GM note for the gallery view.
 //
-// Reuses the shared @hyprgate/utils content parser so the napplet agrees with
-// the note renderer on what counts as an image: an inline image URL (media,
-// mediaType 'image') or a resource pointer (blossom:sha256:… / NAP-RESOURCE
-// image). The returned `source` is fed straight into the `resourceImageBatch`
-// action, which knows how to resolve both a plain URL and a resource pointer.
+// Uses the same local parser as the note renderer: an inline image URL or a
+// resource pointer (blossom:sha256:... / NAP-RESOURCE image) becomes a gallery
+// source that the resource image action can resolve.
 
-import { extractNoteContentEmbeds } from '@hyprgate/utils/note-content';
-import type { NostrEvent } from '@hyprgate/types';
+import { extractNoteContentEmbeds } from './note-content';
+import type { NostrEvent } from './nostr';
 
 /**
  * The first image source in a note's content, or null when it has none.

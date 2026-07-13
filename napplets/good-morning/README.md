@@ -1,10 +1,10 @@
 # Good Morning napplet
 
-A "GM" inbox for hyprgate. It surfaces the **GM / good morning** notes posted by
+A "GM" inbox napplet. It surfaces the **GM / good morning** notes posted by
 the people you follow and marks the ones you have already greeted back.
 
-Ported from the standalone [GM Protocol](../../gm-protocol) app onto the hyprgate
-napplet runtime (NIP-5D iframe, NAP-OUTBOX relay routing, shared note renderer).
+Ported from the standalone GM Protocol app onto a NIP-5D napplet runtime
+(sandboxed iframe, NAP-OUTBOX relay routing, local note renderer).
 
 ## What it does
 
@@ -71,20 +71,20 @@ both note reads and Quick GM publishes route through `NAP-OUTBOX` (there is no
   tested.
 - `src/lib/gm-origin.ts` — the NAP-OUTBOX routing seam for inbox subscriptions.
 - `src/lib/gm-media.ts` — extracts the first image source from a note's content
-  (via `@hyprgate/utils` `extractNoteContentEmbeds`) for the gallery view (+ tests).
+  via the local `extractNoteContentEmbeds` parser for the gallery view (+ tests).
 - `src/lib/profile-metadata.ts` — shared kind-0 loader (kept in sync with feed).
 - `src/lib/gm-actions.ts` — `note:open` payload builders.
 - `src/components/` — `GMInbox` (list/gallery view toggle + profile batching),
-  `GMRow` (a list row), `GMGallery` (the image-wall view), `GMNoteContent` (thin
-  adapter over `@hyprgate/napplet-ui` NoteContent).
+  `GMRow` (a list row), `GMGallery` (the image-wall view), `GMNoteContent` (local
+  text/reference/link renderer).
 
 ## Develop
 
 ```bash
-pnpm --filter @hyprgate/napp-good-morning dev        # vite dev server (port 5184)
-pnpm --filter @hyprgate/napp-good-morning test       # vitest
-pnpm --filter @hyprgate/napp-good-morning type-check
-pnpm --filter @hyprgate/napp-good-morning build
+pnpm --filter @napplelets/good-morning dev        # vite dev server (port 5184)
+pnpm --filter @napplelets/good-morning test       # vitest
+pnpm --filter @napplelets/good-morning type-check
+pnpm --filter @napplelets/good-morning build
 ```
 
 The manifest (`d` tag `good-morning`) is build-signed by `@napplet/vite-plugin`;

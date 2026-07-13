@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import type { NostrEvent } from '@hyprgate/types';
+  import type { NostrEvent } from '../lib/nostr';
   import type { Subscription } from '@napplet/sdk';
   import { createGMStore, buildGMThreads, type GMThread } from '../lib/gm-store';
   import { subscribeProfileMetadata, type ProfileContent } from '../lib/profile-metadata';

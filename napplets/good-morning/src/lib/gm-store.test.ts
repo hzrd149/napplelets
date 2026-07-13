@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { NostrEvent } from '@hyprgate/types';
+import type { NostrEvent } from './nostr';
 import { buildGMThreads, hasETag, startOfTodaySeconds, chunk } from './gm-store';
 
 function ev(partial: Partial<NostrEvent> & { id: string }): NostrEvent {

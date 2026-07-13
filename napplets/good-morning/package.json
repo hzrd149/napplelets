@@ -11,9 +11,6 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@hyprgate/types": "workspace:*",
-    "@hyprgate/napplet-ui": "workspace:*",
-    "@hyprgate/utils": "workspace:*",
     "@napplet/sdk": "^0.24.2",
     "@napplet/shim": "^0.26.5",
     "nostr-tools": "2.23.3",

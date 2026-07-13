@@ -2,13 +2,6 @@ packages:
   - 'napplets/*'
   # Local repo tooling (e.g. the `napplet` launcher that runs @napplet/cli from JSR).
   - 'tools/*'
-  # Shared libraries from the `hyprgate` git submodule (github.com/hyprgate/gui),
-  # consumed by napplets like `good-morning`. Only the `packages/` folder is wired
-  # in — hyprgate's own apps/napplets/rapplets are intentionally NOT workspace
-  # members, so this repo never builds the whole hyprgate project just to build a
-  # napplet. Most @hyprgate/* packages ship as raw source (no build step); the
-  # importing napplet's bundler compiles them.
-  - 'hyprgate/packages/*'
 
 allowBuilds:
   esbuild: true
@@ -29,8 +22,8 @@ minimumReleaseAgeExclude:
 
 # This is a development workspace: we deliberately do NOT pin or override any
 # versions so napplets are always tested against the real, latest resolved
-# versions of `@napplet/*` from JSR, `@hyprgate/*`, and their transitive deps. If
-# a real incompatibility surfaces, fix it at the source, not with an override here.
+# versions of `@napplet/*` from JSR and their transitive deps. If a real
+# incompatibility surfaces, fix it at the source, not with an override here.
 
 # esbuild's postinstall fetches its platform binary (vite depends on it); pnpm 10
 # blocks build scripts by default, so it must be allow-listed. This is a build

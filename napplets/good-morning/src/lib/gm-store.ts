@@ -1,7 +1,7 @@
 // napplets/good-morning/src/lib/gm-store.ts
 //
 // The GM inbox state machine. Mirrors gm-protocol's GMProvider, ported to the
-// hyprgate napplet runtime:
+// NIP-5D napplet runtime:
 //
 //   1. Load the user's contacts from the runtime via NAP-IDENTITY
 //      (identity.getFollows()) — the shell owns resolving the newest kind-3, so
@@ -17,7 +17,7 @@
 // callback (the canonical feed-store / profile-store pattern).
 
 import { identity, type Subscription } from '@napplet/sdk';
-import type { NostrEvent } from '@hyprgate/types';
+import type { NostrEvent } from './nostr';
 import { containsGM } from './gm-detection';
 import { subscribeForPayload } from './gm-origin';
 

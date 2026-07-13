@@ -13,7 +13,7 @@
 // false until the shell handshake settles (profile-metadata.ts pattern).
 
 import { outbox, type RelayEventResult, type Subscription } from '@napplet/sdk';
-import type { NostrEvent, NostrFilter } from '@hyprgate/types';
+import type { NostrEvent, NostrFilter } from './nostr';
 
 /** The minimal payload the GM inbox routes (a subset of FeedIntentPayload). */
 export interface OriginSubscribePayload {

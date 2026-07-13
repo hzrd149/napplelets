@@ -7,9 +7,8 @@ relay access to a host shell over the NIP-5D JSON envelope wire format.
 Each napplet is a self-contained workspace package under [`napplets/`](./napplets)
 built with the [`@napplet`](https://napplet.run/docs/) packages. Those packages
 come from JSR through pnpm's npm compatibility aliases (`npm:@jsr/napplet__*`).
-Shared `@hyprgate/*` libraries are wired in from the `hyprgate/` git submodule as
-workspace members. This is a development workspace — versions are intentionally
-not pinned so napplets are tested against the latest resolved versions.
+This is a development workspace — versions are intentionally not pinned so
+napplets are tested against the latest resolved versions.
 
 ## Layout
 

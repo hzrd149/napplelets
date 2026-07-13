@@ -1,9 +1,9 @@
-import type { NostrEvent } from '@hyprgate/types';
+import type { NostrEvent } from './nostr';
 import {
   createNoteViewerOpenPayload,
   type NoteViewerOpenPayload,
-} from '@hyprgate/utils/note-viewer-protocol';
-export { NOTE_VIEWER_OPEN_TOPIC } from '@hyprgate/utils/note-viewer-protocol';
+} from './note-viewer-protocol';
+export { NOTE_VIEWER_OPEN_TOPIC } from './note-viewer-protocol';
 import { outbox } from '@napplet/sdk';
 import * as nip19 from 'nostr-tools/nip19';
 
@@ -13,7 +13,7 @@ export const COMPOSER_OPEN_TOPIC = 'compose:open' as const;
 export const GM_NAPPLET_SOURCE = 'good-morning' as const;
 
 /** Client tag on GMs this napplet publishes (attribution / parity w/ gm-protocol). */
-export const GM_CLIENT_TAG = ['client', '@hyprgate/good-morning'] as const;
+export const GM_CLIENT_TAG = ['client', '@napplelets/good-morning'] as const;
 
 /** The fixed content of a one-tap "Quick GM" reply. */
 export const QUICK_GM_CONTENT = 'GM' as const;

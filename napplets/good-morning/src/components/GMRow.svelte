@@ -2,10 +2,10 @@
   import { format } from 'timeago.js';
   import * as nip19 from 'nostr-tools/nip19';
   import { inc as ipc } from '@napplet/sdk';
-  import { isCanonicalHexPubkey } from '@hyprgate/utils/nub-topics';
-  import { pubkeyColorStyle } from '@hyprgate/utils/pubkey-color';
-  import { resourceImageBatch as resourceImage } from '@hyprgate/utils/resource-client';
-  import type { NostrEvent } from '@hyprgate/types';
+  import { isCanonicalHexPubkey } from '../lib/intent-topics';
+  import { pubkeyColorStyle } from '../lib/pubkey-color';
+  import { resourceImageBatch as resourceImage } from '../lib/resource-image';
+  import type { NostrEvent } from '../lib/nostr';
   import type { ProfileContent } from '../lib/profile-metadata';
   import {
     createGMNoteOpenPayload,

@@ -1,6 +1,3 @@
 [submodule "napplet"]
 	path = napplet
 	url = https://github.com/napplet/web.git
-[submodule "hyprgate"]
-	path = hyprgate
-	url = git@github.com:hyprgate/gui.git

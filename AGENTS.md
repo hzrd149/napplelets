@@ -49,13 +49,12 @@ pnpm debug                # `napplet debug --all` — read-only deploy/plan diag
 ```
 
 The napplets use the published `@napplet/*` packages from JSR through pnpm's npm
-compatibility aliases (`npm:@jsr/napplet__*`). The `@hyprgate/*` packages still
-come from the `hyprgate/` git submodule and are wired in as workspace members
-(see `pnpm-workspace.yaml`). **Turbo** (`turbo.json`) runs build/type-check in
-dependency order — `pnpm build` builds each napplet's workspace dependencies
-first. This is a development workspace: versions are deliberately **not** pinned
-or overridden, so napplets are tested against the real latest resolved versions.
-This repo ships **no production host shell**, but `pnpm dev [name]` boots the
+compatibility aliases (`npm:@jsr/napplet__*`). **Turbo** (`turbo.json`) runs
+build/type-check in dependency order — `pnpm build` builds each napplet's
+workspace dependencies first. This is a development workspace: versions are
+deliberately **not** pinned or overridden, so napplets are tested against the
+real latest resolved versions. This repo ships **no production host shell**, but
+`pnpm dev [name]` boots the
 **Kehto Paja** dev runtime (via the root `@kehto/cli` devDependency,
 orchestrated by `scripts/dev.mjs`): it hosts the
 napplet in a real Kehto iframe with dev adapters for the whole NAP surface

@@ -1,5 +1,5 @@
 import { outbox, type RelayEventResult, type Subscription } from '@napplet/sdk';
-import type { NostrEvent } from '@hyprgate/types';
+import type { NostrEvent } from './nostr';
 
 /**
  * Shared kind-0 profile-metadata subscription. Kept byte-identical with the
