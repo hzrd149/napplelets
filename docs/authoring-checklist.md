@@ -4,9 +4,10 @@ Use this checklist before shipping meaningful changes to a napplet.
 
 ## App Boundary
 
-- [ ] The app imports `@napplet/shim` once in the entry point.
-- [ ] Protocol calls use `@napplet/sdk` or explicit `@napplet/nap/<domain>/sdk`
-      helpers.
+- [ ] The app does not import or depend on `@napplet/shim`; the runtime injects
+      `window.napplet`.
+- [ ] Protocol calls use `@napplet/sdk` helpers. Direct
+      `window.napplet?.<domain>` access is limited to availability checks.
 - [ ] No app code reads or writes signer keys.
 - [ ] No app code reads shell DOM, parent cookies, service workers, or host
       storage.
@@ -14,6 +15,8 @@ Use this checklist before shipping meaningful changes to a napplet.
 
 ## Network And Resources
 
+- [ ] Normal Nostr reads and publishes use OUTBOX or a higher-level social NAP.
+- [ ] RELAY is used only for a documented relay-local escape hatch.
 - [ ] Read-only external bytes use `resource.bytes()` or
       `resource.bytesAsObjectURL()`.
 - [ ] No direct `fetch`/`WebSocket`/`EventSource` — NAP-CONNECT (direct-network
@@ -31,7 +34,10 @@ Use this checklist before shipping meaningful changes to a napplet.
 
 - [ ] Long-lived subscriptions are closed on teardown.
 - [ ] User-triggered operations surface shell errors without crashing the app.
-- [ ] The app feature-detects optional NAPs with `shell.supports()`.
+- [ ] The app feature-detects optional NAPs with injected domain property
+      presence, such as `window.napplet?.resource`.
+- [ ] For current Kehto/Paja compatibility, every used NAP is declared in
+      manifest `requires`; degradable features still have a usable fallback.
 - [ ] Text that should be copyable opts into selection with
       `data-napplet-select` or a deliberate CSS override.
 

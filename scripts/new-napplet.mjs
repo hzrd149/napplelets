@@ -71,7 +71,7 @@ if (result.status !== 0) {
   process.exit(result.status ?? 1);
 }
 
-// Adopt into the monorepo's DRY layout (shared docs/.codex/LICENSE live at root).
+// Adopt into the monorepo's DRY layout (root guidance replaces standalone copies).
 await adoptNapplet(target, { name, title });
 
 console.log('');

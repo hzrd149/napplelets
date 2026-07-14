@@ -2,24 +2,23 @@
 
 ## Bootstrap
 
-Install the shim once, then use SDK helpers.
+The runtime injects `window.napplet` before app code runs. Napplet application
+code imports SDK helpers; it does not install its own runtime namespace.
 
 ```ts
-import '@napplet/shim';
-import { relay, storage, identity } from '@napplet/sdk';
+import { outbox, storage, identity } from '@napplet/sdk';
 ```
 
 SDK methods read `window.napplet` at call time. This lets app modules import SDK
-helpers freely as long as the entry point imports the shim before user actions
-invoke protocol calls.
+helpers freely while preserving runtime-owned injection.
 
 ## Feature Detection
 
-Use shell capability checks for optional surfaces.
+Use injected domain property presence for optional surfaces.
 
 ```ts
-const supportsResource = window.napplet.shell.supports('nap:resource');
-const supportsRelay = window.napplet.shell.supports('relay');
+const supportsResource = Boolean(window.napplet?.resource);
+const supportsOutbox = Boolean(window.napplet?.outbox);
 ```
 
 Support checks are advisory. A user-triggered call can still fail because the
@@ -74,17 +73,25 @@ For a text-heavy napplet, set the root variable instead:
 }
 ```
 
-## Relay
+## OUTBOX-First Nostr Access
 
-Relay calls go through the shell.
+Use OUTBOX for normal social event reads and publishes so the runtime owns relay
+discovery, fallback, deduplication, signing, and fanout.
 
 ```ts
-const events = await relay.query({ kinds: [1], limit: 5 });
-const sub = relay.subscribe({ kinds: [1] }, onEvent, onEose);
+const { events } = await outbox.query([{ kinds: [1], limit: 5 }]);
+const sub = outbox.subscribe([{ kinds: [1], limit: 20 }]);
+sub.on('event', (result) => renderEvent(result.event));
 sub.close();
 ```
 
 Keep subscriptions tied to UI lifecycle and close them on teardown.
+
+## Relay-Local Escape Hatch
+
+Use RELAY only when a feature needs semantics tied to one named relay, such as
+a NIP-29 group relay, raw relay diagnostics, or protocol tooling OUTBOX cannot
+express. Document that reason next to the call.
 
 ## Resource Fetching
 

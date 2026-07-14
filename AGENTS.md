@@ -23,7 +23,7 @@ itself is **not** in this repo — only the napplet side of the boundary.
 
 - `napplets/<name>/` — one napplet per directory (a pnpm workspace package).
 - `docs/` — shared, repo-wide NIP-5D authoring context (single source of truth).
-- `.codex/skills/` — `napplet-author` and `napplet-verify` skills.
+- `.agents/skills/` — napplet design, build, port, and verification skills.
 - `scripts/new-napplet.mjs` — scaffolder (+ `scripts/lib/adopt.mjs`).
 - `tsconfig.base.json` — every napplet's `tsconfig.json` extends this.
 - `pnpm-workspace.yaml` — workspace = `napplets/*`.
@@ -36,7 +36,8 @@ Workspace-wide (run from root):
 pnpm install              # link all workspace packages (also builds deps via `prepare`)
 pnpm dev [name]           # Paja dev runtime + Vite HMR for one napplet
 pnpm build                # build napplets + their deps in order (Turbo)
-pnpm verify               # type-check + build (Turbo)
+pnpm test                 # scaffolder regression + napplet unit tests (Turbo)
+pnpm verify               # test + type-check + build (Turbo)
 pnpm type-check           # strict TS across the napplets (Turbo)
 pnpm discover             # `napplet discover --all` — list built napplets
 pnpm test:conformance     # build, then `napplet conformance --all`
@@ -48,12 +49,10 @@ pnpm deploy:dry           # build + plan/sign only, no upload/publish (`--dry-ru
 pnpm debug                # `napplet debug --all` — read-only deploy/plan diagnostics
 ```
 
-The napplets use the published `@napplet/*` packages from JSR through pnpm's npm
-compatibility aliases (`npm:@jsr/napplet__*`). **Turbo** (`turbo.json`) runs
-build/type-check in dependency order — `pnpm build` builds each napplet's
-workspace dependencies first. This is a development workspace: versions are
-deliberately **not** pinned or overridden, so napplets are tested against the
-real latest resolved versions. This repo ships **no production host shell**, but
+The napplets use the dual-published npm-facing `@napplet/*` packages. **Turbo**
+(`turbo.json`) runs build/type-check/test tasks across the workspace. Versions
+are deliberately not overridden, so napplets exercise the latest resolved
+compatible releases. This repo ships **no production host shell**, but
 `pnpm dev [name]` boots the
 **Kehto Paja** dev runtime (via the root `@kehto/cli` devDependency,
 orchestrated by `scripts/dev.mjs`): it hosts the
@@ -75,7 +74,8 @@ treat every built napplet folder as its own deploy target (folder name = the
 named-site `d` tag, so it must match `^[a-z0-9-]{1,13}$`). Add `relays` and
 `blossomServers` to the root `.napplet/config.json` before `pnpm deploy` — network
 deploy fails fast without at least one of each. Napplets themselves carry no
-`.napplet` config or CLI scripts — only `dev`/`build`/`type-check`/`verify`.
+`.napplet` deploy config; filtered build, test, verify, and conformance scripts
+remain available per package.
 
 **Publishing / signing.** `pnpm deploy` needs a signer. The one-time login stores
 a secret in the OS keychain and points the root config's `signing.keyReference` at
@@ -97,13 +97,14 @@ Per-napplet (use pnpm's filter; `<name>` is the dir under `napplets/`):
 
 ```bash
 pnpm --filter <name> dev                # vite dev server (127.0.0.1)
-pnpm --filter <name> verify             # type-check + single-file build
+pnpm --filter <name> verify             # unit tests + type-check + single-file build
+pnpm --filter <name> test:conformance   # built-artifact conformance
 ```
 
-There is no unit-test runner; **`test:conformance` is the real test gate**. It
-loads the built single-file napplet in a real `allow-scripts` iframe and fails on
-a malformed envelope, manifest problem, boot failure, or forbidden-global
-reference (`fetch`/`WebSocket`/`localStorage`/`window.nostr`, etc.).
+Unit tests protect app logic; **`test:conformance` remains the protocol gate**.
+It loads the built single-file napplet in a real `allow-scripts` iframe and fails
+on malformed envelopes, boot failures, or forbidden-global references
+(`fetch`/`WebSocket`/`localStorage`/`window.nostr`, etc.).
 
 ## Adding a napplet
 
@@ -111,13 +112,11 @@ reference (`fetch`/`WebSocket`/`localStorage`/`window.nostr`, etc.).
 pnpm new <name> ["Display Title"]   # then: pnpm install
 ```
 
-Always scaffold — never hand-roll a package — so the single-file build, shim
-import, and conformance wiring stay correct. Note the mechanism (the README's
-`templates/napplet/` is stale; that directory does not exist): `scripts/new-napplet.mjs`
-shells out to `npx @napplet/boilerplate` then runs `scripts/lib/adopt.mjs`, which
-strips the generator's per-package copies of `docs/`, `.codex/`, and `LICENSE`
-(those live **once at the repo root**) and repoints the new package's `tsconfig.json`
-and `AGENTS.md`/`README.md` at the root.
+Always scaffold — never hand-roll a package — so the single-file build and
+conformance wiring stay correct. `scripts/new-napplet.mjs` shells out to
+`npx @napplet/boilerplate` then runs `scripts/lib/adopt.mjs`, which removes
+duplicated standalone guidance, repoints the package at the shared root context,
+and defensively strips retired app-owned shim bootstrap from older templates.
 
 ## Before editing napplet behavior
 
@@ -130,21 +129,24 @@ and `AGENTS.md`/`README.md` at the root.
 
 ## Architecture essentials
 
-- **Three packages define the surface** (see `docs/package-surfaces.md`):
-  `@napplet/shim` (import once at the entry point as a side effect — installs
-  `window.napplet`), `@napplet/sdk` (named helpers: `relay`, `storage`,
-  `identity`, `config`, `resource`, `notify`, …; reads `window.napplet` at call
-  time), and `@napplet/vite-plugin` (`nip5aManifest`). Granular needs use
-  `@napplet/nap/<domain>/sdk` — never import the `@napplet/nap` root.
+- **Runtime and application package roles are separate** (see
+  `docs/package-surfaces.md`): runtimes may consume `@napplet/shim` to inject
+  selected domains before app scripts. Napplet packages do not depend on it;
+  they use `@napplet/sdk` named helpers and `@napplet/vite-plugin`
+  (`nip5aManifest`). Granular needs use `@napplet/nap/<domain>/sdk` — never
+  import the `@napplet/nap` root.
 
-- **Single-file build is mandatory.** `vite.config.ts` uses `viteSingleFile()` to
-  inline all JS/CSS into one `index.html` (the srcdoc iframe has no origin to
-  fetch external assets from), and `nip5aManifest({ nappletType, requires, configSchema })`
-  to content-address it. The `requires` array declares which NAPs the napplet uses.
+- **Single-file build is mandatory.** Set `artifactMode: 'single-file'` in
+  `nip5aManifest(...)` to inline JS/CSS into one `index.html` (the srcdoc iframe
+  has no origin to fetch external assets from). The `requires` array declares
+  every NAP domain the app uses because the current Kehto/Paja host derives
+  injected grants from that list; degradable features still use property checks
+  and fallbacks. This is a host compatibility constraint, not normative NIP-5D
+  optional-capability semantics.
 
-- **Manifest aggregate hash:** the built artifact, the `requires` list, and the
-  config schema all feed the NIP-5A aggregate hash. Changing any of them changes
-  the napplet's identity (and thus storage scoping) — treat such changes as
+- **Manifest aggregate hash:** the NIP-5A path tags content-address the built
+  artifact; `requires` is separate NIP-5D manifest metadata. Any built-byte
+  change changes the napplet identity (and thus storage scoping) — treat it as
   intentional.
 
 - **Config** is declared as a JSON Schema (in `vite.config.ts`'s `configSchema`
@@ -166,7 +168,8 @@ and `AGENTS.md`/`README.md` at the root.
 - Do not use direct `fetch`, `WebSocket`, or `EventSource`. NAP-CONNECT
   (direct network) and NAP-CLASS are **deferred**; use `resource.bytes()` for
   read-only external bytes and do not depend on the deferred surfaces.
-- Import `@napplet/shim` once at the entry point before any SDK call.
+- Do not import or depend on `@napplet/shim` in napplet code. The runtime injects
+  `window.napplet`; direct domain access is only for availability checks.
 - Do not invent app-local NAP names, numbers, or envelope domains. If a feature
   seems to need one, apply `docs/new-nap-proposals.md` and propose it upstream at
   `github.com/napplet/naps` first.
@@ -176,7 +179,7 @@ and `AGENTS.md`/`README.md` at the root.
 Run per-napplet (filter) or across the whole workspace:
 
 ```bash
-pnpm --filter <name> verify          # type-check + build one napplet
+pnpm --filter <name> verify          # unit tests + type-check + build one napplet
 pnpm --filter <name> test:conformance # NAP conformance for one napplet
 pnpm verify                          # whole workspace
 pnpm test:conformance                # whole workspace
@@ -188,6 +191,7 @@ forbidden-global reference.
 
 ## When protocol behavior is in question
 
-`docs/nip-5d.md` points to the pinned NIP-5D source — this repo holds no
-normative protocol text. Treat the pinned spec and current `@napplet` package
-source as more authoritative than assumptions; the upstream SDK is alpha.
+`docs/nip-5d.md` points to the living NIP-5D proposal — this repo holds no
+normative protocol text. Treat the current proposal and NAP texts as more
+authoritative than assumptions; use current package source as implementation
+evidence for the still-alpha SDK.

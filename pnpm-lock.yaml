@@ -32,9 +32,6 @@ importers:
       '@napplet/sdk':
         specifier: ^0.24.4
         version: 0.24.4
-      '@napplet/shim':
-        specifier: ^0.26.8
-        version: 0.26.8
       nostr-tools:
         specifier: 2.23.3
         version: 2.23.3(typescript@5.9.3)
@@ -390,9 +387,6 @@ packages:
 
   '@napplet/sdk@0.24.4':
     resolution: {integrity: sha512-g/0Gtvxl6fiTwE1MGZXqv9ztEnzVkJvriZvUKt9IKfIOso5L4dPRpWb/6sczcTNsHdatKjfLk0lQ6KPS8ezjWQ==}
-
-  '@napplet/shim@0.26.8':
-    resolution: {integrity: sha512-CSuPsaPqUQYtukQGZcMx5f9TIlZ22nz57dPgAvoxB8lqHFl+JItngL9Zfw5xBZpg+TG3F+TPckGsLMHfhqJYmQ==}
 
   '@napplet/vite-plugin@0.11.3':
     resolution: {integrity: sha512-4k4xlzYVJHY2dSw5wrR9VxqAj/VL3QAzIfBZUgZI073gDDJac63WUkzj8xeGXB9QRqsqZBCemXGLZB0q+vyV6Q==}
@@ -1740,13 +1734,6 @@ snapshots:
       '@napplet/core': 0.28.0
 
   '@napplet/sdk@0.24.4':
-    dependencies:
-      '@napplet/core': 0.28.0
-      '@napplet/nap': 0.28.0
-    transitivePeerDependencies:
-      - json-schema-to-ts
-
-  '@napplet/shim@0.26.8':
     dependencies:
       '@napplet/core': 0.28.0
       '@napplet/nap': 0.28.0

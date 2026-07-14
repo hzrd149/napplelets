@@ -11,12 +11,9 @@ export default defineConfig({
     // becomes the manifest `d` tag, so it MUST match the launcher registry dTag
     // ('good-morning') or the resolver REQs a non-existent manifest.
     //
-    // Capability ACL: the runtime silently drops service messages for undeclared
-    // domains. We route GM reads and Quick GM publishes through NAP-OUTBOX, so
-    // WITHOUT 'outbox' here the inbox never fetches and Quick GM cannot publish.
-    // 'resource' is required for avatar/media image loading, 'inc' for identity +
-    // note:open/profile:open intents, 'link' for opening external URLs via the
-    // shell-owned opener (NAP-LINK).
+    // Capability grant list: current runtimes derive injected domains from
+    // manifest requirements. Keep every used domain here; the app still guards
+    // degraded paths so incomplete diagnostic runtimes do not crash it.
     nip5aManifest({
       nappletType: 'good-morning',
       requires: ['identity', 'inc', 'outbox', 'resource', 'theme', 'link'],

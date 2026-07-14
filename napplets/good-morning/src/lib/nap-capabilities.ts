@@ -13,12 +13,11 @@
 //   * `degraded`  — the inbox still works but loses something (avatars, theme).
 //                   Missing → an inline warning banner.
 //
-// Detection follows the current NAP model: a domain is available when
-// `window.napplet.<domain>` is an installed object (the @napplet/sdk helpers
-// read the same property at call time — "absence means the domain is
-// unavailable"). There is no `shell.supports()` / `shell.ready()` probing: the
-// NappletGlobal surface has no `shell` property, and readiness/transport is
-// owned by the SDK plumbing, not by app code.
+// Detection follows the current NAP model: the runtime injects
+// `window.napplet.<domain>` before app code, and @napplet/sdk reads the same
+// property at call time. There is no `shell.supports()` / `shell.ready()`
+// probing: the NappletGlobal surface has no `shell` property, and
+// readiness/transport are runtime concerns.
 
 import {
   IDENTITY_DOMAIN,
@@ -28,6 +27,7 @@ import {
   RESOURCE_DOMAIN,
   THEME_DOMAIN,
 } from '@napplet/sdk';
+import { isNapDomainPresent } from './runtime-domain';
 
 export type NapSeverity = 'essential' | 'degraded';
 
@@ -43,11 +43,10 @@ export interface NapRequirement {
 }
 
 /**
- * The NAPs good-morning gates on, in report order — mirrors vite.config.ts's
- * `requires: ['identity','inc','outbox','resource','theme']`. The inbox is
- * outbox-only: both note reads and Quick GM publishes route through NAP-OUTBOX
- * (there is no NAP-RELAY fallback), so it is gated essential. Keep the essential
- * set in sync with that policy.
+ * The NAPs good-morning reports, in display order. Every entry belongs in
+ * vite.config.ts `requires` because current runtimes use it as the injected
+ * grant list; severity controls the app's fallback UI. The inbox is outbox-only:
+ * both reads and Quick GM publishes route through NAP-OUTBOX.
  */
 export const GM_NAP_REQUIREMENTS: NapRequirement[] = [
   {
@@ -90,7 +89,7 @@ export const GM_NAP_REQUIREMENTS: NapRequirement[] = [
 ];
 
 export interface NapCapabilityStatus extends NapRequirement {
-  /** window.napplet[domain] is an installed object. */
+  /** window.napplet[domain] is a runtime-injected object. */
   domainPresent: boolean;
   /** domainPresent. */
   available: boolean;
@@ -134,18 +133,6 @@ export function classifyCapabilities(
   };
 }
 
-// ── Runtime probe (impure) ───────────────────────────────────────────────────
-
-function getNapplet(): Record<string, unknown> | null {
-  return (globalThis as unknown as { napplet?: Record<string, unknown> }).napplet ?? null;
-}
-
-/** True when window.napplet[domain] is an installed (non-null) object. */
-function domainIsPresent(domain: string): boolean {
-  const napplet = getNapplet();
-  return napplet != null && napplet[domain] != null;
-}
-
 /**
  * Probe the live runtime for the NAPs good-morning needs. Domain presence is
  * synchronous on the NappletGlobal surface, so this resolves immediately — no
@@ -154,5 +141,5 @@ function domainIsPresent(domain: string): boolean {
 export function probeNapCapabilities(
   requirements: NapRequirement[] = GM_NAP_REQUIREMENTS,
 ): CapabilityReport {
-  return classifyCapabilities(requirements, domainIsPresent);
+  return classifyCapabilities(requirements, isNapDomainPresent);
 }

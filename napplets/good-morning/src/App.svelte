@@ -17,6 +17,8 @@
   // live NAP-IDENTITY `onChanged` push. Use onMount (not $effect) so the on()
   // callback writing $state doesn't re-trigger setup.
   onMount(() => {
+    if (!report?.ok) return;
+
     const controller = new AbortController();
 
     const handleIdentityChanged = (nextPubkey: string) => {

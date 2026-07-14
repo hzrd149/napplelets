@@ -95,8 +95,8 @@ export function subscribeProfileMetadata(
   // write relays (NAP-OUTBOX) instead of re-deriving from filters. NAP-OUTBOX has
   // no `eose` (napplet/naps#32): a one-shot query is the initial read (its
   // resolution fires `onDone`) and a live subscription tails any profile updates
-  // while the inbox stays open. The SDK owns readiness/transport; open
-  // synchronously and let the shim handle clone-safety at the boundary.
+  // while the inbox stays open. The SDK delegates to the runtime-injected
+  // domain; open synchronously and let the runtime handle clone-safety.
   const options = { authors };
   const sub = outbox.subscribe(filters, options);
   // NAP-OUTBOX delivers a RelayEventResult (`{ event, sidecar? }`); the raw

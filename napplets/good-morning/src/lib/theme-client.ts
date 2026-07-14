@@ -65,10 +65,21 @@ export function installBuiltInThemeClient(): { close(): void } {
   const napplet = (globalThis as unknown as { napplet?: { theme?: unknown } }).napplet;
   if (!napplet?.theme) return { close: () => undefined };
 
-  void themeGet()
-    .then((theme) => applyCssVariables(variablesForTheme(theme)))
-    .catch(() => undefined);
+  // Keep the fallback usable in diagnostic/development runtimes that expose
+  // the optional domain but do not implement its complete SDK surface.
+  try {
+    void themeGet()
+      .then((theme) => applyCssVariables(variablesForTheme(theme)))
+      .catch(() => undefined);
+  } catch {
+    // The fallback variables above are already applied.
+  }
 
-  const sub = themeOnChanged((theme) => applyCssVariables(variablesForTheme(theme)));
-  return { close: () => sub.close() };
+  let sub: { close(): void } | null = null;
+  try {
+    sub = themeOnChanged((theme) => applyCssVariables(variablesForTheme(theme)));
+  } catch {
+    // Theme updates are a degradable enhancement.
+  }
+  return { close: () => sub?.close() };
 }

@@ -10,6 +10,14 @@ import { join } from 'node:path';
 
 // Napplet folder names double as deploy `d` tags in @napplet/cli monorepo mode.
 const D_TAG_PATTERN = /^[a-z0-9-]{1,13}$/;
+const SHIM_PACKAGE = '@napplet/shim';
+const CURRENT_NAPPLET_PACKAGES = {
+  '@napplet/sdk': '^0.24.4',
+  '@napplet/conformance-cli': '^0.2.15',
+  '@napplet/vite-plugin': '^0.11.3',
+};
+const STATIC_SHIM_IMPORT =
+  /^[\t ]*import(?:[\t ]+[^'"\r\n]+[\t ]+from)?[\t ]*['"]@napplet\/shim(?:\/[^'"]*)?['"];?[\t ]*(?:\/\/[^\r\n]*)?\r?\n?/gm;
 
 function titleFromName(name) {
   return name
@@ -22,16 +30,16 @@ function titleFromName(name) {
 export async function adoptNapplet(dir, { name, title } = {}) {
   const displayTitle = title?.trim() || titleFromName(name);
 
-  // 1. Remove duplicated shared context — it lives once at the repo root.
-  for (const shared of ['docs', '.codex', 'LICENSE']) {
+  // 1. Remove duplicated shared context and the standalone template's guidance
+  // test. Repo-level guidance and its validation live once at the root.
+  for (const shared of ['docs', '.codex', 'tests/guidance.test.mjs', 'LICENSE']) {
     await rm(join(dir, shared), { recursive: true, force: true });
   }
 
-  // 1b. Pin a memorable dev port (napplet Vite on 3001). Testing and deploy are
-  // driven by @napplet/cli at the repo root in monorepo mode (`pnpm
-  // test:conformance` / `pnpm deploy` run `napplet … --all` over `napplets/`), so
-  // napplets carry no per-package CLI config or scripts. The folder name is the
-  // deploy `d` tag, so it must be a valid tag.
+  // 1b. Pin a memorable dev port (napplet Vite on 3001). Deploy is driven by
+  // @napplet/cli at the repo root in monorepo mode; package-level build,
+  // type-check, verify, and conformance scripts remain useful for filtered runs.
+  // The folder name is the deploy `d` tag, so it must be a valid tag.
   if (!D_TAG_PATTERN.test(name)) {
     console.warn(
       `warning: "${name}" is not a valid napplet d tag (^[a-z0-9-]{1,13}$, no trailing '-').\n` +
@@ -40,11 +48,41 @@ export async function adoptNapplet(dir, { name, title } = {}) {
   }
   const pkgPath = join(dir, 'package.json');
   const pkg = JSON.parse(await readFile(pkgPath, 'utf8'));
+  for (const dependencyGroup of ['dependencies', 'devDependencies']) {
+    if (!pkg[dependencyGroup]) continue;
+    delete pkg[dependencyGroup][SHIM_PACKAGE];
+  }
+  pkg.dependencies = {
+    ...pkg.dependencies,
+    '@napplet/sdk': CURRENT_NAPPLET_PACKAGES['@napplet/sdk'],
+  };
+  pkg.devDependencies = {
+    ...pkg.devDependencies,
+    '@napplet/conformance-cli': CURRENT_NAPPLET_PACKAGES['@napplet/conformance-cli'],
+    '@napplet/vite-plugin': CURRENT_NAPPLET_PACKAGES['@napplet/vite-plugin'],
+  };
+  const scripts = { ...pkg.scripts };
+  delete scripts['test:guidance'];
   pkg.scripts = {
-    ...pkg.scripts,
+    ...scripts,
     dev: 'vite --host 127.0.0.1 --port 3001 --strictPort',
+    verify: 'pnpm type-check && pnpm build',
   };
   await writeFile(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
+
+  // Runtime injection replaced app-owned bootstrap. Keep this normalization
+  // while the published generator can still clone older template revisions.
+  const mainPath = join(dir, 'src', 'main.ts');
+  const mainSource = await readFile(mainPath, 'utf8');
+  const normalizedMain = mainSource.replace(STATIC_SHIM_IMPORT, '');
+  if (normalizedMain.includes(SHIM_PACKAGE)) {
+    throw new Error(
+      `${mainPath} still references ${SHIM_PACKAGE}; remove the app-owned runtime bootstrap`,
+    );
+  }
+  if (normalizedMain !== mainSource) {
+    await writeFile(mainPath, normalizedMain);
+  }
 
   // 2. Extend the shared base tsconfig instead of carrying a full copy.
   await writeFile(
@@ -66,10 +104,11 @@ the shared NIP-5D authoring context live at the root:
 
 - [\`../../AGENTS.md\`](../../AGENTS.md) — boundaries, workflow, verification
 - [\`../../docs/\`](../../docs) — NIP-5D, boundaries, design patterns, NAP proposals
-- [\`../../.codex/skills/\`](../../.codex/skills) — napplet-author, napplet-verify
+- [\`../../.agents/skills/\`](../../.agents/skills) — napplet design, build, and verification
 
 This package is the napplet side of the shell boundary only. Do not add shell or
-host code, direct \`fetch\`/\`WebSocket\`/storage, or \`window.nostr\` here.
+host code, direct \`fetch\`/\`WebSocket\`/storage, \`window.nostr\`, or an app-owned
+\`@napplet/shim\` import here. The runtime injects \`window.napplet\` before app code.
 `,
   );
 
@@ -86,8 +125,10 @@ pnpm --filter ${name} verify            # type-check + single-file build
 pnpm --filter ${name} test:conformance  # NAP conformance check
 \`\`\`
 
-Imports \`@napplet/shim\` once at the entry point, then uses \`@napplet/sdk\` for
-shell services, declaring the NAPs it uses in \`vite.config.ts\` (\`requires\`).
+The runtime injects \`window.napplet\`; app code uses \`@napplet/sdk\` for shell
+services. For current Kehto/Paja compatibility, \`vite.config.ts\` declares every
+used NAP because the host derives injected grants from that list; degradable paths
+still use injected property presence and fallbacks.
 
 Shared authoring context lives at the repo root: [\`../../docs/\`](../../docs).
 See [\`../../AGENTS.md\`](../../AGENTS.md) before changing protocol-facing behavior.
