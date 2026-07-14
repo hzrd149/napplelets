@@ -83,9 +83,12 @@ runtime exposes that NAP; absence means it's unavailable. The inbox is
 ```bash
 pnpm --filter @napplelets/good-morning dev        # vite dev server (port 5184)
 pnpm --filter @napplelets/good-morning test       # vitest
-pnpm --filter @napplelets/good-morning type-check
-pnpm --filter @napplelets/good-morning build
+pnpm --filter @napplelets/good-morning verify     # test + type-check + build
+pnpm --filter @napplelets/good-morning test:conformance
 ```
+
+The host runtime injects `window.napplet` before this app starts; the package
+uses `@napplet/sdk` and carries no app-owned `@napplet/shim` dependency.
 
 The manifest (`d` tag `good-morning`) is build-signed by `@napplet/vite-plugin`;
 the launcher registry entry (`apps/shell/.../napplet-registry.ts`) uses the same

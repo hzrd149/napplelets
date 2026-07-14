@@ -7,10 +7,10 @@ The template should stay on the napplet side of that line.
 
 - UI state and rendering.
 - User gestures inside the iframe.
-- Calls into `window.napplet` through `@napplet/sdk`.
-- Feature detection with `window.napplet.shell.supports()`.
-- Subscription cleanup for relay, identity, config, keys, media, notify, and INC
-  listeners.
+- Calls into runtime-injected `window.napplet` through `@napplet/sdk`.
+- Feature detection with injected domain property presence.
+- Subscription cleanup for outbox, relay-local escape hatches, identity, config,
+  keys, media, notify, and INC listeners.
 - Graceful fallback when a shell does not implement a requested NAP.
 
 ## Shell Owns
@@ -21,6 +21,7 @@ The template should stay on the napplet side of that line.
 - Storage persistence and quota.
 - External byte fetching through NAP-RESOURCE.
 - Settings UI for NAP-CONFIG.
+- Injection of the granted `window.napplet.<domain>` objects before app scripts.
 
 (NAP-CONNECT direct-network grants and NAP-CLASS security-class assignment are
 currently deferred on the NAPs track — not part of the active surface.)
@@ -38,7 +39,9 @@ currently deferred on the NAPs track — not part of the active surface.)
 
 ## Allowed Patterns
 
-- `import '@napplet/shim';` at the app entry point.
-- `import { relay, storage, identity } from '@napplet/sdk';` for named helpers.
+- `import { outbox, storage, identity } from '@napplet/sdk';` for named helpers.
+- `if (window.napplet?.resource) { ... }` before using optional domains.
+- `relay.subscribe(..., { relay: groupRelay })` only for explicit relay-local
+  semantics that OUTBOX cannot express.
 - `storage.setItem()` for durable key-value app state.
 - `resource.bytes()` for external read-only bytes.

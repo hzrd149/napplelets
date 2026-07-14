@@ -60,7 +60,7 @@ describe('classifyCapabilities', () => {
 });
 
 describe('GM_NAP_REQUIREMENTS', () => {
-  it('covers the domains declared in vite.config requires', () => {
+  it('covers every domain declared in the manifest grant list', () => {
     const domains = GM_NAP_REQUIREMENTS.map((r) => r.domain).sort();
     expect(domains).toEqual(['identity', 'inc', 'link', 'outbox', 'resource', 'theme'].sort());
   });

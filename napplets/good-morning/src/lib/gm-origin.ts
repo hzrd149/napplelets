@@ -9,11 +9,9 @@
 //                      scan (resolution = "scan settled") + a live
 //                      outbox.subscribe(filters, { authors }) tail for new events.
 //
-// The SDK owns readiness/transport: outbox.subscribe/query read
-// window.napplet.outbox at call time, and the shim's sendEnvelope handles
-// clone-safe postMessage (default 'auto' mode snapshots reactive proxies on
-// DataCloneError), so app code passes plain objects and lets the boundary own
-// the rest.
+// The SDK owns the app-facing transport: outbox.subscribe/query read the
+// runtime-injected window.napplet.outbox at call time, so app code passes plain
+// objects and lets the runtime boundary own clone-safe postMessage delivery.
 
 import { outbox, type RelayEventResult, type Subscription } from '@napplet/sdk';
 import type { NostrEvent, NostrFilter } from './nostr';
@@ -51,8 +49,8 @@ interface OutboxReadOptions {
 
 /**
  * Apply caller-supplied per-leg props onto every filter, returning plain filter
- * objects. The shim's sendEnvelope normalizes reactive proxies before they cross
- * the iframe boundary (clone mode 'auto'), so a plain spread is sufficient here.
+ * objects. The runtime boundary normalizes clone-safe values before they cross
+ * the iframe, so a plain spread is sufficient here.
  */
 function withExtraProps(
   filters: NostrFilter[],
@@ -83,7 +81,7 @@ export function subscribeForPayload(
   const filters = withExtraProps(payload.filters, extraFilterProps);
   // Forward explicit author hints so the shell routes each filter to the authors'
   // write relays (NAP-OUTBOX) instead of re-deriving them. A plain array copy is
-  // enough — the shim handles clone-safety at the boundary.
+  // enough — the runtime handles clone-safety at the boundary.
   const options: OutboxReadOptions =
     payload.authors && payload.authors.length > 0 ? { authors: [...payload.authors] } : {};
 

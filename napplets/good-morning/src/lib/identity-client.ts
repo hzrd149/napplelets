@@ -48,12 +48,16 @@ export async function waitForPublicKey(
   const startedAt = Date.now();
   let attempts = 0;
   const identityChangeWaiters = new Set<() => void>();
-  const identityChangeSub =
-    typeof identity.onChanged === 'function'
-      ? identity.onChanged(() => {
-          for (const resolve of identityChangeWaiters) resolve();
-        })
-      : null;
+  let identityChangeSub: { close(): void } | null = null;
+  if (typeof identity.onChanged === 'function') {
+    try {
+      identityChangeSub = identity.onChanged(() => {
+        for (const resolve of identityChangeWaiters) resolve();
+      });
+    } catch (error) {
+      options.onError?.(error);
+    }
+  }
 
   const waitForRetry = (ms: number): Promise<void> => {
     if (options.signal?.aborted) return Promise.resolve();

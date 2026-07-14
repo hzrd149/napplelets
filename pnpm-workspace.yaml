@@ -7,18 +7,16 @@ allowBuilds:
   esbuild: true
 
 minimumReleaseAgeExclude:
-  - '@napplet/conformance-cli@0.2.14'
-  - '@napplet/conformance@0.12.3'
-  - '@napplet/core@0.27.1'
-  - '@napplet/nap@0.27.2'
-  - '@napplet/sdk@0.24.2'
-  - '@napplet/shim@0.26.5'
-  - '@napplet/vite-plugin@0.11.0'
-  - '@jsr/napplet__core@0.27.1'
-  - '@jsr/napplet__nap@0.27.2'
-  - '@jsr/napplet__sdk@0.24.2'
-  - '@jsr/napplet__shim@0.26.5'
-  - '@jsr/napplet__vite-plugin@0.11.0'
+  - '@napplet/conformance-cli@0.2.15'
+  - '@napplet/conformance@0.13.0'
+  - '@napplet/core@0.28.0'
+  - '@napplet/nap@0.28.0'
+  - '@napplet/sdk@0.24.4'
+  - '@napplet/vite-plugin@0.11.3'
+  - '@jsr/napplet__core@0.28.0'
+  - '@jsr/napplet__nap@0.28.0'
+  - '@jsr/napplet__sdk@0.24.4'
+  - '@jsr/napplet__vite-plugin@0.11.3'
 
 # This is a development workspace: we deliberately do NOT pin or override any
 # versions so napplets are always tested against the real, latest resolved

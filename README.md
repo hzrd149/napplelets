@@ -6,22 +6,22 @@ relay access to a host shell over the NIP-5D JSON envelope wire format.
 
 Each napplet is a self-contained workspace package under [`napplets/`](./napplets)
 built with the [`@napplet`](https://napplet.run/docs/) packages. Those packages
-come from JSR through pnpm's npm compatibility aliases (`npm:@jsr/napplet__*`).
-This is a development workspace — versions are intentionally not pinned so
-napplets are tested against the latest resolved versions.
+are dual-published to npm and JSR; this workspace consumes the npm-facing
+`@napplet/*` names. Versions are intentionally not overridden so napplets are
+tested against the latest resolved compatible releases.
 
 ## Layout
 
 ```
 napplelets/
 ├─ napplets/            # one workspace package per napplet
-│  └─ test/             # example napplet (exercises every shell surface)
-├─ templates/
-│  └─ napplet/          # clean starter copied by `pnpm new`
+│  └─ good-morning/     # current napplet package
 ├─ docs/                # shared NIP-5D authoring context (single source of truth)
 ├─ scripts/
-│  └─ new-napplet.mjs   # scaffolder
-├─ .codex/skills/       # napplet authoring + verification skills
+│  ├─ new-napplet.mjs   # official-generator wrapper
+│  └─ lib/adopt.mjs     # monorepo adoption + stale-template sanitizer
+├─ tools/napplet-cli/   # Deno launcher for the root CLI
+├─ .agents/skills/      # napplet design, build, port, and verification skills
 ├─ tsconfig.base.json   # shared TypeScript config every napplet extends
 └─ pnpm-workspace.yaml  # workspace = napplets/*
 ```
@@ -63,7 +63,8 @@ every napplet).
 
 ```bash
 pnpm build               # build every napplet to a single self-contained index.html
-pnpm verify              # type-check + build every napplet
+pnpm test                # scaffolder regression + package unit tests
+pnpm verify              # test + type-check + build every napplet
 pnpm type-check          # strict TS check across the workspace
 pnpm discover            # list every built napplet the CLI can see
 pnpm test:conformance    # NAP conformance check for every napplet
@@ -98,18 +99,19 @@ keys with `pnpm keys list` / `pnpm keys doctor` / `pnpm logout`.
 Run a single napplet's own scripts with pnpm's filter:
 
 ```bash
-pnpm --filter test dev
-pnpm --filter test verify
+pnpm --filter @napplelets/good-morning dev
+pnpm --filter @napplelets/good-morning verify
+pnpm --filter @napplelets/good-morning test:conformance
 ```
 
 ## How a napplet works
 
-A napplet imports `@napplet/shim` once at its entry point to install
-`window.napplet`, then uses `@napplet/sdk` to ask the host shell for relay,
-identity, storage, resource, config, notification, and other NAP services. The
-build inlines everything into one `index.html` (via `vite-plugin-singlefile`)
-because NIP-5D loads a napplet through `iframe.srcdoc` with no served origin to
-fetch external assets from.
+The host runtime injects the granted `window.napplet.<domain>` objects before
+application scripts run. Napplet code uses `@napplet/sdk` for typed calls and
+checks injected domain properties only for optional-feature availability; it
+does not import `@napplet/shim`. `@napplet/vite-plugin` inlines the build into one
+`index.html` because NIP-5D loads a napplet through `iframe.srcdoc` with no
+served origin from which to fetch external assets.
 
 ### Hard boundaries
 
@@ -117,6 +119,10 @@ fetch external assets from.
   `sessionStorage`. Use the `@napplet/sdk` helpers; use `resource.bytes()` for
   read-only external bytes.
 - No `window.nostr` or direct access to signer keys, relay pools, or host DOM.
+- No app-owned `@napplet/shim` dependency or import.
+- For current Kehto/Paja compatibility, manifest `requires` lists every domain
+  the app uses because the host derives injected grants from it; degradable
+  domains must still be presence-gated with a usable fallback.
 - Don't invent NAP names, numbers, or envelope domains — see
   [`docs/new-nap-proposals.md`](./docs/new-nap-proposals.md).
 

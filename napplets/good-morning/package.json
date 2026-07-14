@@ -4,15 +4,17 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host 127.0.0.1",
     "build": "vite build",
-    "preview": "vite preview",
+    "preview": "vite preview --host 127.0.0.1",
     "type-check": "tsc --noEmit",
-    "test": "vitest run"
+    "verify": "pnpm test && pnpm type-check && pnpm build",
+    "test": "vitest run",
+    "test:conformance": "pnpm build && napplet-conformance ./dist",
+    "test:conformance:ui": "napplet-conformance --ui . --exec \"vite build --watch\""
   },
   "dependencies": {
     "@napplet/sdk": "^0.24.4",
-    "@napplet/shim": "^0.26.8",
     "nostr-tools": "2.23.3",
     "svelte": "^5.56.4",
     "timeago.js": "4.0.2"

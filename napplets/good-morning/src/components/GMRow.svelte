@@ -5,6 +5,7 @@
   import { isCanonicalHexPubkey } from '../lib/intent-topics';
   import { pubkeyColorStyle } from '../lib/pubkey-color';
   import { resourceImageBatch as resourceImage } from '../lib/resource-image';
+  import { isNapDomainPresent } from '../lib/runtime-domain';
   import type { NostrEvent } from '../lib/nostr';
   import type { ProfileContent } from '../lib/profile-metadata';
   import {
@@ -25,6 +26,7 @@
   }
 
   let { event, isRead, profile, profiles }: Props = $props();
+  const resourceAvailable = isNapDomainPresent('resource');
 
   type QuickState = 'idle' | 'sending' | 'sent' | 'error';
   let quickState = $state<QuickState>('idle');
@@ -110,7 +112,7 @@
       onclick={openProfile}
       aria-label="Open profile for {authorName}"
     >
-      {#if avatarUrl != null}
+      {#if resourceAvailable && avatarUrl != null}
         <img
           use:resourceImage={avatarUrl}
           alt={authorName}

@@ -6,6 +6,7 @@
   import type { ProfileContent } from '../lib/profile-metadata';
   import { buildGalleryItems } from '../lib/gm-media';
   import { createGMNoteOpenPayload, NOTE_VIEWER_OPEN_TOPIC } from '../lib/gm-actions';
+  import { isNapDomainPresent } from '../lib/runtime-domain';
 
   interface Props {
     /** The GM threads to show as a gallery (already filtered by the inbox). */
@@ -15,6 +16,7 @@
   }
 
   let { threads, profiles }: Props = $props();
+  const resourceAvailable = isNapDomainPresent('resource');
 
   // Only GMs that carry an image become gallery tiles; the note content rides
   // along as the alt/caption under each one.
@@ -68,7 +70,11 @@
           data-gm-note-id={item.note.id}
           aria-label="Open GM note"
         >
-          <img use:resourceImage={item.imageSource} alt={item.note.content} loading="lazy" />
+          {#if resourceAvailable}
+            <img use:resourceImage={item.imageSource} alt={item.note.content} loading="lazy" />
+          {:else}
+            <span class="gm-tile-unavailable">media unavailable</span>
+          {/if}
 
           <!-- Author avatar floating in the upper-left corner (decorative — the
                whole tile opens the note). -->
@@ -77,7 +83,7 @@
             title={authorName(item.note.pubkey)}
             data-gm-author-pubkey={item.note.pubkey}
           >
-            {#if avatarUrl(item.note.pubkey) != null}
+            {#if resourceAvailable && avatarUrl(item.note.pubkey) != null}
               <img
                 use:resourceImage={avatarUrl(item.note.pubkey)}
                 alt={authorName(item.note.pubkey)}
@@ -148,6 +154,15 @@
     transition:
       border-color 120ms,
       transform 120ms;
+  }
+
+  .gm-tile-unavailable {
+    display: grid;
+    width: 100%;
+    height: 100%;
+    place-items: center;
+    color: var(--hg-text-muted, #b8b1a4);
+    font-size: 0.75rem;
   }
 
   /* Overlays ride above the image but never intercept the tile's click. */

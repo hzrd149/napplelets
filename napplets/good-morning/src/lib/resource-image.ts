@@ -1,4 +1,5 @@
-import { resourceBytesAsObjectURL } from '@napplet/sdk';
+import { resourceBytes } from '@napplet/sdk';
+import { isNapDomainPresent } from './runtime-domain';
 
 type ActionReturn<Parameter> = {
   update?(parameter: Parameter): void;
@@ -11,21 +12,6 @@ interface ResourceMediaBatchOptions {
 }
 
 type ResourceMediaBatchParameter = string | null | undefined | ResourceMediaBatchOptions;
-
-/**
- * Handle shape returned by resourceBytesAsObjectURL. The SDK's published type
- * lists only { url, revoke }, but the shim attaches a non-enumerable `ready`
- * promise (documented as a "shim-specific extension" in the d.ts docstring) that
- * resolves with the object URL once the shell-side fetch completes. The `url`
- * field is "" until that resolves — so awaiting `ready` is the only way to
- * actually get bytes onto the element. Without this, the handle resolves
- * synchronously with an empty url and the media never loads.
- */
-interface ResourceObjectUrlHandle {
-  url: string;
-  revoke(): void;
-  ready?: Promise<string>;
-}
 
 /** Element types that expose a settable `src` attribute. */
 type MediaElement = HTMLImageElement | HTMLVideoElement;
@@ -65,6 +51,7 @@ function createResourceMediaAction(
 ): ActionReturn<ResourceMediaBatchParameter> {
   let currentSource: string | null = null;
   let objectUrl: string | null = null;
+  let requestController: AbortController | null = null;
   let token = 0;
 
   function clearObjectUrl(): void {
@@ -82,6 +69,8 @@ function createResourceMediaAction(
     if (nextSource === currentSource) return;
     currentSource = nextSource;
     token++;
+    requestController?.abort();
+    requestController = null;
     clearObjectUrl();
 
     if (!nextSource) {
@@ -98,15 +87,24 @@ function createResourceMediaAction(
     // would either fail or bypass the shell's resource policy. Leave src unset
     // until the shell-resolved object URL is ready; on failure, leave it unset.
     setResolvedSource(null);
+    if (!isNapDomainPresent('resource')) return;
+
     const requestToken = token;
-    // resourceBytesAsObjectURL returns synchronously with url:"" and a hidden
-    // `ready` promise that resolves once the shell fetch completes. Await
-    // `ready` — awaiting the handle itself resolves immediately with url:"".
-    const handle = resourceBytesAsObjectURL(nextSource) as ResourceObjectUrlHandle;
-    void handle.ready
-      ?.then((resolvedUrl) => {
-        if (requestToken !== token) {
-          handle.revoke();
+    const controller = new AbortController();
+    requestController = controller;
+    let bytesPromise: Promise<Blob>;
+    try {
+      bytesPromise = resourceBytes(nextSource, { signal: controller.signal });
+    } catch {
+      requestController = null;
+      return;
+    }
+    void bytesPromise
+      .then((blob) => {
+        if (requestToken !== token || controller.signal.aborted) return;
+        const resolvedUrl = URL.createObjectURL(blob);
+        if (requestToken !== token || controller.signal.aborted) {
+          URL.revokeObjectURL(resolvedUrl);
           return;
         }
         clearObjectUrl();
@@ -115,6 +113,9 @@ function createResourceMediaAction(
       })
       .catch(() => {
         if (requestToken === token) setResolvedSource(null);
+      })
+      .finally(() => {
+        if (requestController === controller) requestController = null;
       });
   }
 
@@ -124,6 +125,8 @@ function createResourceMediaAction(
     update: setParameter,
     destroy() {
       token++;
+      requestController?.abort();
+      requestController = null;
       clearObjectUrl();
       node.removeAttribute('src');
     },

@@ -1,9 +1,14 @@
 <script lang="ts">
-  import { inc as ipc, link } from '@napplet/sdk';
+  import { inc as ipc } from '@napplet/sdk';
   import { isCanonicalHexPubkey } from '../lib/intent-topics';
   import { parseNoteContent } from '../lib/note-content';
-  import { resourceImageBatch as resourceImage, resourceVideoBatch as resourceVideo } from '../lib/resource-image';
+  import {
+    resourceImageBatch as resourceImage,
+    resourceVideoBatch as resourceVideo,
+  } from '../lib/resource-image';
   import { createGMReferenceOpenPayload, NOTE_VIEWER_OPEN_TOPIC } from '../lib/gm-actions';
+  import { openExternalLink } from '../lib/link-client';
+  import { isNapDomainPresent } from '../lib/runtime-domain';
 
   interface Props {
     content: string;
@@ -12,18 +17,12 @@
   }
 
   let { content, emojiTags = [], profileLabel }: Props = $props();
+  const resourceAvailable = isNapDomainPresent('resource');
   let blocks = $derived(parseNoteContent(content, emojiTags));
 
   function openProfile(pubkey: string): void {
     if (!isCanonicalHexPubkey(pubkey)) return;
     ipc.emit('profile:open', [], JSON.stringify({ pubkey }));
-  }
-
-  // NAP-LINK: route external links through the shell-owned opener so the new
-  // browsing context does not inherit this napplet's origin.
-  async function openLink(url: string): Promise<boolean> {
-    const result = await link.open(url);
-    return result.status === 'opened';
   }
 
   function handleLinkClick(event: MouseEvent, url: string): void {
@@ -37,7 +36,9 @@
     )
       return;
     event.preventDefault();
-    void openLink(url);
+    // Link opening is degradable. Preserve the sandbox when NAP-LINK is
+    // unavailable instead of navigating the iframe directly to the URL.
+    void openExternalLink(url);
   }
 
   function openReference(source: string): void {
@@ -68,24 +69,40 @@
         {block.value}
       </a>
     {:else if block.type === 'media' && block.mediaType === 'image'}
-      <span class="gm-inline-resource">
-        <img use:resourceImage={block.value} alt="GM image" loading="lazy" />
-      </span>
+      {#if resourceAvailable}
+        <span class="gm-inline-resource">
+          <img use:resourceImage={block.value} alt="Good morning media" loading="lazy" />
+        </span>
+      {:else}
+        <span class="text-text-muted">[media unavailable]</span>
+      {/if}
     {:else if block.type === 'media' && block.mediaType === 'video'}
-      <span class="gm-inline-resource">
-        <video use:resourceVideo={block.value} controls preload="auto" />
-      </span>
+      {#if resourceAvailable}
+        <span class="gm-inline-resource">
+          <video use:resourceVideo={block.value} controls preload="auto"></video>
+        </span>
+      {:else}
+        <span class="text-text-muted">[media unavailable]</span>
+      {/if}
     {:else if block.type === 'resource'}
-      <span class="gm-inline-resource">
-        <img use:resourceImage={block.source} alt="GM attachment" loading="lazy" />
-      </span>
+      {#if resourceAvailable}
+        <span class="gm-inline-resource">
+          <img use:resourceImage={block.source} alt="GM attachment" loading="lazy" />
+        </span>
+      {:else}
+        <span class="text-text-muted">[attachment unavailable]</span>
+      {/if}
     {:else if block.type === 'emoji'}
-      <img
-        class="gm-inline-emoji"
-        use:resourceImage={block.imageUrl}
-        alt={block.source}
-        loading="lazy"
-      />
+      {#if resourceAvailable}
+        <img
+          class="gm-inline-emoji"
+          use:resourceImage={block.imageUrl}
+          alt={block.source}
+          loading="lazy"
+        />
+      {:else}
+        {block.source}
+      {/if}
     {:else}
       {block.source}
     {/if}

@@ -9,25 +9,21 @@ guardrails are met.
 
 ### `@napplet/shim`
 
-Side-effect installer. Import once in the entry point.
-
-```ts
-import '@napplet/shim';
-```
-
-It installs `window.napplet`, routes JSON envelope messages from the shell, and
-mounts the NAP namespaces.
+Runtime-side injected-global installer. Napplet application code does not import
+or depend on this package. Runtime implementers use it to install the granted
+`window.napplet.<domain>` objects before any napplet script runs.
 
 ### `@napplet/sdk`
 
 Named helpers for napplet app code.
 
 ```ts
-import { relay, storage, identity, config, resource } from '@napplet/sdk';
+import { outbox, storage, identity, config, resource } from '@napplet/sdk';
 ```
 
-Use this for most app code. It wraps `window.napplet` at call time and re-exports
-types and constants for common NAPs.
+Use this for app calls. It wraps runtime-injected domains at call time and
+re-exports types and constants. Prefer OUTBOX or a higher-level social domain
+for normal Nostr work; RELAY is the low-level relay-local escape hatch.
 
 ### `@napplet/nap`
 
@@ -44,14 +40,16 @@ Do not import from the `@napplet/nap` root. Import a domain subpath.
 
 ### `@napplet/vite-plugin`
 
-Vite plugin for local development metadata and local manifest/hash workflow.
+Vite plugin for single-file builds and a local manifest/hash workflow.
 
 ```ts
 import { nip5aManifest } from '@napplet/vite-plugin';
 ```
 
-The plugin injects napplet meta tags, folds config schema and connect origins
-into aggregate hash inputs, and can write a local `.nip5a-manifest.json` when
-`VITE_DEV_PRIVKEY_HEX` is set.
+Set `artifactMode: 'single-file'` for the NIP-5D artifact shape. The plugin can
+write a local `.nip5a-manifest.json` when `VITE_DEV_PRIVKEY_HEX` is set. Declare
+every used domain through `requires` because current Kehto/Paja hosts derive the
+injected grant from it; this is a runtime compatibility constraint. Presence-gate
+degradable paths as a robustness fallback.
 
 Production relay publishing is intentionally outside this boilerplate.
