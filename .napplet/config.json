@@ -1,19 +1,23 @@
 {
   "version": 1,
   "sourceDir": ".",
-  "relays": ["wss://relay.ditto.pub"],
-  "blossomServers": ["https://cdn.hzrd149.com"],
+  "relays": [
+    "wss://relay.ditto.pub"
+  ],
+  "blossomServers": [
+    "https://cdn.hzrd149.com"
+  ],
   "defaultTarget": "named",
   "named": [],
   "discover": {
     "enabled": true,
-    "roots": ["napplets"]
+    "roots": [
+      "napplets"
+    ]
   },
   "signing": {
     "mode": "interactive",
-    "keyReference": "266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5",
-    "pubkey": "266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5",
-    "relays": ["wss://bucket.coracle.social"]
+    "keyReference": "hzrd149"
   },
   "conformance": {
     "command": "napplet-conformance"
