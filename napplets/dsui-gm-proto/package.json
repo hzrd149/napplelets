@@ -1,0 +1,33 @@
+{
+  "name": "@napplelets/dsui-gm-proto",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "type-check": "tsc --noEmit",
+    "verify": "pnpm test && pnpm type-check && pnpm build",
+    "test": "vitest run",
+    "test:conformance": "pnpm build && napplet-conformance ./dist",
+    "test:conformance:ui": "napplet-conformance --ui . --exec \"vite build --watch\""
+  },
+  "dependencies": {
+    "@napplet/sdk": "^0.24.4",
+    "nostr-tools": "2.23.3",
+    "svelte": "^5.56.4",
+    "timeago.js": "4.0.2"
+  },
+  "devDependencies": {
+    "@napplet/vite-plugin": "^0.11.3",
+    "@sveltejs/vite-plugin-svelte": "^7.2.0",
+    "@tailwindcss/vite": "^4.1.18",
+    "daisyui": "^5.6.7",
+    "jsdom": "^26.1.0",
+    "tailwindcss": "^4.1.18",
+    "typescript": "^5.9.3",
+    "vite": "^8.1.4",
+    "vitest": "^4.1.10"
+  }
+}

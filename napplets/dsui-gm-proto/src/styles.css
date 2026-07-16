@@ -1,0 +1,55 @@
+@import "tailwindcss";
+@plugin "daisyui" {
+  themes: light --default, dark --prefersdark;
+  logs: false;
+}
+@plugin "daisyui/theme" {
+  name: "napplet-runtime";
+  default: false;
+  prefersdark: false;
+  color-scheme: dark;
+  --color-base-100: #14110c;
+  --color-base-200: #1f1b13;
+  --color-base-300: #2b2519;
+  --color-base-content: #f5f1e8;
+  --color-primary: #9be564;
+  --color-primary-content: #111827;
+  --color-secondary: #4c6040;
+  --color-secondary-content: #f5f1e8;
+  --color-accent: #aee47e;
+  --color-accent-content: #111827;
+  --color-neutral: #38332b;
+  --color-neutral-content: #f5f1e8;
+  --color-info: #38bdf8;
+  --color-info-content: #082f49;
+  --color-success: #22c55e;
+  --color-success-content: #052e16;
+  --color-warning: #facc15;
+  --color-warning-content: #422006;
+  --color-error: #f87171;
+  --color-error-content: #450a0a;
+  --radius-selector: 1rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.75rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 1;
+  --noise: 0;
+}
+
+:root {
+  --gm-font-body: ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+html,
+body,
+#app {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--gm-font-body);
+}
