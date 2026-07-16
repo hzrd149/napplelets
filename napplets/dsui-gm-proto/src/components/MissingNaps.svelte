@@ -72,15 +72,13 @@
             data-gm-nap-severity="essential"
           >
             <div class="card-body p-3">
-            <div class="flex items-center gap-2 mb-1">
-              <span
-                class="badge badge-error badge-outline badge-xs uppercase tracking-wide"
-              >
-                required
-              </span>
-              <code class="text-sm text-base-content font-semibold">{nap.label}</code>
-            </div>
-            <p class="text-base-content/70 text-xs leading-relaxed">{nap.purpose}</p>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="badge badge-error badge-outline badge-xs uppercase tracking-wide">
+                  required
+                </span>
+                <code class="text-sm text-base-content font-semibold">{nap.label}</code>
+              </div>
+              <p class="text-base-content/70 text-xs leading-relaxed">{nap.purpose}</p>
             </div>
           </li>
         {/each}
@@ -99,15 +97,15 @@
                 data-gm-nap-severity="degraded"
               >
                 <div class="card-body p-3">
-                <div class="flex items-center gap-2 mb-1">
-                  <span
-                    class="badge badge-warning badge-outline badge-xs uppercase tracking-wide"
-                  >
-                    optional
-                  </span>
-                  <code class="text-sm text-base-content font-semibold">{nap.label}</code>
-                </div>
-                <p class="text-base-content/70 text-xs leading-relaxed">{nap.purpose}</p>
+                  <div class="flex items-center gap-2 mb-1">
+                    <span
+                      class="badge badge-warning badge-outline badge-xs uppercase tracking-wide"
+                    >
+                      optional
+                    </span>
+                    <code class="text-sm text-base-content font-semibold">{nap.label}</code>
+                  </div>
+                  <p class="text-base-content/70 text-xs leading-relaxed">{nap.purpose}</p>
                 </div>
               </li>
             {/each}

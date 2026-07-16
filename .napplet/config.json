@@ -1,19 +1,13 @@
 {
   "version": 1,
   "sourceDir": ".",
-  "relays": [
-    "wss://relay.ditto.pub"
-  ],
-  "blossomServers": [
-    "https://cdn.hzrd149.com"
-  ],
+  "relays": ["wss://relay.ditto.pub", "wss://relay.damus.io", "wss://relay.primal.net", "wss://nos.lol"],
+  "blossomServers": ["https://cdn.hzrd149.com", "https://blossom.ditto.pub"],
   "defaultTarget": "named",
   "named": [],
   "discover": {
     "enabled": true,
-    "roots": [
-      "napplets"
-    ]
+    "roots": ["napplets"]
   },
   "signing": {
     "mode": "interactive",

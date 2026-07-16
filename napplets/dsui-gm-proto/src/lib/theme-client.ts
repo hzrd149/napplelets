@@ -22,7 +22,8 @@ function variablesForTheme(theme: Theme): Record<string, string> {
     text: theme.colors.text,
     primary: theme.colors.primary,
   };
-  if (!Object.values(colors).every((value) => typeof value === 'string' && isDaisyThemeHex(value))) return {};
+  if (!Object.values(colors).every((value) => typeof value === 'string' && isDaisyThemeHex(value)))
+    return {};
 
   const variables = buildDaisyTheme(colors);
   // NAP-THEME fonts are { name, url } objects — use the family name. Loading

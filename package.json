@@ -35,7 +35,7 @@
     "@napplet/conformance-cli": "^0.2.15",
     "prettier": "^3.9.5",
     "prettier-plugin-svelte": "^3.5.2",
-    "turbo": "^2.10.4"
+    "turbo": "^2.10.5"
   },
   "license": "MIT"
 }

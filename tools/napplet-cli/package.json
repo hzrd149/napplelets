@@ -7,5 +7,8 @@
   "bin": {
     "napplet": "./bin.mjs"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@napplet/cli": "jsr:^0.1.3"
+  }
 }
