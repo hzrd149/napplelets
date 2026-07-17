@@ -111,7 +111,7 @@ export function isDarkDaisyTheme(input: DaisyThemeInput): boolean {
   return luminance(input.background) < 0.2;
 }
 
-export function buildDaisyTheme(input: DaisyThemeInput): DaisyThemeVariables {
+export function buildDaisyThemeColors(input: DaisyThemeInput): DaisyThemeVariables {
   assertHex(input.background, 'background');
   assertHex(input.text, 'text');
   assertHex(input.primary, 'primary');
@@ -145,13 +145,19 @@ export function buildDaisyTheme(input: DaisyThemeInput): DaisyThemeVariables {
     '--color-warning-content': dark ? '#422006' : '#ffffff',
     '--color-error': dark ? '#f87171' : '#dc2626',
     '--color-error-content': dark ? '#450a0a' : '#ffffff',
-    '--radius-selector': '1rem',
-    '--radius-field': '0.5rem',
-    '--radius-box': '0.75rem',
-    '--size-selector': '0.25rem',
-    '--size-field': '0.25rem',
+  };
+}
+
+export function buildDaisyTheme(input: DaisyThemeInput): DaisyThemeVariables {
+  return {
+    ...buildDaisyThemeColors(input),
+    '--radius-selector': '0rem',
+    '--radius-field': '0rem',
+    '--radius-box': '0rem',
+    '--size-selector': '0.21875rem',
+    '--size-field': '0.21875rem',
     '--border': '1px',
-    '--depth': '1',
+    '--depth': '0',
     '--noise': '0',
   };
 }
