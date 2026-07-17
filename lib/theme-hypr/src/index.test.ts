@@ -7,7 +7,7 @@ const sdk = vi.hoisted(() => ({
 
 vi.mock('@napplet/sdk', () => sdk);
 
-import { installBuiltInThemeClient } from './theme-client';
+import { installThemeClient } from './index';
 
 afterEach(() => {
   sdk.themeGet.mockReset();
@@ -16,7 +16,7 @@ afterEach(() => {
   document.documentElement.removeAttribute('style');
 });
 
-describe('installBuiltInThemeClient', () => {
+describe('installThemeClient', () => {
   it('keeps fallback variables when a diagnostic runtime injects an incomplete theme domain', () => {
     Object.defineProperty(globalThis, 'napplet', {
       configurable: true,
@@ -29,7 +29,7 @@ describe('installBuiltInThemeClient', () => {
       throw new Error('theme.onChanged is unavailable');
     });
 
-    expect(() => installBuiltInThemeClient()).not.toThrow();
+    expect(() => installThemeClient()).not.toThrow();
     expect(document.documentElement.style.getPropertyValue('--hg-bg-base')).toBe('#14110c');
   });
 });

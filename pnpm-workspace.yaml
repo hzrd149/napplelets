@@ -1,4 +1,5 @@
 packages:
+  - 'lib/*'
   - 'napplets/*'
   # Local repo tooling (e.g. the `napplet` launcher that runs @napplet/cli from JSR).
   - 'tools/*'

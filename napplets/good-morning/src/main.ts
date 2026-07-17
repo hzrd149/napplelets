@@ -1,10 +1,10 @@
-import '@unocss/reset/tailwind.css';
+import '@napplelets/theme-hypr/styles.css';
 import 'virtual:uno.css';
-import { installBuiltInThemeClient } from './lib/theme-client';
+import { installThemeClient } from '@napplelets/theme-hypr';
 import { mount } from 'svelte';
 import App from './App.svelte';
 
-installBuiltInThemeClient();
+installThemeClient();
 
 const app = mount(App, { target: document.getElementById('app')! });
 export default app;

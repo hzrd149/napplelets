@@ -14,6 +14,7 @@ tested against the latest resolved compatible releases.
 
 ```
 napplelets/
+├─ lib/                 # shared workspace packages used by napplets
 ├─ napplets/            # one workspace package per napplet
 │  └─ good-morning/     # current napplet package
 ├─ docs/                # shared NIP-5D authoring context (single source of truth)
@@ -23,7 +24,7 @@ napplelets/
 ├─ tools/napplet-cli/   # Deno launcher for the root CLI
 ├─ .agents/skills/      # napplet design, build, port, and verification skills
 ├─ tsconfig.base.json   # shared TypeScript config every napplet extends
-└─ pnpm-workspace.yaml  # workspace = napplets/*
+└─ pnpm-workspace.yaml  # workspace = lib/* + napplets/*
 ```
 
 ## Getting started

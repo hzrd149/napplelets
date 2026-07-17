@@ -7,16 +7,17 @@ const sdk = vi.hoisted(() => ({
 
 vi.mock('@napplet/sdk', () => sdk);
 
-import { installBuiltInThemeClient } from './theme-client';
+import { installThemeClient } from './index';
 
 afterEach(() => {
   sdk.themeGet.mockReset();
   sdk.themeOnChanged.mockReset();
   Reflect.deleteProperty(globalThis, 'napplet');
   document.documentElement.removeAttribute('style');
+  document.documentElement.removeAttribute('data-theme');
 });
 
-describe('installBuiltInThemeClient', () => {
+describe('installThemeClient', () => {
   it('keeps fallback variables when a diagnostic runtime injects an incomplete theme domain', () => {
     Object.defineProperty(globalThis, 'napplet', {
       configurable: true,
@@ -29,7 +30,7 @@ describe('installBuiltInThemeClient', () => {
       throw new Error('theme.onChanged is unavailable');
     });
 
-    expect(() => installBuiltInThemeClient()).not.toThrow();
+    expect(() => installThemeClient()).not.toThrow();
     expect(document.documentElement.getAttribute('data-theme')).toBe('napplet-runtime');
     expect(document.documentElement.style.getPropertyValue('--color-base-100')).toBe('#14110c');
     expect(document.documentElement.style.getPropertyValue('--color-primary')).toBe('#9be564');
@@ -46,7 +47,7 @@ describe('installBuiltInThemeClient', () => {
     });
     sdk.themeOnChanged.mockReturnValue({ close: vi.fn() });
 
-    installBuiltInThemeClient();
+    installThemeClient();
     await Promise.resolve();
 
     expect(document.documentElement.getAttribute('data-theme')).toBe('napplet-runtime');

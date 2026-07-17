@@ -22,11 +22,12 @@ itself is **not** in this repo — only the napplet side of the boundary.
 ## Repo shape
 
 - `napplets/<name>/` — one napplet per directory (a pnpm workspace package).
+- `lib/<name>/` — shared workspace packages consumed by napplets.
 - `docs/` — shared, repo-wide NIP-5D authoring context (single source of truth).
 - `.agents/skills/` — napplet design, build, port, and verification skills.
 - `scripts/new-napplet.mjs` — scaffolder (+ `scripts/lib/adopt.mjs`).
 - `tsconfig.base.json` — every napplet's `tsconfig.json` extends this.
-- `pnpm-workspace.yaml` — workspace = `napplets/*`.
+- `pnpm-workspace.yaml` — workspace = `lib/*` + `napplets/*`.
 
 ## Commands
 

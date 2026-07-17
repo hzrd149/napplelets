@@ -19,12 +19,6 @@ const FALLBACK_VARIABLES: Record<string, string> = {
   '--hg-font-mono': "ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace",
 };
 
-/**
- * Map the 3 NAP-THEME colors onto the semantically equivalent CSS variables.
- * NAP-THEME provides only `background`, `text`, and `primary` — the remaining
- * 10 slots (surfaces, borders, secondary text, amber/red accents) have no
- * shell-side equivalent and stay as fallback defaults.
- */
 const THEME_COLOR_MAP: Record<'background' | 'text' | 'primary', string> = {
   background: '--hg-bg-base',
   text: '--hg-text-primary',
@@ -51,22 +45,17 @@ function variablesForTheme(theme: Theme): Record<string, string> {
     const value = theme.colors[themeKey as keyof typeof THEME_COLOR_MAP];
     if (typeof value === 'string' && value.trim()) variables[cssVar] = value;
   }
-  // NAP-THEME fonts are { name, url } objects — use the family name. Loading
-  // the font file at `url` requires NAP-RESOURCE + @font-face injection, which
-  // is a separate concern; the name alone works when the font is system-installed.
   const bodyFont = theme.fonts?.body?.name;
   if (typeof bodyFont === 'string' && bodyFont.trim()) variables['--hg-font-body'] = bodyFont;
   return variables;
 }
 
-export function installBuiltInThemeClient(): { close(): void } {
+export function installHyprThemeClient(): { close(): void } {
   applyCssVariables(FALLBACK_VARIABLES);
 
   const napplet = (globalThis as unknown as { napplet?: { theme?: unknown } }).napplet;
   if (!napplet?.theme) return { close: () => undefined };
 
-  // Keep the fallback usable in diagnostic/development runtimes that expose
-  // the optional domain but do not implement its complete SDK surface.
   try {
     void themeGet()
       .then((theme) => applyCssVariables(variablesForTheme(theme)))
@@ -83,3 +72,5 @@ export function installBuiltInThemeClient(): { close(): void } {
   }
   return { close: () => sub?.close() };
 }
+
+export const installThemeClient = installHyprThemeClient;

@@ -26,22 +26,17 @@ function variablesForTheme(theme: Theme): Record<string, string> {
     return {};
 
   const variables = buildDaisyTheme(colors);
-  // NAP-THEME fonts are { name, url } objects — use the family name. Loading
-  // the font file at `url` requires NAP-RESOURCE + @font-face injection, which
-  // is a separate concern; the name alone works when the font is system-installed.
   const bodyFont = theme.fonts?.body?.name;
   if (typeof bodyFont === 'string' && bodyFont.trim()) variables['--gm-font-body'] = bodyFont;
   return variables;
 }
 
-export function installBuiltInThemeClient(): { close(): void } {
+export function installDsuiThemeClient(): { close(): void } {
   applyCssVariables(buildDaisyTheme(FALLBACK_COLORS));
 
   const napplet = (globalThis as unknown as { napplet?: { theme?: unknown } }).napplet;
   if (!napplet?.theme) return { close: () => undefined };
 
-  // Keep the fallback usable in diagnostic/development runtimes that expose
-  // the optional domain but do not implement its complete SDK surface.
   try {
     void themeGet()
       .then((theme) => applyCssVariables(variablesForTheme(theme)))
@@ -58,3 +53,7 @@ export function installBuiltInThemeClient(): { close(): void } {
   }
   return { close: () => sub?.close() };
 }
+
+export const installThemeClient = installDsuiThemeClient;
+export { buildDaisyTheme, buildDaisyThemeColors, isDaisyThemeHex, isDarkDaisyTheme } from './daisy-theme';
+export type { DaisyThemeInput, DaisyThemeVariables } from './daisy-theme';

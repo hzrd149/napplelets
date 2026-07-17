@@ -1,0 +1,31 @@
+{
+  "name": "@napplelets/theme-hypr",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    },
+    "./styles.css": "./src/styles.css",
+    "./uno": {
+      "types": "./src/uno.ts",
+      "import": "./src/uno.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "type-check": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@napplet/sdk": "^0.24.4",
+    "@unocss/reset": "^66.7.5"
+  },
+  "devDependencies": {
+    "jsdom": "^26.1.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.10"
+  }
+}

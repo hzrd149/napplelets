@@ -1,9 +1,9 @@
-import './styles.css';
-import { installBuiltInThemeClient } from './lib/theme-client';
+import '@napplelets/theme-dsui/styles.css';
+import { installThemeClient } from '@napplelets/theme-dsui';
 import { mount } from 'svelte';
 import App from './App.svelte';
 
-installBuiltInThemeClient();
+installThemeClient();
 
 const app = mount(App, { target: document.getElementById('app')! });
 export default app;
