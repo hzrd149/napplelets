@@ -19,8 +19,36 @@ otherwise list the feature as blocked/deferred.
 
 Ports should replace app-owned infrastructure with `@napplet/sdk` imports, not
 with hand-written `window.napplet.<domain>.*` clients. Keep direct
-`window.napplet?.domain` access for availability checks and graceful fallback
-paths; use SDK helper exports for actual calls whenever they exist.
+`window.napplet?.domain` access for post-injection optional-domain fallback
+checks; use SDK helper exports for actual calls whenever they exist.
+
+Current packages do not expose `window.napplet.shell`, `shell.ready()`, or
+`shell.supports(...)`. Use `@napplet/sdk` wrappers for calls and use
+`window.napplet?.domain` only as an optional-domain fallback check after runtime
+injection. If a source app needed an async service-discovery layer, remove that
+layer or flag the missing package/runtime surface instead of recreating it
+inside the napplet.
+
+## Sandbox Authority Contract
+
+Do not preserve browser authority from the source app. A port is not complete
+until these surfaces are gone from napplet runtime code:
+
+- `fetch`, `XMLHttpRequest`, `WebSocket`, relay pools, direct NIP-65 routing, and
+  any app-owned network fanout.
+- `localStorage`, `sessionStorage`, IndexedDB, cookies, filesystem-like browser
+  caches, and ad hoc persistence.
+- External `<script src>`, `<link href>`, `<img src>`, `<audio src>`,
+  `<video src>`, CSS network URLs, and dynamic network imports.
+- `window.nostr`, raw private keys, local signing, local encryption/decryption,
+  or extension-specific signer assumptions.
+
+For resource-heavy ports, inventory every ROM, WASM side file, avatar, image,
+font, media file, and JSON fetch. Bundle immutable bytes into the single-file
+artifact when that is the product shape; otherwise route them through
+`resource.bytes` / `resource.bytesMany`. If the old dependency cannot run
+without direct browser fetch/storage/socket authority, stop and flag that
+dependency instead of wrapping it in a napplet.
 
 ## Migration Rule
 
@@ -44,6 +72,11 @@ Replace app-owned infrastructure with the highest-level NAP that owns the user i
 
 If the port still contains a relay client, signer, direct storage layer, or direct network layer after this pass, assume the boundary is wrong until proven otherwise.
 
+Do not add `keys` to `requires` when local buttons, menus, text input, or
+click/tap controls let the napplet function without shell-managed key
+reservation. Treat key reservation as optional unless the port's core workflow
+cannot work without shell-owned reserved shortcuts.
+
 ## Step 1 - Inventory The Existing App
 
 Make a table before editing:
@@ -51,7 +84,7 @@ Make a table before editing:
 ```
 feature | existing code path | current direct authority | replacement NAP | hard/optional | notes
 feed reads | RelayPool.subscribe + NIP-65 | relay routing | outbox | hard | author write relays matter
-post note | signer.sign + relay.publish | signing + fanout | outbox.publish | hard | targetAuthors for directed posts
+post note | signer.sign + relay.publish | signing + fanout | outbox.publish | hard | toInboxes for directed posts
 react | build kind 7 + signer + relay | social action | common.react | optional | fallback disables action
 mute pubkey | edit kind 10000 | list mutation | lists.add | optional | preserve list state shell-side
 avatar | fetch(url) | network bytes | resource.bytes | optional | object URL + revoke
@@ -116,13 +149,15 @@ Search and delete or replace:
 - `new WebSocket("wss://...")`, relay pool libraries, direct NIP-65 resolvers, app-owned fanout/dedup.
 - `fetch`, `XMLHttpRequest`, direct `<img src="https://...">`, external scripts/styles.
 - `localStorage`, `sessionStorage`, IndexedDB, cookies.
-- Generic capability probes such as `discoverServices`, `hasService`, `shell.supports`.
+- Generic capability probes such as `discoverServices`, `hasService`,
+  `shell.ready()`, or `shell.supports(...)`.
 
-Capability checks are property checks:
+Optional-domain fallback checks are property checks after runtime injection; use
+SDK imports for the actual calls inside enabled branches:
 
 ```ts
-if (window.napplet?.outbox) loadFeed();
-if (!window.napplet?.common) disableSocialActions();
+if (window.napplet?.common) enableSocialActions();
+else disableSocialActions();
 ```
 
 ## Step 5 - Hand Off To Build

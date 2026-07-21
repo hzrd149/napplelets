@@ -1,11 +1,35 @@
 ---
 name: build-napplet
-description: Use when writing a napplet (sandboxed Nostr iframe app) - Vite setup, the NIP-5A manifest plugin, runtime-injected window.napplet, the @napplet/sdk API for every current package-implemented NAP domain, OUTBOX-first event access, relay as explicit escape hatch, NAP-KEYS for shortcuts/keybindings, domain-presence gating, and the single-file artifact rule. Pairs with design-napplet (plan first), port-nostr-app (for migrations), and test-napplet (verify before publish).
+description: Use when writing a napplet (sandboxed Nostr iframe app) - Vite setup, the NIP-5A manifest plugin, runtime-injected window.napplet, the @napplet/sdk API for every current package-implemented NAP domain, OUTBOX-first event access, relay as explicit escape hatch, optional NAP-KEYS shortcuts/keybindings, post-injection optional-domain fallback checks, and the single-file artifact rule. Pairs with design-napplet (plan first), port-nostr-app (for migrations), and test-napplet (verify before publish).
 ---
 
 # Building a Napplet
 
 Implements a `design-napplet` spec. A napplet is a single self-contained `/index.html` the shell loads into a `sandbox="allow-scripts"` iframe (no `allow-same-origin`); all host access is proxied over postMessage per NIP-5D. The napplet never holds keys. Protocol truth: NIP-5D (<https://github.com/nostr-protocol/nips/pull/2303>) + NAPs (<https://github.com/napplet/naps>). Never invent wire surface; flag gaps.
+
+## Sandbox Authority Contract
+
+Treat this as a pre-code gate. If the implementation plan needs any direct
+browser network, browser persistence, or external runtime asset, rewrite the
+plan before coding.
+
+- Never call `fetch`, `XMLHttpRequest`, `WebSocket`, `localStorage`,
+  `sessionStorage`, IndexedDB, `document.cookie`, `window.nostr`, or any relay
+  pool/signing API from napplet code.
+- Never load runtime bytes through external `<script src>`, `<link href>`,
+  `<img src>`, `<audio src>`, `<video src>`, CSS `url(https://...)`, dynamic
+  `import("https://...")`, or side files that the opaque-origin `srcdoc`
+  iframe must fetch.
+- ROMs, WASM companions, images, avatars, media, fonts, JSON, and other bytes
+  must be either folded into the single `/index.html` artifact at build time or
+  requested through `resource.bytes` / `resource.bytesMany` under shell policy.
+- Browser-local state must use `storage`; Nostr network reads/publishes must use
+  `outbox`, `common`, `lists`, `count`, `dm`, or a documented `relay` escape
+  hatch; external URL opening must use `link`.
+- If a dependency contains dormant forbidden references, prove they are removed,
+  tree-shaken, or replaced by NAP-backed adapters in the built output. If a
+  dependency actually needs direct fetch/storage/socket authority at runtime,
+  stop and flag it instead of shipping.
 
 Use only domains and helpers shipped by the current packages. Current package
 domains are:
@@ -22,10 +46,17 @@ API even if a spec PR exists. Flag the package/spec gap.
 
 The runtime injects `window.napplet` before napplet scripts run. Napplet code
 does not import `@napplet/shim`; runtimes consume that package when they need the
-first-party installer. Napplet implementation code is **SDK-first**: import
-named, typed wrappers from `@napplet/sdk` for every domain call the SDK exposes.
-Use direct `window.napplet?.domain` access only for domain availability checks,
-fallback branching, or a real package gap where no SDK wrapper exists.
+first-party installer. Current packages do not expose `window.napplet.shell`,
+`shell.ready()`, or `shell.supports(...)`; do not add a napplet-owned readiness
+handshake, generic capability probe, or synthetic shell namespace. A missing
+optional domain means "feature unavailable for this load"; a missing hard
+requirement should have been handled by the manifest load gate.
+
+Napplet implementation code is **SDK-first**. Use `@napplet/sdk` wrappers for
+calls: import named, typed wrappers from `@napplet/sdk` for every domain call
+the SDK exposes. Use direct `window.napplet?.domain` access only for optional
+domain fallback checks after runtime injection, or for a real package gap where
+no SDK wrapper exists.
 
 Canonical pattern:
 
@@ -91,9 +122,9 @@ change them:
 ## Step 3 — Configure the Vite plugin
 
 The boilerplate already wires `nip5aManifest`. Update its project fields rather
-than replacing the config. `nip5aManifest` hashes build output and writes the
-NIP-5A manifest at build time, injecting a `<meta name="napplet-type">` tag the
-runtime keys on. `nappletType` (the NIP-5D d-tag) is required.
+than replacing the config. `nip5aManifest` hashes build output and can write a
+local NIP-5D manifest using the NIP-5A path and aggregate tags. `nappletType`
+populates the NIP-5D `d` tag.
 
 ```ts
 // vite.config.ts
@@ -105,8 +136,7 @@ export default defineConfig({
     nip5aManifest({
       nappletType: 'my-napplet',     // required — NIP-5D d-tag
       artifactMode: 'single-file',   // fold assets + keep inline scripts in one index.html
-      // requires: ['outbox', 'storage'], // optional hard NAP domain requirements
-      // configSchema: './config.schema.json', // optional NAP-CONFIG schema
+      // requires: ['outbox', 'storage'], // hard requirements only; omit optional enhancements
     }),
   ],
 });
@@ -157,10 +187,12 @@ if (!result.ok || !result.event) throw new Error(result.error ?? 'publish failed
 console.log('published', result.event.id);
 ```
 
-For directed events, pass `targetAuthors` so the shell can include recipient inbox relays.
+For directed events, pass `toInboxes` so the shell can include recipient inbox relays.
+`toOutbox` defaults to true; pass `relays` only for explicit relay URL fanout
+candidates subject to shell validation.
 
 ```ts
-await outbox.publish(template, { targetAuthors: [recipientPubkey] });
+await outbox.publish(template, { toInboxes: [recipientPubkey] });
 ```
 
 ## Step 5 — Use Higher-Level Social NAPs Before Raw Events
@@ -254,18 +286,26 @@ Always type-check `payload` (it is `unknown`).
 ## Step 10 — Domain availability
 
 There is **no** `discoverServices()`/`hasService()` and no generic shell
-capability query. NIP-5D runtimes inject `window.napplet` before napplet code
-runs. Available domains are present as properties; unavailable domains are
-absent.
+capability query. Current packages do not expose `window.napplet.shell`,
+`shell.ready()`, or `shell.supports(...)`. NIP-5D runtimes inject
+`window.napplet` before napplet code runs. Available domains are present as
+properties; unavailable domains are absent. Use `@napplet/sdk` wrappers for
+calls; use direct property checks only to decide whether an optional feature
+should render or fall back after the injected namespace exists.
 
 ```ts
-if (window.napplet?.resource) { /* resource NAP available */ }
-if (window.napplet?.inc) { /* inter-napplet events available */ }
-if (!window.napplet?.upload) { /* render fallback */ }
+if (window.napplet?.resource) {
+  const blob = await resource.bytes(avatarUrl);
+  renderAvatar(blob);
+} else {
+  renderInitials();
+}
 ```
 
-Gate every domain-specific call behind property presence unless the domain is a
-hard manifest requirement and the shell already refused incompatible loads.
+Do not turn one missing optional domain into a broken app state. Disable or hide
+only that enhancement. For hard manifest requirements, do not duplicate the
+load gate in app code; the shell should refuse incompatible loads before the app
+runs.
 
 ## Step 11 — Fetch external bytes (resource NAP)
 
@@ -286,7 +326,7 @@ imgEl.src = handle.url; // resolves once fetched
 handle.revoke();        // when done
 ```
 
-Schemes: `data:` (decoded in-shim, no round-trip), `https:` (shell network under policy), `blossom:sha256:<hex>` (hash-verified), `nostr:<bech32>` (single-hop NIP-19). Cancel with `bytes(url, { signal })`. Rejections carry a `code` — branch on it, never the message string:
+Schemes: `data:` (decoded in-shim, no round-trip), `https:` (shell network under policy), `blossom:sha256:<hex>` (hash-verified), `htree:` (Hashtree-verified), `nostr:<bech32>` (single-hop NIP-19). Cancel with `bytes(url, { signal })`. Rejections carry a `code` — branch on it, never the message string:
 `not-found`, `blocked-by-policy`, `timeout`, `too-large`, `unsupported-scheme`, `decode-failed`, `network-error`, `quota-exceeded`.
 
 The shell byte-sniffs and classifies the MIME; never trust the upstream `Content-Type`. SVG inputs are rasterized server-side — napplets never receive `image/svg+xml`.
@@ -296,15 +336,27 @@ The shell byte-sniffs and classifies the MIME; never trust the upstream `Content
 ```ts
 import { config, themeGet, themeOnChanged } from '@napplet/sdk';
 
-const cfg = await config.get();                   // validated + defaulted snapshot
-const cfgSub = config.subscribe((v) => apply(v)); // live updates
-config.openSettings({ section: 'appearance' });  // deep-link shell settings UI
+if (window.napplet?.config) {
+  await config.registerSchema({
+    type: 'object',
+    properties: { accent: { type: 'string', default: 'blue' } },
+  });
+  const cfg = await config.get();
+  apply(cfg);
+  const cfgSub = config.subscribe((v) => apply(v));
+  config.openSettings();
+}
 
 const colors = await themeGet();
 const themeSub = themeOnChanged((t) => paint(t));
 ```
 
-Declare config schema via the vite-plugin (`configSchema`) so the shell renders settings. Gate both behind `window.napplet?.config` / `window.napplet?.theme`.
+NAP-CONFIG defines runtime `config.registerSchema`, but its current proposal does
+not define a manifest-tag or HTML-meta encoding for build-time schemas. Do not
+treat vite-plugin config metadata as interoperable protocol. Recheck the living
+[NAP-CONFIG proposal](https://github.com/napplet/naps/pull/14) before adding
+settings. Gate config and theme behind `window.napplet?.config` /
+`window.napplet?.theme`.
 
 ## Step 12 — Keyboard shortcuts and actions (keys NAP)
 
@@ -312,6 +364,11 @@ If the feature mentions shortcuts, hotkeys, keyboard forwarding, command
 palettes, editor actions, media shortcuts, or app-level keybinds, use NAP-KEYS.
 Do not hand-roll global key capture as the main integration path; the shell owns
 reserved shortcuts and binding policy.
+
+Do not add `keys` to `requires` just because shortcuts would be nice. Treat key
+reservation as optional when local buttons, menus, text input, click/tap
+controls, or app-local fallback shortcuts let the napplet still perform its core
+task.
 
 ```ts
 import { keys } from '@napplet/sdk';
@@ -347,8 +404,9 @@ their exact boundary:
 | `serial` | The napplet needs serial-port access. |
 | `webrtc` | The napplet needs shell-mediated WebRTC signaling/session setup. |
 
-Gate optional domains with `window.napplet?.domain`. Declare bare domain names
-in `requires` only for hard requirements.
+Use `window.napplet?.domain` only for optional-domain fallback checks after
+runtime injection. Declare bare domain names in `requires` only for hard
+requirements.
 
 ## Runtime guard & standalone dev
 
@@ -375,8 +433,8 @@ those exact commands before completion.
 
 - Recreating the boilerplate by hand — **wrong substrate.** Start from
   `@napplet/boilerplate` for new napplets and preserve its scripts/config/layout.
-- Napplet-owned `@napplet/shim` bootstrap — **wrong layer.** The runtime injects `window.napplet`; napplets use `@napplet/sdk` for calls and direct domain properties only for availability checks.
-- Reaching straight into `window.napplet.<domain>.*` when `@napplet/sdk` exports that domain — **wrong default.** Prefer SDK wrappers for implementation calls; keep direct access for `window.napplet?.domain` gating or true SDK gaps.
+- Napplet-owned `@napplet/shim` bootstrap — **wrong layer.** The runtime injects `window.napplet`; napplets use `@napplet/sdk` for calls and direct domain properties only for post-injection optional-domain fallback checks.
+- Reaching straight into `window.napplet.<domain>.*` when `@napplet/sdk` exports that domain — **wrong default.** Prefer SDK wrappers for implementation calls; keep direct access for post-injection optional-domain fallback checks or true SDK gaps.
 - Treating open NAP proposals as shipped package APIs — **wrong surface.** If the current packages do not export the domain/helper, use an existing shipped NAP that faithfully owns the intent or flag the gap.
 - No `discoverServices`/`hasService`/`hasServiceVersion` — use injected domain property presence.
 - Treating NAP-RELAY as the default data layer — **wrong default.** Use `outbox` for normal event reads/publishes, `common` for social actions, `lists` for list mutations, `count` for counts, and `dm` for messages. Use `relay` only when the spec names a relay-local escape hatch.

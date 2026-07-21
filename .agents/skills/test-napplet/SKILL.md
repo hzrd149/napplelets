@@ -5,7 +5,25 @@ description: Use to verify a napplet before publishing - run protocol conformanc
 
 # Testing a Napplet
 
-Conformance proves the build speaks NIP-5D correctly inside a real `sandbox="allow-scripts"` iframe driven by a reference shell — catching malformed envelopes, manifest problems, boot failures, and forbidden-global references locally instead of after publishing. Truth: NIP-5D (<https://github.com/nostr-protocol/nips/pull/2303>) + NAPs (<https://github.com/napplet/naps>).
+Conformance proves the build speaks NIP-5D correctly inside a real `sandbox="allow-scripts"` iframe driven by a reference shell — catching malformed envelopes, manifest problems, boot failures, and forbidden browser-authority references locally instead of after publishing. Truth: NIP-5D (<https://github.com/nostr-protocol/nips/pull/2303>) + NAPs (<https://github.com/napplet/naps>).
+
+## Sandbox Authority Contract
+
+Testing is not green if the napplet still owns browser authority that belongs to
+the shell. Treat any of these in served source or built output as a release
+blocker:
+
+- `fetch`, `XMLHttpRequest`, `WebSocket`, relay pools, direct NIP-65 routing, or
+  app-owned network fanout.
+- `localStorage`, `sessionStorage`, IndexedDB, cookies, or other browser-local
+  persistence.
+- External network-loaded `<script>`, stylesheet, image, audio, video, font, CSS
+  URL, or dynamic import.
+- `window.nostr`, raw keys, app-owned signing, or app-owned encryption.
+
+Expected replacements are `resource` for bytes, `storage` for state, `outbox` /
+`common` / `lists` / `count` / `dm` for social Nostr behavior, `relay` only for
+a documented relay-local escape hatch, and `link` for external URL opening.
 
 ## Step 1 — Build first
 
@@ -61,9 +79,18 @@ Before publishing, inspect source and built output for wrong-layer code:
 | Relay routing | No app-owned NIP-65 resolver, relay pool, WebSocket relay client, or relay fanout policy |
 | Network and media bytes | No direct `fetch`, `XMLHttpRequest`, `WebSocket`, or external `<img src>`; use `resource` |
 | Persistence | No `localStorage`, `IndexedDB`, cookies, or direct filesystem state; use `storage` |
-| Capability checks | Domain property presence (`window.napplet?.outbox`), never `shell.supports` |
+| Optional-domain fallback checks | `window.napplet?.domain` after runtime injection; no `window.napplet.shell`, `shell.ready()`, `shell.supports(...)`, or generic service probing |
 
 If a direct relay use remains, prove why `outbox`, `common`, `lists`, `count`, and `dm` do not fit. Otherwise refactor before shipping.
+
+Also scan for direct browser authority with exact strings before completion:
+
+```bash
+grep -RInE "fetch\\s*\\(|XMLHttpRequest|WebSocket|localStorage|sessionStorage|indexedDB|document\\.cookie|window\\.nostr|<img[^>]+src=['\\\"]?https?:|<script[^>]+src=['\\\"]?https?:|<link[^>]+href=['\\\"]?https?:" src dist index.html
+```
+
+Any hit in authored or bundled napplet code must be removed or explained as a
+tooling false positive before shipping.
 
 ## Step 5 — Confirm the artifact & guard
 
@@ -75,7 +102,7 @@ If a direct relay use remains, prove why `outbox`, `common`, `lists`, `count`, a
 Exercise the feature against the NAP domains it declares:
 
 - Signed-out path: identity returns `""`; app degrades without publish/list/dm actions.
-- OUTBOX path: `outbox.query`, `outbox.subscribe`, and `outbox.publish` use current option fields only (`authors`, `author`, `relays`, `targetAuthors`, `limit`, `timeoutMs`). No `strategy`, subscribe `live`, or `outbox.eose`.
+- OUTBOX path: current option fields only: `outbox.getEvent` uses `author`, `relays`, `timeoutMs`; `outbox.query` / `outbox.subscribe` use `authors`, `relays`, `limit`, `timeoutMs`; `outbox.publish` uses `relays`, `toOutbox`, `toInboxes`. No `strategy`, subscribe `live`, publish `timeoutMs`, or `outbox.eose`.
 - Optional-domain path: remove an optional domain from the mock runtime and verify fallback UI.
 - Escape hatch path: if `relay` is used, test the explicit relay-local behavior and teardown.
 
