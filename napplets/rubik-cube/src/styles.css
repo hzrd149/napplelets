@@ -1,0 +1,170 @@
+:root {
+  color-scheme: dark;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #07080d;
+  color: #f7f3e8;
+  --panel: rgba(12, 14, 24, 0.72);
+  --panel-strong: rgba(21, 24, 38, 0.9);
+  --line: rgba(255, 255, 255, 0.14);
+  --muted: #a8adbd;
+  --accent: #ffcc66;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 0;
+  min-height: 100vh;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(255, 204, 102, 0.24), transparent 34rem),
+    linear-gradient(145deg, #07080d 0%, #141525 48%, #090b12 100%);
+}
+
+button,
+select {
+  font: inherit;
+}
+
+#app,
+.rubik-shell {
+  width: 100vw;
+  height: 100vh;
+  min-width: 0;
+  min-height: 0;
+}
+
+.rubik-shell {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
+}
+
+.toolbar {
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: clamp(0.35rem, 1.2vw, 0.75rem);
+  padding: clamp(0.55rem, 1.4vw, 1rem);
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(180deg, var(--panel-strong), var(--panel));
+  backdrop-filter: blur(18px);
+}
+
+.title {
+  min-width: 0;
+  margin-right: auto;
+}
+
+.title strong {
+  display: block;
+  font-size: clamp(0.94rem, 2vw, 1.35rem);
+  letter-spacing: -0.04em;
+}
+
+.title span {
+  display: block;
+  margin-top: 0.08rem;
+  color: var(--muted);
+  font-size: clamp(0.68rem, 1.4vw, 0.82rem);
+  white-space: nowrap;
+}
+
+.control {
+  height: 2.25rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+select.control {
+  padding: 0 0.65rem;
+}
+
+button.control {
+  min-width: 4.5rem;
+  padding: 0 0.85rem;
+  cursor: pointer;
+}
+
+button.control.primary {
+  border-color: rgba(255, 204, 102, 0.55);
+  background: linear-gradient(180deg, #ffdd88, #d88c2e);
+  color: #1b1104;
+  font-weight: 800;
+}
+
+button.control:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.stage {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  touch-action: none;
+}
+
+.stage canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+}
+
+.stage[data-dragging="true"] canvas {
+  cursor: grabbing;
+}
+
+.hint {
+  position: absolute;
+  right: clamp(0.65rem, 2vw, 1.15rem);
+  bottom: clamp(0.65rem, 2vw, 1.15rem);
+  max-width: min(26rem, calc(100% - 1.3rem));
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 0.78rem;
+  backdrop-filter: blur(18px);
+}
+
+.status {
+  position: absolute;
+  left: clamp(0.65rem, 2vw, 1.15rem);
+  bottom: clamp(0.65rem, 2vw, 1.15rem);
+  padding: 0.55rem 0.7rem;
+  border: 1px solid rgba(255, 204, 102, 0.35);
+  border-radius: 999px;
+  background: rgba(255, 204, 102, 0.12);
+  color: #ffe2a3;
+  font-size: 0.78rem;
+}
+
+@media (max-width: 520px), (max-height: 420px) {
+  .toolbar {
+    flex-wrap: wrap;
+  }
+
+  .title {
+    flex-basis: 100%;
+  }
+
+  .title span,
+  .hint {
+    display: none;
+  }
+
+  button.control {
+    min-width: 0;
+    flex: 1;
+  }
+}

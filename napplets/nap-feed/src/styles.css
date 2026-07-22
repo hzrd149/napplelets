@@ -1,0 +1,236 @@
+:root {
+  color-scheme: dark;
+  --panel: color-mix(in srgb, var(--color-base-200, #241f16) 88%, transparent);
+  --panel-strong: color-mix(in srgb, var(--color-base-300, #342c1f) 86%, transparent);
+  --text: var(--color-base-content, #f5f1e8);
+  --muted: color-mix(in srgb, var(--color-base-content, #f5f1e8) 62%, var(--color-base-100, #14110c) 38%);
+  --line: color-mix(in srgb, var(--color-base-content, #f5f1e8) 18%, transparent);
+  --accent: var(--color-primary, #9be564);
+  --accent-ink: var(--color-primary-content, #111827);
+  --napplet-text-selection: text;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 0;
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--accent) 24%, transparent), transparent 34rem),
+    var(--color-base-100, #14110c);
+  color: var(--text);
+  font-family: var(--gm-font-body, ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, Consolas, monospace);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 38%, transparent);
+}
+
+.shell {
+  container-type: inline-size;
+  min-height: 100dvh;
+  padding: clamp(0.75rem, 3cqi, 1.5rem);
+}
+
+h2,
+p {
+  margin-block-start: 0;
+}
+
+.refresh,
+.copy-box button {
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  cursor: pointer;
+  font-weight: 800;
+  padding: 0.72rem 1rem;
+  white-space: nowrap;
+}
+
+.status-card,
+.empty,
+.nap-card,
+.skeleton {
+  border: 1px solid var(--line);
+  border-radius: 1.25rem;
+  background: color-mix(in srgb, var(--color-base-100, #14110c) 80%, transparent);
+  box-shadow: 0 1rem 3rem color-mix(in srgb, black 18%, transparent);
+}
+
+.status-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 0.85rem 1rem;
+}
+
+.status-card span,
+.publisher,
+.section-label,
+.copy-status {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.status-card span {
+  display: block;
+  margin-top: 0.2rem;
+}
+
+.copy-status {
+  margin: 0;
+  text-align: right;
+}
+
+.feed {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  gap: 1rem;
+}
+
+.nap-card {
+  display: grid;
+  gap: 0.9rem;
+  padding: clamp(0.9rem, 3cqi, 1.2rem);
+}
+
+.publisher {
+  margin-bottom: 0.4rem;
+}
+
+.nap-card h2 {
+  margin-bottom: 0.45rem;
+  font-size: clamp(1.25rem, 5cqi, 1.8rem);
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.description {
+  margin-bottom: 0;
+  color: var(--muted);
+}
+
+.copy-box {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.copy-box details {
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.copy-box summary {
+  cursor: pointer;
+  width: max-content;
+}
+
+.copy-box input {
+  margin-top: 0.55rem;
+  min-width: 0;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 0.85rem;
+  background: var(--panel);
+  color: var(--text);
+  padding: 0.65rem 0.75rem;
+  user-select: all;
+}
+
+.friendly-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.friendly-facts span {
+  border-radius: 0.9rem;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 0.84rem;
+  padding: 0.5rem 0.65rem;
+}
+
+.section-label {
+  margin: 0 0 -0.45rem;
+  font-weight: 800;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.chips span {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel-strong);
+  font-size: 0.78rem;
+  padding: 0.3rem 0.55rem;
+}
+
+.chips.subtle span {
+  background: transparent;
+  color: var(--muted);
+}
+
+.empty,
+.skeleton {
+  padding: clamp(1.2rem, 5cqi, 2rem);
+}
+
+.empty h2 {
+  margin-bottom: 0.45rem;
+}
+
+.skeleton {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.skeleton span {
+  height: 1rem;
+  border-radius: 999px;
+  background: var(--panel-strong);
+}
+
+.skeleton span:first-child {
+  width: 55%;
+}
+
+.skeleton span:last-child {
+  width: 75%;
+}
+
+@container (max-width: 28rem) {
+  .status-card {
+    display: grid;
+  }
+
+  .refresh,
+  .copy-box button {
+    width: 100%;
+  }
+
+  .copy-status {
+    text-align: left;
+  }
+
+  .friendly-facts span {
+    width: 100%;
+  }
+}
