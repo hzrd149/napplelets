@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nostr Bubbles</title>
+  </head>
+  <body>
+    <main id="app" class="bubble-stage" aria-label="Nostr Bubbles">
+      <div class="space-backdrop" aria-hidden="true"></div>
+      <svg id="effects" class="effects-layer" aria-hidden="true"></svg>
+      <div id="bubbleLayer" class="bubble-layer" aria-hidden="true"></div>
+
+      <header class="visually-hidden" aria-labelledby="app-title">
+        <h1 id="app-title">Nostr Bubbles</h1>
+      </header>
+
+      <section id="emptyState" class="empty-state">
+        <div class="spark">*</div>
+        <h2>Waiting for Nostr activity</h2>
+        <p>Notes become profile bubbles. Zaps become fast comets.</p>
+      </section>
+
+      <button id="footerBar" class="footer-bar" type="button" aria-haspopup="dialog" aria-controls="settingsOverlay" aria-expanded="false">
+        <span class="footer-brand">Nostr Bubbles</span>
+        <output id="status" class="footer-status status-idle">Booting</output>
+        <span><strong id="contactCount">0</strong> sources</span>
+        <span><strong id="noteCount">0</strong> notes</span>
+        <span><strong id="satsCount">0</strong> sats</span>
+        <span><strong id="orbCount">0</strong> orbs</span>
+        <span class="footer-settings">settings</span>
+      </button>
+
+      <section id="settingsOverlay" class="settings-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+        <div class="settings-card">
+          <div class="settings-head">
+            <h2 id="settingsTitle">Settings</h2>
+            <button id="closeSettingsButton" class="icon-button" type="button" aria-label="Close settings">x</button>
+          </div>
+          <p id="message" class="message">Loading shell identity...</p>
+          <div id="settingsSummary" class="settings-summary"></div>
+          <div class="controls">
+            <button id="restartButton" type="button">Restart stream</button>
+          </div>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
