@@ -108,7 +108,7 @@ function contrastContent(hex: string): string {
 
 export function isDarkDaisyTheme(input: DaisyThemeInput): boolean {
   assertHex(input.background, 'background');
-  return luminance(input.background) < 0.2;
+  return luminance(input.background) <= 0.56;
 }
 
 export function buildDaisyThemeColors(input: DaisyThemeInput): DaisyThemeVariables {
@@ -151,9 +151,9 @@ export function buildDaisyThemeColors(input: DaisyThemeInput): DaisyThemeVariabl
 export function buildDaisyTheme(input: DaisyThemeInput): DaisyThemeVariables {
   return {
     ...buildDaisyThemeColors(input),
-    '--radius-selector': '0rem',
-    '--radius-field': '0rem',
-    '--radius-box': '0rem',
+    '--radius-selector': '0.25rem',
+    '--radius-field': '0.25rem',
+    '--radius-box': '0.375rem',
     '--size-selector': '0.21875rem',
     '--size-field': '0.21875rem',
     '--border': '1px',

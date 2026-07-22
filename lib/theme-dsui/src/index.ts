@@ -17,17 +17,19 @@ function applyCssVariables(values: Record<string, string>): void {
 }
 
 function variablesForTheme(theme: Theme): Record<string, string> {
+  const variables: Record<string, string> = {};
+  const bodyFont = theme.fonts?.body?.name;
+  if (typeof bodyFont === 'string' && bodyFont.trim()) variables['--gm-font-body'] = bodyFont;
+
   const colors = {
     background: theme.colors.background,
     text: theme.colors.text,
     primary: theme.colors.primary,
   };
   if (!Object.values(colors).every((value) => typeof value === 'string' && isDaisyThemeHex(value)))
-    return {};
+    return variables;
 
-  const variables = buildDaisyTheme(colors);
-  const bodyFont = theme.fonts?.body?.name;
-  if (typeof bodyFont === 'string' && bodyFont.trim()) variables['--gm-font-body'] = bodyFont;
+  Object.assign(variables, buildDaisyTheme(colors));
   return variables;
 }
 
