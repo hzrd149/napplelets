@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Comic Upload</title>
+  </head>
+  <body>
+    <main id="app" class="comic-app" aria-label="Comic Upload">
+      <div class="topline" aria-label="Upload progress">
+        <span id="stepLabel">Select</span>
+        <output id="identityStatus">Checking identity...</output>
+      </div>
+
+      <div class="steps" aria-hidden="true">
+        <span data-dot="0"></span>
+        <span data-dot="1"></span>
+        <span data-dot="2"></span>
+        <span data-dot="3"></span>
+        <span data-dot="4"></span>
+      </div>
+
+      <form id="metadataForm" class="flow" aria-label="Comic upload workflow">
+        <section class="flow-step" data-step="0" aria-label="Select comic archive">
+          <label id="dropZone" class="file-pick">
+            <input id="fileInput" type="file" accept=".cbz,application/vnd.comicbook+zip,application/x-cbz,application/zip" />
+            <span class="file-action">Select CBZ</span>
+            <span id="fileMeta">No file selected</span>
+          </label>
+          <p>Choose a CBZ. ComicInfo.xml will be used when present.</p>
+        </section>
+
+        <section class="flow-step" data-step="1" aria-label="Required comic metadata" hidden>
+          <div class="metadata-form required-fields">
+            <label>Series *<input id="Series" name="Series" autocomplete="off" required /></label>
+            <label>Number *<input id="Number" name="Number" autocomplete="off" required /></label>
+            <label>Title *<input id="Title" name="Title" autocomplete="off" required /></label>
+            <label>Publisher *<input id="Publisher" name="Publisher" autocomplete="off" required /></label>
+            <label>LanguageISO *<input id="LanguageISO" name="LanguageISO" autocomplete="off" placeholder="en" required /></label>
+          </div>
+          <p id="requiredHint">These fields identify the published comic.</p>
+        </section>
+
+        <section class="flow-step" data-step="2" aria-label="Optional comic metadata" hidden>
+          <div class="metadata-form optional-fields">
+            <label>Volume<input id="Volume" name="Volume" inputmode="numeric" autocomplete="off" /></label>
+            <label>Count<input id="Count" name="Count" inputmode="numeric" autocomplete="off" /></label>
+            <label>Year<input id="Year" name="Year" inputmode="numeric" autocomplete="off" /></label>
+          <label>Month<input id="Month" name="Month" inputmode="numeric" autocomplete="off" /></label>
+          <label>Day<input id="Day" name="Day" inputmode="numeric" autocomplete="off" /></label>
+          <label>PageCount<input id="PageCount" name="PageCount" inputmode="numeric" autocomplete="off" /></label>
+          <label>Genre<input id="Genre" name="Genre" autocomplete="off" placeholder="Superhero, Action" /></label>
+          <label>Writer<input id="Writer" name="Writer" autocomplete="off" /></label>
+          <label>Penciller<input id="Penciller" name="Penciller" autocomplete="off" /></label>
+          <label>Inker<input id="Inker" name="Inker" autocomplete="off" /></label>
+          <label>Colorist<input id="Colorist" name="Colorist" autocomplete="off" /></label>
+          <label>Letterer<input id="Letterer" name="Letterer" autocomplete="off" /></label>
+          <label>CoverArtist<input id="CoverArtist" name="CoverArtist" autocomplete="off" /></label>
+          <label>Editor<input id="Editor" name="Editor" autocomplete="off" /></label>
+          <label>Manga<select id="Manga" name="Manga"><option value=""></option><option>No</option><option>Yes</option><option>YesAndRightToLeft</option><option>Unknown</option></select></label>
+          <label>BlackAndWhite<select id="BlackAndWhite" name="BlackAndWhite"><option value=""></option><option>No</option><option>Yes</option><option>Unknown</option></select></label>
+          <label>AgeRating<input id="AgeRating" name="AgeRating" autocomplete="off" /></label>
+          <label>StoryArc<input id="StoryArc" name="StoryArc" autocomplete="off" /></label>
+          <label>Character<input id="Character" name="Character" autocomplete="off" /></label>
+            <label>Team<input id="Team" name="Team" autocomplete="off" /></label>
+            <label>Location<input id="Location" name="Location" autocomplete="off" /></label>
+            <label>Web<input id="Web" name="Web" autocomplete="off" /></label>
+            <label class="wide">Description<textarea id="contentText" rows="4"></textarea></label>
+          </div>
+        </section>
+
+        <section class="flow-step cover-step" data-step="3" aria-label="Cover thumbnail" hidden>
+          <figure class="cover-frame">
+            <img id="coverPreview" alt="Cover preview" hidden />
+            <figcaption id="coverCaption">Cover thumbnail required</figcaption>
+          </figure>
+          <p>The selected cover will be converted to a thumbnail before publishing.</p>
+        </section>
+
+        <section class="flow-step" data-step="4" aria-label="Publish comic" hidden>
+          <output id="derivedSummary">Select a CBZ to begin.</output>
+          <button id="publishButton" type="button" disabled>Publish</button>
+        </section>
+      </form>
+
+      <div class="nav-row">
+        <button id="backButton" type="button">Back</button>
+        <button id="nextButton" type="button">Next</button>
+      </div>
+
+      <output id="statusLog" class="status-line">Ready.</output>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

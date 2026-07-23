@@ -1,0 +1,30 @@
+{
+  "name": "comic-upload",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 3001 --strictPort",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "type-check": "tsc --noEmit",
+    "verify": "pnpm test && pnpm type-check && pnpm build",
+    "test": "vitest run",
+    "test:conformance": "pnpm build && napplet-conformance ./dist",
+    "test:conformance:ui": "napplet-conformance --ui . --exec \"vite build --watch\""
+  },
+  "dependencies": {
+    "@napplelets/theme-dsui": "workspace:*",
+    "@napplet/sdk": "^0.24.4",
+    "fflate": "^0.8.3"
+  },
+  "devDependencies": {
+    "@napplet/conformance-cli": "^0.2.15",
+    "@napplet/vite-plugin": "^0.11.3",
+    "typescript": "^5.9.3",
+    "vite": "^6.4.2",
+    "vite-plugin-singlefile": "^2.3.3",
+    "vitest": "^4.1.10"
+  },
+  "license": "MIT"
+}

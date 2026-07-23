@@ -7,6 +7,28 @@ This is a **monorepo of NIP-5D napplets**. Each package under `napplets/` is one
 small, framework-light, single-purpose napplet on the napplet side of the shell
 boundary. Keep each napplet small; the host shell composes many of them.
 
+Napplets are embedded mini-app frames inside a larger host UI, not standalone
+web pages. Avoid adding page headers, hero sections, framed cards, decorative
+boxes, or debug-heavy status surfaces unless the task explicitly calls for them.
+Prefer compact, task-focused controls that do one job well and let the host shell
+provide surrounding navigation, chrome, and context. If a task needs several
+inputs or decisions, prefer a staged flow that exposes only the current step over
+showing every field and diagnostic detail at once.
+
+Every napplet must be responsive to arbitrary host frame sizes, not just phone vs
+desktop viewports. A desktop shell may place a napplet in a tiny pane, sidebar,
+or resizable tile. Use fluid layout, `minmax(0, ...)`, `clamp()`, compact states,
+and width/height-aware breakpoints so controls remain usable without horizontal
+overflow or clipped actions.
+
+Use the shared DSUI runtime theme package for napplet UI by default:
+`@napplelets/theme-dsui/styles.css` plus `installThemeClient` from
+`@napplelets/theme-dsui`. Build local CSS on its Daisy/DSUI variables
+(`--color-base-*`, `--color-primary`, `--color-accent`, `--gm-font-body`) rather
+than inventing per-napplet theme tokens. Only use another theme package when the
+task explicitly asks for it or an existing napplet already owns that visual
+language.
+
 `docs/` is the authoritative authoring context — read `docs/context-map.md`
 first to find the smallest set of docs that covers a change.
 
