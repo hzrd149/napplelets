@@ -220,15 +220,29 @@ function updateSettings(patch: Partial<BubbleSettings>, restart: boolean): void 
   if (restart) void startStream();
 }
 
-async function loadStoredSettings(): Promise<void> {
-  if (!isNapDomainPresent('storage')) return;
+async function loadStoredSettings(): Promise<boolean> {
+  if (!isNapDomainPresent('storage')) return false;
   try {
     const raw = await storage.getItem(SETTINGS_STORAGE_KEY);
-    if (!raw) return;
+    if (!raw) return false;
     const parsed = JSON.parse(raw) as unknown;
-    if (parsed && typeof parsed === 'object') settings = normalizeSettings(parsed as Record<string, unknown>);
+    if (parsed && typeof parsed === 'object') {
+      settings = normalizeSettings(parsed as Record<string, unknown>);
+      return true;
+    }
   } catch {
     settings = { ...DEFAULT_SETTINGS };
+  }
+  return false;
+}
+
+async function applyIdentitySourceDefault(): Promise<void> {
+  if (!isNapDomainPresent('identity')) return;
+  try {
+    const pubkey = await identity.getPublicKey();
+    if (pubkey) settings = { ...settings, sourceMode: 'contacts' };
+  } catch {
+    // Keep the popular-relay fallback when the optional identity snapshot fails.
   }
 }
 
@@ -985,11 +999,13 @@ function closeSettingsOverlay(): void {
 
 async function bootstrap(): Promise<void> {
   setupControls();
+  let loadedStoredSettings = false;
   try {
-    await loadStoredSettings();
+    loadedStoredSettings = await loadStoredSettings();
   } catch {
     settings = { ...DEFAULT_SETTINGS };
   }
+  if (!loadedStoredSettings) await applyIdentitySourceDefault();
   try {
     identitySubscription = identity.onChanged(() => {
       void startStream();
