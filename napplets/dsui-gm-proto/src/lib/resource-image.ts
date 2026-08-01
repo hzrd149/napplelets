@@ -1,4 +1,4 @@
-import { resourceBytes } from '@napplet/sdk';
+import { resource } from '@napplet/sdk';
 import { isNapDomainPresent } from './runtime-domain';
 
 type ActionReturn<Parameter> = {
@@ -94,7 +94,7 @@ function createResourceMediaAction(
     requestController = controller;
     let bytesPromise: Promise<Blob>;
     try {
-      bytesPromise = resourceBytes(nextSource, { signal: controller.signal });
+      bytesPromise = resource.bytes(nextSource, { signal: controller.signal });
     } catch {
       requestController = null;
       return;

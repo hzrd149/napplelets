@@ -18,7 +18,6 @@ export default defineConfig({
       nappletType: 'dsui-gm-proto',
       requires: ['identity', 'inc', 'outbox', 'resource', 'theme', 'link'],
       artifactMode: 'single-file',
-      archetypes: [{ slug: 'dsui-gm-proto', naps: ['good-morning'] }],
     }),
   ],
   resolve: {

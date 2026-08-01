@@ -20,13 +20,13 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@napplet/sdk": "^0.24.4",
+    "@napplet/sdk": "^0.27.0",
     "daisyui": "^5.7.9",
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
-    "jsdom": "^26.1.0",
-    "typescript": "^5.9.3",
+    "jsdom": "^30.0.1",
+    "typescript": "^7.0.2",
     "vitest": "^4.1.10"
   }
 }

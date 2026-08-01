@@ -36,7 +36,6 @@ export default defineConfig({
           },
         },
       },
-      archetypes: [{ slug: 'feed', naps: ['napplet-manifest'] }],
     }),
   ],
   server: {

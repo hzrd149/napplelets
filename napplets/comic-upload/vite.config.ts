@@ -9,7 +9,6 @@ export default defineConfig({
       nappletType: 'comic-upload',
       requires: ['identity', 'upload', 'outbox', 'theme'],
       artifactMode: 'single-file',
-      archetypes: [{ slug: 'comic-upload', naps: ['comic-upload'] }],
     }),
   ],
   build: {

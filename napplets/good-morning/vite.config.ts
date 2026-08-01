@@ -18,7 +18,6 @@ export default defineConfig({
       nappletType: 'good-morning',
       requires: ['identity', 'inc', 'outbox', 'resource', 'theme', 'link'],
       artifactMode: 'single-file',
-      archetypes: [{ slug: 'good-morning', naps: ['good-morning'] }],
     }),
   ],
   resolve: {
