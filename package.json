@@ -32,10 +32,10 @@
   "devDependencies": {
     "@kehto/cli": "^0.2.16",
     "@napplelets/napplet-cli": "workspace:*",
-    "@napplet/conformance-cli": "^0.2.15",
-    "prettier": "^3.9.5",
+    "@napplet/conformance-cli": "^0.2.18",
+    "prettier": "^3.9.6",
     "prettier-plugin-svelte": "^3.5.2",
-    "turbo": "^2.10.5"
+    "turbo": "^2.10.7"
   },
   "license": "MIT"
 }

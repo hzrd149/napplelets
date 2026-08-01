@@ -19,11 +19,11 @@
     "nostr-tools": "^2.23.3"
   },
   "devDependencies": {
-    "@napplet/conformance-cli": "^0.2.15",
+    "@napplet/conformance-cli": "^0.2.18",
     "@napplet/vite-plugin": "^0.11.3",
     "jsdom": "^26.1.0",
     "typescript": "^5.9.3",
-    "vite": "^8.1.4",
+    "vite": "^8.2.0",
     "vitest": "^4.1.10"
   }
 }
