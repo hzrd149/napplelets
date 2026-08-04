@@ -145,8 +145,16 @@ body,
   box-sizing: border-box;
 }
 
-/* A window that fills the host frame and scrolls its body rather than the page. */
+/* A window that fills the host frame and scrolls its body rather than the page.
+ *
+ * `box-sizing` is set on the window itself (not its subtree -- see the note
+ * above) because `.window` carries the frame as padding: the XP skin's is
+ * `0 0 3px 0`, the 98 skin's is `3px`. Content-box would put that frame
+ * *outside* `height: 100%` and scroll the whole napplet pane by those few
+ * pixels, with nothing in view to explain it. Only the window's own box
+ * changes, so the fixed-size title bar and controls inside are untouched. */
 .window.xp-fill {
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   width: 100%;
