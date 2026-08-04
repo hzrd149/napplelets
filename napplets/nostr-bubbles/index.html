@@ -21,7 +21,14 @@
         <p>Notes become profile bubbles. Zaps become fast comets.</p>
       </section>
 
-      <button id="footerBar" class="footer-bar" type="button" aria-haspopup="dialog" aria-controls="settingsOverlay" aria-expanded="false">
+      <button
+        id="footerBar"
+        class="footer-bar"
+        type="button"
+        aria-haspopup="dialog"
+        aria-controls="settingsOverlay"
+        aria-expanded="false"
+      >
         <span class="footer-brand">Nostr Bubbles</span>
         <output id="status" class="footer-status status-idle">Booting</output>
         <span><strong id="contactCount">0</strong> sources</span>
@@ -31,15 +38,28 @@
         <span class="footer-settings">settings</span>
       </button>
 
-      <section id="settingsOverlay" class="settings-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <section
+        id="settingsOverlay"
+        class="settings-overlay hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="settingsTitle"
+      >
         <div class="settings-card">
           <div class="settings-head">
             <h2 id="settingsTitle">Settings</h2>
-            <button id="closeSettingsButton" class="icon-button" type="button" aria-label="Close settings">x</button>
+            <button
+              id="closeSettingsButton"
+              class="icon-button"
+              type="button"
+              aria-label="Close settings"
+            >
+              x
+            </button>
           </div>
           <p id="message" class="message">Loading shell identity...</p>
-          <div id="settingsSummary" class="settings-summary"></div>
           <div class="controls">
+            <button id="openSettingsButton" type="button">Open shell settings</button>
             <button id="restartButton" type="button">Restart stream</button>
           </div>
         </div>

@@ -43,18 +43,16 @@ export interface BubbleSettings {
   includeZaps: boolean;
   includeOnchainZaps: boolean;
   zapBreaksBubbles: boolean;
-  contactBatchSize: number;
 }
 
 export const DEFAULT_SETTINGS: BubbleSettings = {
-  sourceMode: 'popular',
+  sourceMode: 'contacts',
   bubbleDensityMode: 'auto',
   bubbleTargetCount: 44,
   enableReactions: true,
   includeZaps: true,
   includeOnchainZaps: true,
   zapBreaksBubbles: true,
-  contactBatchSize: 500,
 };
 
 export const MAX_BUBBLES = 112;
@@ -83,7 +81,9 @@ export function randomBetween(min: number, max: number): number {
 }
 
 export function getAutoBubbleTarget(width: number, height: number): number {
-  return Math.round(clampNumber((width * height) / 45_000, AUTO_BUBBLE_TARGET_MIN, AUTO_BUBBLE_TARGET_MAX));
+  return Math.round(
+    clampNumber((width * height) / 45_000, AUTO_BUBBLE_TARGET_MIN, AUTO_BUBBLE_TARGET_MAX),
+  );
 }
 
 export function getRoleRadiusRange(role: BubbleRole): readonly [number, number] {
@@ -101,9 +101,15 @@ export function getDiscArea(radius: number): number {
   return Math.PI * radius * radius;
 }
 
-export function getBubbleLifetime(role: BubbleRole, targetCount: number, spawnRatePerSecond: number): number {
-  const targetLifetime = targetCount / Math.max(spawnRatePerSecond, 1 / (BUBBLE_SPAWN_RATE_WINDOW / 1000));
-  const roleMultiplier = role === 'root' ? 1.24 : role === 'zap' ? 0.95 : role === 'reaction' ? 0.26 : 1;
+export function getBubbleLifetime(
+  role: BubbleRole,
+  targetCount: number,
+  spawnRatePerSecond: number,
+): number {
+  const targetLifetime =
+    targetCount / Math.max(spawnRatePerSecond, 1 / (BUBBLE_SPAWN_RATE_WINDOW / 1000));
+  const roleMultiplier =
+    role === 'root' ? 1.24 : role === 'zap' ? 0.95 : role === 'reaction' ? 0.26 : 1;
   const lifetime = targetLifetime * roleMultiplier * 1000;
   if (role === 'root') return clampNumber(lifetime, 14_000, 70_000);
   if (role === 'zap') return clampNumber(lifetime, 12_000, 50_000);
@@ -111,14 +117,20 @@ export function getBubbleLifetime(role: BubbleRole, targetCount: number, spawnRa
   return clampNumber(lifetime, 8_000, 60_000);
 }
 
-export function pruneForBubbleArea(bubbles: Bubble[], incomingArea: number, stageArea: number): Bubble[] {
+export function pruneForBubbleArea(
+  bubbles: Bubble[],
+  incomingArea: number,
+  stageArea: number,
+): Bubble[] {
   const budget = stageArea * PERSISTENT_AREA_BUDGET;
   let currentArea = incomingArea;
   for (const bubble of bubbles) {
     if (isPersistentBubbleRole(bubble.role)) currentArea += getDiscArea(bubble.radius);
   }
   if (currentArea <= budget) return bubbles;
-  const evictable = bubbles.filter((bubble) => isPersistentBubbleRole(bubble.role)).sort((a, b) => a.createdAt - b.createdAt);
+  const evictable = bubbles
+    .filter((bubble) => isPersistentBubbleRole(bubble.role))
+    .sort((a, b) => a.createdAt - b.createdAt);
   const toEvict = new Set<string>();
   for (const bubble of evictable) {
     if (currentArea <= budget) break;

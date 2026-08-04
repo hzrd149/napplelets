@@ -1,6 +1,67 @@
 import { defineConfig } from 'vite';
 import { viteSingleFile } from 'vite-plugin-singlefile';
 import { nip5aManifest } from '@napplet/vite-plugin';
+import type { NappletConfigSchema } from '@napplet/sdk';
+
+const configSchema = {
+  type: 'object',
+  properties: {
+    sourceMode: {
+      type: 'string',
+      title: 'Activity source',
+      description: 'Watch your contacts through OUTBOX or named popular relays.',
+      enum: ['contacts', 'popular'],
+      default: 'contacts',
+      'x-napplet-section': 'stream',
+      'x-napplet-order': 1,
+    },
+    bubbleDensityMode: {
+      type: 'string',
+      title: 'Bubble density',
+      enum: ['auto', 'manual'],
+      default: 'auto',
+      'x-napplet-section': 'appearance',
+      'x-napplet-order': 1,
+    },
+    bubbleTargetCount: {
+      type: 'integer',
+      title: 'Target bubbles',
+      minimum: 8,
+      maximum: 96,
+      default: 44,
+      'x-napplet-section': 'appearance',
+      'x-napplet-order': 2,
+    },
+    enableReactions: {
+      type: 'boolean',
+      title: 'Show reactions',
+      default: true,
+      'x-napplet-section': 'events',
+      'x-napplet-order': 1,
+    },
+    includeZaps: {
+      type: 'boolean',
+      title: 'Show Lightning zaps',
+      default: true,
+      'x-napplet-section': 'events',
+      'x-napplet-order': 2,
+    },
+    includeOnchainZaps: {
+      type: 'boolean',
+      title: 'Show on-chain zaps',
+      default: true,
+      'x-napplet-section': 'events',
+      'x-napplet-order': 3,
+    },
+    zapBreaksBubbles: {
+      type: 'boolean',
+      title: 'Zap collisions break bubbles',
+      default: true,
+      'x-napplet-section': 'appearance',
+      'x-napplet-order': 3,
+    },
+  },
+} satisfies NappletConfigSchema;
 
 export default defineConfig({
   plugins: [
@@ -14,8 +75,9 @@ export default defineConfig({
     viteSingleFile(),
     nip5aManifest({
       nappletType: 'nostr-bubbles',
-      requires: ['identity', 'outbox', 'relay', 'resource', 'storage', 'theme'],
+      requires: ['identity', 'outbox', 'relay', 'resource', 'config', 'theme', 'common'],
       artifactMode: 'single-file',
+      configSchema,
     }),
   ],
   build: {

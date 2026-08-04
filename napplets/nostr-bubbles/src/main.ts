@@ -1,11 +1,12 @@
 import '@napplelets/theme-hypr/styles.css';
 import { installThemeClient } from '@napplelets/theme-hypr';
 import {
+  common,
+  config,
   identity,
   outbox,
   relay,
   resource,
-  storage,
   type RelayEventResult,
   type Subscription,
 } from '@napplet/sdk';
@@ -45,7 +46,6 @@ import {
   getZapAmountSats,
   getZapSenderPubkey,
   isSelfOnchainZap,
-  parseProfile,
   parseThreadReference,
   sanitizeHttpsUrl,
 } from './lib/event-parsing';
@@ -72,9 +72,13 @@ const PROFILE_CACHE_LIMIT = 500;
 const ROOT_CACHE_LIMIT = 400;
 const RECENT_EVENT_LIMIT = 800;
 const STREAM_SINCE_SECONDS = 8;
-const SETTINGS_STORAGE_KEY = 'settings:v1';
+const MAX_FILTER_AUTHORS = 200;
 // Mirrored from ../nostr-tv-bubbles/src/lib/appRelays.ts default app relays.
-const POPULAR_RELAYS = ['wss://relay.ditto.pub', 'wss://relay.primal.net', 'wss://relay.damus.io'] as const;
+const POPULAR_RELAYS = [
+  'wss://relay.ditto.pub',
+  'wss://relay.primal.net',
+  'wss://relay.damus.io',
+] as const;
 
 const themeHandle = installThemeClient();
 
@@ -90,13 +94,14 @@ const elements = {
   satsCount: requireElement<HTMLElement>('#satsCount'),
   orbCount: requireElement<HTMLElement>('#orbCount'),
   settingsOverlay: requireElement<HTMLElement>('#settingsOverlay'),
-  settingsSummary: requireElement<HTMLElement>('#settingsSummary'),
   closeSettingsButton: requireElement<HTMLButtonElement>('#closeSettingsButton'),
+  openSettingsButton: requireElement<HTMLButtonElement>('#openSettingsButton'),
   restartButton: requireElement<HTMLButtonElement>('#restartButton'),
   emptyState: requireElement<HTMLElement>('#emptyState'),
 };
 
 let identitySubscription: Subscription | null = null;
+let configSubscription: Subscription | null = null;
 let nostrSubscriptions: Subscription[] = [];
 let activeOutboxStreams = 0;
 let streamToken = 0;
@@ -134,12 +139,15 @@ function normalizeSettings(values: Record<string, unknown>): BubbleSettings {
   return {
     sourceMode: values.sourceMode === 'contacts' ? 'contacts' : 'popular',
     bubbleDensityMode: mode,
-    bubbleTargetCount: clampNumber(Number(values.bubbleTargetCount ?? DEFAULT_SETTINGS.bubbleTargetCount), 8, 96),
+    bubbleTargetCount: clampNumber(
+      Number(values.bubbleTargetCount ?? DEFAULT_SETTINGS.bubbleTargetCount),
+      8,
+      96,
+    ),
     enableReactions: values.enableReactions !== false,
     includeZaps: values.includeZaps !== false,
     includeOnchainZaps: values.includeOnchainZaps !== false,
     zapBreaksBubbles: values.zapBreaksBubbles !== false,
-    contactBatchSize: Math.round(clampNumber(Number(values.contactBatchSize ?? DEFAULT_SETTINGS.contactBatchSize), 50, 500)),
   };
 }
 
@@ -158,103 +166,6 @@ function updateStats(): void {
   elements.emptyState.classList.toggle('hidden', bubbles.length > 0 || connectionState === 'live');
 }
 
-function renderSettingsSummary(): void {
-  elements.settingsSummary.replaceChildren(
-    selectSetting('Source', settings.sourceMode, ['popular', 'contacts'], (value) => updateSettings({ sourceMode: value === 'contacts' ? 'contacts' : 'popular' }, true)),
-    selectSetting('Density', settings.bubbleDensityMode, ['auto', 'manual'], (value) => updateSettings({ bubbleDensityMode: value === 'manual' ? 'manual' : 'auto' }, false)),
-    numberSetting('Target bubbles', settings.bubbleTargetCount, 8, 96, (value) => updateSettings({ bubbleTargetCount: value }, false)),
-    toggleSetting('Reactions', settings.enableReactions, (checked) => updateSettings({ enableReactions: checked }, true)),
-    toggleSetting('Lightning zaps', settings.includeZaps, (checked) => updateSettings({ includeZaps: checked }, true)),
-    toggleSetting('On-chain zaps', settings.includeOnchainZaps, (checked) => updateSettings({ includeOnchainZaps: checked }, true)),
-    toggleSetting('Zap collisions', settings.zapBreaksBubbles, (checked) => updateSettings({ zapBreaksBubbles: checked }, false)),
-    numberSetting('Contact batch', settings.contactBatchSize, 50, 500, (value) => updateSettings({ contactBatchSize: value }, true)),
-  );
-}
-
-function settingRow(label: string, control: HTMLElement): HTMLLabelElement {
-  const row = document.createElement('label');
-  row.className = 'setting-row';
-  const labelNode = document.createElement('span');
-  labelNode.textContent = label;
-  row.append(labelNode, control);
-  return row;
-}
-
-function selectSetting(label: string, value: string, options: string[], onChange: (value: string) => void): HTMLLabelElement {
-  const select = document.createElement('select');
-  for (const optionValue of options) {
-    const option = document.createElement('option');
-    option.value = optionValue;
-    option.textContent = optionValue;
-    select.append(option);
-  }
-  select.value = value;
-  select.addEventListener('change', () => onChange(select.value));
-  return settingRow(label, select);
-}
-
-function numberSetting(label: string, value: number, min: number, max: number, onChange: (value: number) => void): HTMLLabelElement {
-  const input = document.createElement('input');
-  input.type = 'number';
-  input.min = String(min);
-  input.max = String(max);
-  input.step = '1';
-  input.value = String(value);
-  input.addEventListener('change', () => onChange(Math.round(clampNumber(Number(input.value), min, max))));
-  return settingRow(label, input);
-}
-
-function toggleSetting(label: string, value: boolean, onChange: (checked: boolean) => void): HTMLLabelElement {
-  const input = document.createElement('input');
-  input.type = 'checkbox';
-  input.checked = value;
-  input.addEventListener('change', () => onChange(input.checked));
-  return settingRow(label, input);
-}
-
-function updateSettings(patch: Partial<BubbleSettings>, restart: boolean): void {
-  settings = { ...settings, ...patch };
-  renderSettingsSummary();
-  updateStats();
-  void saveSettings();
-  if (restart) void startStream();
-}
-
-async function loadStoredSettings(): Promise<boolean> {
-  if (!isNapDomainPresent('storage')) return false;
-  try {
-    const raw = await storage.getItem(SETTINGS_STORAGE_KEY);
-    if (!raw) return false;
-    const parsed = JSON.parse(raw) as unknown;
-    if (parsed && typeof parsed === 'object') {
-      settings = normalizeSettings(parsed as Record<string, unknown>);
-      return true;
-    }
-  } catch {
-    settings = { ...DEFAULT_SETTINGS };
-  }
-  return false;
-}
-
-async function applyIdentitySourceDefault(): Promise<void> {
-  if (!isNapDomainPresent('identity')) return;
-  try {
-    const pubkey = await identity.getPublicKey();
-    if (pubkey) settings = { ...settings, sourceMode: 'contacts' };
-  } catch {
-    // Keep the popular-relay fallback when the optional identity snapshot fails.
-  }
-}
-
-async function saveSettings(): Promise<void> {
-  if (!isNapDomainPresent('storage')) return;
-  try {
-    await storage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
-  } catch {
-    // Keep the in-memory drawer usable even if shell storage rejects the write.
-  }
-}
-
 function stageSize(): { width: number; height: number } {
   const rect = elements.app.getBoundingClientRect();
   return {
@@ -264,7 +175,9 @@ function stageSize(): { width: number; height: number } {
 }
 
 function currentBubbleTarget(width: number, height: number): number {
-  return settings.bubbleDensityMode === 'auto' ? getAutoBubbleTarget(width, height) : settings.bubbleTargetCount;
+  return settings.bubbleDensityMode === 'auto'
+    ? getAutoBubbleTarget(width, height)
+    : settings.bubbleTargetCount;
 }
 
 function closeNostrSubscriptions(): void {
@@ -291,7 +204,12 @@ async function startStream(): Promise<void> {
   const token = ++streamToken;
   resetStreamState();
   contactCount = 0;
-  setConnectionState('connecting', settings.sourceMode === 'contacts' ? 'Reading shell identity and follows...' : 'Opening popular relay streams...');
+  setConnectionState(
+    'connecting',
+    settings.sourceMode === 'contacts'
+      ? 'Reading shell identity and follows...'
+      : 'Opening popular relay streams...',
+  );
   updateStats();
 
   if (settings.sourceMode !== 'contacts') {
@@ -313,7 +231,10 @@ async function startStream(): Promise<void> {
   }
   if (token !== streamToken) return;
   if (!pubkey) {
-    setConnectionState('no-identity', 'Connect an identity in the shell to watch your one-hop contact orbit.');
+    setConnectionState(
+      'no-identity',
+      'Connect an identity in the shell to watch your one-hop contact orbit.',
+    );
     return;
   }
 
@@ -321,7 +242,10 @@ async function startStream(): Promise<void> {
   try {
     follows = [...new Set(await identity.getFollows())];
   } catch (error) {
-    setConnectionState('error', error instanceof Error ? error.message : 'Could not load follows from NAP-IDENTITY.');
+    setConnectionState(
+      'error',
+      error instanceof Error ? error.message : 'Could not load follows from NAP-IDENTITY.',
+    );
     return;
   }
   if (token !== streamToken) return;
@@ -336,8 +260,11 @@ async function startStream(): Promise<void> {
   if (settings.includeZaps) kinds.push(KIND_ZAP_RECEIPT);
   if (settings.includeOnchainZaps) kinds.push(KIND_ONCHAIN_ZAP);
   const since = Math.floor(Date.now() / 1000) - STREAM_SINCE_SECONDS;
-  const batches = chunk(follows, settings.contactBatchSize);
-  setConnectionState('connecting', `Opening ${batches.length.toLocaleString()} contact batch stream${batches.length === 1 ? '' : 's'}...`);
+  const batches = chunk(follows, MAX_FILTER_AUTHORS);
+  setConnectionState(
+    'connecting',
+    `Opening ${batches.length.toLocaleString()} contact batch stream${batches.length === 1 ? '' : 's'}...`,
+  );
 
   for (const authors of batches) {
     if (token !== streamToken) return;
@@ -345,20 +272,29 @@ async function startStream(): Promise<void> {
   }
 }
 
-function subscribeAuthorBatch(authors: string[], kinds: number[], since: number, token: number): void {
+function subscribeAuthorBatch(
+  authors: string[],
+  kinds: number[],
+  since: number,
+  token: number,
+): void {
   const filters: NostrFilter[] = [{ kinds, authors, since, limit: 60 }];
   const options = { authors, timeoutMs: 5000 };
   const sub = outbox.subscribe(filters, options);
   activeOutboxStreams += 1;
   sub.on('event', (result: RelayEventResult) => {
     if (token !== streamToken) return;
-    setConnectionState('live', `Watching ${contactCount.toLocaleString()} one-hop contacts through NAP-OUTBOX.`);
+    setConnectionState(
+      'live',
+      `Watching ${contactCount.toLocaleString()} one-hop contacts through NAP-OUTBOX.`,
+    );
     handleIncomingEvent(result.event as NostrEvent);
   });
   sub.on('closed', () => {
     if (token !== streamToken) return;
     activeOutboxStreams = Math.max(0, activeOutboxStreams - 1);
-    if (activeOutboxStreams === 0) setConnectionState('offline', 'The live stream closed. Try restarting.');
+    if (activeOutboxStreams === 0)
+      setConnectionState('offline', 'The live stream closed. Try restarting.');
   });
   nostrSubscriptions.push(sub);
 
@@ -367,9 +303,13 @@ function subscribeAuthorBatch(authors: string[], kinds: number[], since: number,
       const { events } = await outbox.query(filters, options);
       if (token !== streamToken) return;
       for (const result of events) handleIncomingEvent(result.event as NostrEvent);
-      setConnectionState('live', `Watching ${contactCount.toLocaleString()} one-hop contacts through NAP-OUTBOX.`);
+      setConnectionState(
+        'live',
+        `Watching ${contactCount.toLocaleString()} one-hop contacts through NAP-OUTBOX.`,
+      );
     } catch {
-      if (token === streamToken && connectionState === 'connecting') setConnectionState('offline', 'Initial OUTBOX scan failed; waiting for live events.');
+      if (token === streamToken && connectionState === 'connecting')
+        setConnectionState('offline', 'Initial OUTBOX scan failed; waiting for live events.');
     }
   })();
 }
@@ -383,7 +323,9 @@ function startPopularRelayStream(token: number): void {
   const kinds = [KIND_TEXT_NOTE, KIND_REACTION];
   if (settings.includeZaps) kinds.push(KIND_ZAP_RECEIPT);
   if (settings.includeOnchainZaps) kinds.push(KIND_ONCHAIN_ZAP);
-  const filters: NostrFilter[] = [{ kinds, since: Math.floor(Date.now() / 1000) - STREAM_SINCE_SECONDS, limit: 120 }];
+  const filters: NostrFilter[] = [
+    { kinds, since: Math.floor(Date.now() / 1000) - STREAM_SINCE_SECONDS, limit: 120 },
+  ];
   contactCount = POPULAR_RELAYS.length;
   updateStats();
 
@@ -392,12 +334,18 @@ function startPopularRelayStream(token: number): void {
       filters,
       (result: RelayEventResult) => {
         if (token !== streamToken) return;
-        setConnectionState('live', `Watching ${POPULAR_RELAYS.length.toLocaleString()} popular relays through NAP-RELAY.`);
+        setConnectionState(
+          'live',
+          `Watching ${POPULAR_RELAYS.length.toLocaleString()} popular relays through NAP-RELAY.`,
+        );
         handleIncomingEvent(result.event as NostrEvent);
       },
       () => {
         if (token === streamToken && connectionState === 'connecting') {
-          setConnectionState('live', `Watching ${POPULAR_RELAYS.length.toLocaleString()} popular relays through NAP-RELAY.`);
+          setConnectionState(
+            'live',
+            `Watching ${POPULAR_RELAYS.length.toLocaleString()} popular relays through NAP-RELAY.`,
+          );
         }
       },
       { relay: relayUrl },
@@ -422,7 +370,8 @@ function handleIncomingEvent(event: NostrEvent): void {
   if (event.kind === KIND_TEXT_NOTE) handleIncomingNote(event);
   else if (event.kind === KIND_REACTION && settings.enableReactions) handleIncomingReaction(event);
   else if (event.kind === KIND_ZAP_RECEIPT && settings.includeZaps) handleIncomingZap(event);
-  else if (event.kind === KIND_ONCHAIN_ZAP && settings.includeOnchainZaps) handleIncomingOnchainZap(event);
+  else if (event.kind === KIND_ONCHAIN_ZAP && settings.includeOnchainZaps)
+    handleIncomingOnchainZap(event);
 }
 
 function handleIncomingNote(event: NostrEvent): void {
@@ -432,21 +381,43 @@ function handleIncomingNote(event: NostrEvent): void {
   const role: BubbleRole = thread ? 'reply' : 'note';
   const radiusRange = getRoleRadiusRange(role);
   const radius = randomBetween(radiusRange[0], radiusRange[1]);
-  void fetchProfileAndSpawn(event, { role, radius, rootEventId: thread?.root.eventId, replyEventId: thread?.reply?.eventId });
+  void fetchProfileAndSpawn(event, {
+    role,
+    radius,
+    rootEventId: thread?.root.eventId,
+    replyEventId: thread?.reply?.eventId,
+  });
 
   if (thread?.root && thread.root.eventId !== event.id) {
     void fetchReferencedNoteAndSpawn(thread.root, { role: 'root', maxRadius: radius });
   }
-  if (thread?.reply && thread.reply.eventId !== event.id && thread.reply.eventId !== thread.root.eventId) {
-    void fetchReferencedNoteAndSpawn(thread.reply, { role: 'reply', rootEventId: thread.root.eventId, maxRadius: radius });
+  if (
+    thread?.reply &&
+    thread.reply.eventId !== event.id &&
+    thread.reply.eventId !== thread.root.eventId
+  ) {
+    void fetchReferencedNoteAndSpawn(thread.reply, {
+      role: 'reply',
+      rootEventId: thread.root.eventId,
+      maxRadius: radius,
+    });
   }
 }
 
 function handleIncomingReaction(event: NostrEvent): void {
   const targetEventId = getReactionTargetEventId(event);
   if (!targetEventId) return;
-  if (!bubbles.some((bubble) => bubble.eventId === targetEventId && bubble.role !== 'reaction' && bubble.role !== 'zap')) return;
-  void fetchProfileAndSpawn({ ...event, content: getReactionEmoji(event.content) }, { role: 'reaction', rootEventId: targetEventId });
+  if (
+    !bubbles.some(
+      (bubble) =>
+        bubble.eventId === targetEventId && bubble.role !== 'reaction' && bubble.role !== 'zap',
+    )
+  )
+    return;
+  void fetchProfileAndSpawn(
+    { ...event, content: getReactionEmoji(event.content) },
+    { role: 'reaction', rootEventId: targetEventId },
+  );
 }
 
 function handleIncomingZap(event: NostrEvent): void {
@@ -456,7 +427,10 @@ function handleIncomingZap(event: NostrEvent): void {
   zapCount += 1;
   satsCount += amount;
   updateStats();
-  void fetchProfileAndSpawn({ ...event, pubkey: sender, content: '' }, { role: 'zap', zapAmountSats: amount });
+  void fetchProfileAndSpawn(
+    { ...event, pubkey: sender, content: '' },
+    { role: 'zap', zapAmountSats: amount },
+  );
 }
 
 function handleIncomingOnchainZap(event: NostrEvent): void {
@@ -480,7 +454,10 @@ interface SpawnOptions {
 
 async function fetchProfileAndSpawn(event: NostrEvent, options: SpawnOptions = {}): Promise<void> {
   const cached = profileCache.get(event.pubkey);
-  const messagePreview = options.role === 'zap' ? `${formatSats(options.zapAmountSats ?? 0)} sats` : getMessagePreview(event.content);
+  const messagePreview =
+    options.role === 'zap'
+      ? `${formatSats(options.zapAmountSats ?? 0)} sats`
+      : getMessagePreview(event.content);
   if (cached) {
     spawnBubble(event, cached.imageUrl, cached.shape, messagePreview, options);
     return;
@@ -491,12 +468,14 @@ async function fetchProfileAndSpawn(event: NostrEvent, options: SpawnOptions = {
   }
   pendingProfiles.add(event.pubkey);
   try {
-    const { events } = await outbox.query([{ kinds: [0], authors: [event.pubkey], limit: 1 }], { authors: [event.pubkey], timeoutMs: 3000 });
-    const profile = parseProfile(events[0]?.event as NostrEvent | undefined);
-    const entry = await resolveProfileImage(profile.picture);
-    entry.shape = profile.shape;
+    const result = await common.getProfile(event.pubkey);
+    const picture =
+      typeof result.profile?.picture === 'string' ? result.profile.picture : undefined;
+    const shape = typeof result.profile?.shape === 'string' ? result.profile.shape : undefined;
+    const entry = await resolveProfileImage(picture);
+    entry.shape = shape;
     cacheProfile(event.pubkey, entry);
-    spawnBubble(event, entry.imageUrl, profile.shape, messagePreview, options);
+    spawnBubble(event, entry.imageUrl, shape, messagePreview, options);
   } catch {
     const entry = { imageUrl: DEFAULT_PROFILE_IMAGE };
     cacheProfile(event.pubkey, entry);
@@ -529,7 +508,10 @@ function cacheProfile(pubkey: string, entry: ProfileCacheEntry): void {
   }
 }
 
-async function fetchReferencedNoteAndSpawn(reference: { eventId: string; authorHint?: string }, options: SpawnOptions): Promise<void> {
+async function fetchReferencedNoteAndSpawn(
+  reference: { eventId: string; authorHint?: string },
+  options: SpawnOptions,
+): Promise<void> {
   const cached = rootEventCache.get(reference.eventId);
   if (cached) {
     void fetchProfileAndSpawn(cached, { ...options, reuseExisting: true });
@@ -538,10 +520,11 @@ async function fetchReferencedNoteAndSpawn(reference: { eventId: string; authorH
   if (cached === null || pendingRoots.has(reference.eventId)) return;
   pendingRoots.add(reference.eventId);
   try {
-    const filter: NostrFilter = { kinds: [KIND_TEXT_NOTE], ids: [reference.eventId], limit: 1 };
-    if (reference.authorHint) filter.authors = [reference.authorHint];
-    const { events } = await outbox.query([filter], reference.authorHint ? { authors: [reference.authorHint], timeoutMs: 3000 } : { timeoutMs: 3000 });
-    const found = events[0]?.event as NostrEvent | undefined;
+    const lookup = await outbox.getEvent(reference.eventId, {
+      author: reference.authorHint,
+      timeoutMs: 3000,
+    });
+    const found = lookup.result?.event as NostrEvent | undefined;
     rootEventCache.set(reference.eventId, found ?? null);
     while (rootEventCache.size > ROOT_CACHE_LIMIT) {
       const oldest = rootEventCache.keys().next().value as string | undefined;
@@ -554,14 +537,25 @@ async function fetchReferencedNoteAndSpawn(reference: { eventId: string; authorH
   }
 }
 
-function spawnBubble(event: NostrEvent, imageUrl: string, shape: string | undefined, messagePreview: string, options: SpawnOptions = {}): void {
+function spawnBubble(
+  event: NostrEvent,
+  imageUrl: string,
+  shape: string | undefined,
+  messagePreview: string,
+  options: SpawnOptions = {},
+): void {
   const { width, height } = stageSize();
   const role = options.role ?? 'note';
   const radiusRange = getRoleRadiusRange(role);
-  const radius = Math.min(options.radius ?? randomBetween(radiusRange[0], radiusRange[1]), options.maxRadius ?? Number.POSITIVE_INFINITY);
+  const radius = Math.min(
+    options.radius ?? randomBetween(radiusRange[0], radiusRange[1]),
+    options.maxRadius ?? Number.POSITIVE_INFINITY,
+  );
   const now = performance.now();
   const targetCount = currentBubbleTarget(width, height);
-  spawnTimestamps = [...spawnTimestamps, now].filter((timestamp) => now - timestamp <= BUBBLE_SPAWN_RATE_WINDOW);
+  spawnTimestamps = [...spawnTimestamps, now].filter(
+    (timestamp) => now - timestamp <= BUBBLE_SPAWN_RATE_WINDOW,
+  );
   const spawnRate = spawnTimestamps.length / (BUBBLE_SPAWN_RATE_WINDOW / 1000);
   const lifetime = getBubbleLifetime(role, targetCount, spawnRate) * randomBetween(0.88, 1.12);
   const maxBubbles = Math.min(MAX_BUBBLES, targetCount + 12);
@@ -581,17 +575,43 @@ function spawnBubble(event: NostrEvent, imageUrl: string, shape: string | undefi
   let nextBubbles = bubbles;
   if (role === 'root') {
     const roots = nextBubbles.filter((bubble) => bubble.role === 'root');
-    if (roots.length >= MAX_ROOT_BUBBLES) nextBubbles = nextBubbles.filter((bubble) => bubble.id !== roots[0]?.id);
+    if (roots.length >= MAX_ROOT_BUBBLES)
+      nextBubbles = nextBubbles.filter((bubble) => bubble.id !== roots[0]?.id);
   }
   const incomingArea = isPersistentBubbleRole(role) ? getDiscArea(radius) : 0;
-  nextBubbles = incomingArea > 0 ? pruneForBubbleArea(nextBubbles, incomingArea, width * height) : nextBubbles;
+  nextBubbles =
+    incomingArea > 0 ? pruneForBubbleArea(nextBubbles, incomingArea, width * height) : nextBubbles;
 
   const startsFromLeft = Math.random() > 0.5;
-  const roleSpeed = role === 'root' ? randomBetween(36, 96) : role === 'zap' ? randomBetween(620, 1040) : role === 'reaction' ? randomBetween(360, 720) : randomBetween(70, 210);
-  const baseAngle = role === 'zap' ? randomBetween(-Math.PI * 0.32, Math.PI * 0.32) : role === 'reaction' ? randomBetween(-Math.PI * 0.11, Math.PI * 0.11) : randomBetween(0, Math.PI * 2);
+  const roleSpeed =
+    role === 'root'
+      ? randomBetween(36, 96)
+      : role === 'zap'
+        ? randomBetween(620, 1040)
+        : role === 'reaction'
+          ? randomBetween(360, 720)
+          : randomBetween(70, 210);
+  const baseAngle =
+    role === 'zap'
+      ? randomBetween(-Math.PI * 0.32, Math.PI * 0.32)
+      : role === 'reaction'
+        ? randomBetween(-Math.PI * 0.11, Math.PI * 0.11)
+        : randomBetween(0, Math.PI * 2);
   const angle = startsFromLeft ? baseAngle : Math.PI - baseAngle;
-  const x = role === 'zap' ? (startsFromLeft ? -radius * randomBetween(2.6, 6) : width + radius * randomBetween(2.6, 6)) : role === 'reaction' ? (startsFromLeft ? -radius * randomBetween(3.2, 8) : width + radius * randomBetween(3.2, 8)) : randomBetween(radius, Math.max(radius, width - radius));
-  const y = role === 'zap' || role === 'reaction' ? randomBetween(radius + 80, Math.max(radius + 80, height - radius)) : randomBetween(radius + 84, Math.max(radius + 84, height - radius));
+  const x =
+    role === 'zap'
+      ? startsFromLeft
+        ? -radius * randomBetween(2.6, 6)
+        : width + radius * randomBetween(2.6, 6)
+      : role === 'reaction'
+        ? startsFromLeft
+          ? -radius * randomBetween(3.2, 8)
+          : width + radius * randomBetween(3.2, 8)
+        : randomBetween(radius, Math.max(radius, width - radius));
+  const y =
+    role === 'zap' || role === 'reaction'
+      ? randomBetween(radius + 80, Math.max(radius + 80, height - radius))
+      : randomBetween(radius + 84, Math.max(radius + 84, height - radius));
   const bubble: Bubble = {
     id: `${event.id}-${role}-${now}-${Math.random().toString(36).slice(2)}`,
     eventId: event.id,
@@ -606,7 +626,14 @@ function spawnBubble(event: NostrEvent, imageUrl: string, shape: string | undefi
     radius,
     createdAt: now,
     expiresAt: now + lifetime,
-    hue: role === 'root' ? randomBetween(34, 62) : role === 'zap' ? randomBetween(42, 55) : role === 'reaction' ? randomBetween(280, 340) : randomBetween(88, 210),
+    hue:
+      role === 'root'
+        ? randomBetween(34, 62)
+        : role === 'zap'
+          ? randomBetween(42, 55)
+          : role === 'reaction'
+            ? randomBetween(280, 340)
+            : randomBetween(88, 210),
     role,
     rootEventId: options.rootEventId,
     replyEventId: options.replyEventId,
@@ -625,18 +652,30 @@ function animate(time: number): void {
   lastFrame = time;
   renderTime = time;
   const { width, height } = stageSize();
-  const updated = bubbles.filter((bubble) => bubble.expiresAt > time).map((bubble) => ({ ...bubble, trail: bubble.trail ? [...bubble.trail] : undefined }));
+  const updated = bubbles
+    .filter((bubble) => bubble.expiresAt > time)
+    .map((bubble) => ({ ...bubble, trail: bubble.trail ? [...bubble.trail] : undefined }));
 
   for (const bubble of updated) {
     bubble.x += bubble.vx * delta;
     bubble.y += bubble.vy * delta;
     if (bubble.role === 'reaction') {
       const padding = Math.max(180, bubble.radius * 8);
-      if (bubble.x < -padding || bubble.x > width + padding || bubble.y < -padding || bubble.y > height + padding) bubble.expiresAt = time;
+      if (
+        bubble.x < -padding ||
+        bubble.x > width + padding ||
+        bubble.y < -padding ||
+        bubble.y > height + padding
+      )
+        bubble.expiresAt = time;
       continue;
     }
     if (bubble.role === 'zap') {
-      const inside = bubble.x - bubble.radius >= 0 && bubble.x + bubble.radius <= width && bubble.y - bubble.radius >= 0 && bubble.y + bubble.radius <= height;
+      const inside =
+        bubble.x - bubble.radius >= 0 &&
+        bubble.x + bubble.radius <= width &&
+        bubble.y - bubble.radius >= 0 &&
+        bubble.y + bubble.radius <= height;
       bubble.enteredViewport ||= inside;
       if (bubble.enteredViewport) bounceOffEdges(bubble, width, height);
       if (bubble.targetSpeed && bubble.enteredViewport) {
@@ -647,7 +686,9 @@ function animate(time: number): void {
           bubble.vy *= nextSpeed / speed;
         }
       }
-      bubble.trail = [...(bubble.trail ?? []), { x: bubble.x, y: bubble.y, time }].filter((point) => time - point.time <= ZAP_TRAIL_DURATION).slice(-34);
+      bubble.trail = [...(bubble.trail ?? []), { x: bubble.x, y: bubble.y, time }]
+        .filter((point) => time - point.time <= ZAP_TRAIL_DURATION)
+        .slice(-34);
       continue;
     }
     bounceOffEdges(bubble, width, height);
@@ -680,7 +721,13 @@ function applyCollisions(items: Bubble[], time: number): void {
     for (let j = i + 1; j < items.length; j += 1) {
       const a = items[i]!;
       const b = items[j]!;
-      if (a.role === 'reaction' || b.role === 'reaction' || a.explodingAt !== undefined || b.explodingAt !== undefined) continue;
+      if (
+        a.role === 'reaction' ||
+        b.role === 'reaction' ||
+        a.explodingAt !== undefined ||
+        b.explodingAt !== undefined
+      )
+        continue;
       const dx = b.x - a.x;
       const dy = b.y - a.y;
       const distance = Math.hypot(dx, dy) || 0.001;
@@ -735,13 +782,19 @@ function render(): void {
 
 function renderEffects(): void {
   const links = buildThreadLinks();
-  const zapTrails = bubbles.filter((bubble) => bubble.role === 'zap' && bubble.trail && bubble.trail.length > 1);
+  const zapTrails = bubbles.filter(
+    (bubble) => bubble.role === 'zap' && bubble.trail && bubble.trail.length > 1,
+  );
   elements.effects.replaceChildren(
     svgEl('defs', {}, [
-      svgEl('linearGradient', { id: 'thread-string-gradient', x1: '0', x2: '1', y1: '0', y2: '0' }, [
-        svgEl('stop', { offset: '0%', 'stop-color': 'rgba(229,196,100,.85)' }),
-        svgEl('stop', { offset: '100%', 'stop-color': 'rgba(155,229,100,.72)' }),
-      ]),
+      svgEl(
+        'linearGradient',
+        { id: 'thread-string-gradient', x1: '0', x2: '1', y1: '0', y2: '0' },
+        [
+          svgEl('stop', { offset: '0%', 'stop-color': 'rgba(229,196,100,.85)' }),
+          svgEl('stop', { offset: '100%', 'stop-color': 'rgba(155,229,100,.72)' }),
+        ],
+      ),
     ]),
     ...zapTrails.flatMap(renderZapTrail),
     ...links.map(renderThreadLink),
@@ -750,7 +803,9 @@ function renderEffects(): void {
 
 function renderZapTrail(bubble: Bubble): SVGElement[] {
   const trail = bubble.trail ?? [];
-  const group = svgEl('g', { opacity: String(Math.min(0.86, Math.max(0, (bubble.expiresAt - renderTime) / 1200))) });
+  const group = svgEl('g', {
+    opacity: String(Math.min(0.86, Math.max(0, (bubble.expiresAt - renderTime) / 1200))),
+  });
   for (let i = 1; i < trail.length; i += 1) {
     const previous = trail[i - 1]!;
     const point = trail[i]!;
@@ -796,7 +851,12 @@ function renderThreadLink({ from, to, relation, id }: ThreadLink): SVGElement {
       'stroke-width': relation === 'root' ? 2.5 : 2,
       'stroke-dasharray': relation === 'root' ? '7 9' : '3 8',
     }),
-    svgEl('circle', { cx: from.x, cy: from.y, r: relation === 'root' ? 4 : 3.5, fill: relation === 'root' ? 'rgba(229,196,100,.9)' : 'rgba(168,85,247,.8)' }),
+    svgEl('circle', {
+      cx: from.x,
+      cy: from.y,
+      r: relation === 'root' ? 4 : 3.5,
+      fill: relation === 'root' ? 'rgba(229,196,100,.9)' : 'rgba(168,85,247,.8)',
+    }),
     svgEl('circle', { cx: to.x, cy: to.y, r: 3, fill: 'rgba(155,229,100,.8)' }),
   ]);
 }
@@ -806,15 +866,26 @@ function buildThreadLinks(): ThreadLink[] {
   const relatedByEventId = new Map<string, Bubble>();
   for (const bubble of bubbles) {
     if (bubble.role === 'root') rootByEventId.set(bubble.eventId, bubble);
-    if (bubble.role !== 'zap' && bubble.role !== 'reaction') relatedByEventId.set(bubble.eventId, bubble);
+    if (bubble.role !== 'zap' && bubble.role !== 'reaction')
+      relatedByEventId.set(bubble.eventId, bubble);
   }
   return bubbles.flatMap((bubble) => {
     if (bubble.role !== 'reply') return [];
     const links: ThreadLink[] = [];
     const root = bubble.rootEventId ? rootByEventId.get(bubble.rootEventId) : undefined;
-    const reply = bubble.replyEventId && bubble.replyEventId !== bubble.rootEventId ? relatedByEventId.get(bubble.replyEventId) : undefined;
-    if (root && root.id !== bubble.id) links.push({ id: `${root.id}-${bubble.id}-root`, from: root, to: bubble, relation: 'root' });
-    if (reply && reply.id !== bubble.id) links.push({ id: `${reply.id}-${bubble.id}-reply`, from: reply, to: bubble, relation: 'reply' });
+    const reply =
+      bubble.replyEventId && bubble.replyEventId !== bubble.rootEventId
+        ? relatedByEventId.get(bubble.replyEventId)
+        : undefined;
+    if (root && root.id !== bubble.id)
+      links.push({ id: `${root.id}-${bubble.id}-root`, from: root, to: bubble, relation: 'root' });
+    if (reply && reply.id !== bubble.id)
+      links.push({
+        id: `${reply.id}-${bubble.id}-reply`,
+        from: reply,
+        to: bubble,
+        relation: 'reply',
+      });
     return links;
   });
 }
@@ -850,7 +921,12 @@ function renderReactionContents(node: HTMLElement, bubble: Bubble): void {
 
 function renderOrbContents(node: HTMLElement, bubble: Bubble): void {
   const isExploding = bubble.explodingAt !== undefined;
-  const explosionProgress = isExploding ? Math.min(1, Math.max(0, (renderTime - (bubble.explodingAt ?? renderTime)) / EXPLOSION_DURATION)) : 0;
+  const explosionProgress = isExploding
+    ? Math.min(
+        1,
+        Math.max(0, (renderTime - (bubble.explodingAt ?? renderTime)) / EXPLOSION_DURATION),
+      )
+    : 0;
   const orb = avatarNode(bubble, `Nostr ${bubble.role} orb`);
   orb.classList.add('orb-core');
   orb.style.setProperty('--hue', String(bubble.hue));
@@ -903,9 +979,22 @@ function labelNode(bubble: Bubble): HTMLElement {
 }
 
 function cracksNode(cracks: number): SVGSVGElement {
-  const svg = svgEl('svg', { class: 'cracks', viewBox: '0 0 100 100', preserveAspectRatio: 'none' }) as SVGSVGElement;
-  svg.append(svgEl('path', { d: 'M 8 52 L 30 44 L 42 56 L 56 38 L 70 52 L 92 46' }), svgEl('path', { d: 'M 30 44 L 24 30' }), svgEl('path', { d: 'M 56 38 L 60 22' }));
-  if (cracks >= 2) svg.append(svgEl('path', { d: 'M 48 8 L 56 30 L 42 44 L 58 60 L 44 78 L 52 92' }), svgEl('path', { d: 'M 56 30 L 70 24' }), svgEl('path', { d: 'M 58 60 L 76 64' }));
+  const svg = svgEl('svg', {
+    class: 'cracks',
+    viewBox: '0 0 100 100',
+    preserveAspectRatio: 'none',
+  }) as SVGSVGElement;
+  svg.append(
+    svgEl('path', { d: 'M 8 52 L 30 44 L 42 56 L 56 38 L 70 52 L 92 46' }),
+    svgEl('path', { d: 'M 30 44 L 24 30' }),
+    svgEl('path', { d: 'M 56 38 L 60 22' }),
+  );
+  if (cracks >= 2)
+    svg.append(
+      svgEl('path', { d: 'M 48 8 L 56 30 L 42 44 L 58 60 L 44 78 L 52 92' }),
+      svgEl('path', { d: 'M 56 30 L 70 24' }),
+      svgEl('path', { d: 'M 58 60 L 76 64' }),
+    );
   return svg;
 }
 
@@ -934,7 +1023,11 @@ function explosionNode(bubble: Bubble, progress: number): HTMLElement {
   return container;
 }
 
-function svgEl(name: string, attrs: Record<string, unknown> = {}, children: SVGElement[] = []): SVGElement {
+function svgEl(
+  name: string,
+  attrs: Record<string, unknown> = {},
+  children: SVGElement[] = [],
+): SVGElement {
   const element = document.createElementNS('http://www.w3.org/2000/svg', name);
   for (const [key, value] of Object.entries(attrs)) element.setAttribute(key, String(value));
   element.append(...children);
@@ -948,6 +1041,13 @@ function formatSats(amount: number): string {
 function setupControls(): void {
   elements.footerBar.addEventListener('click', openSettingsOverlay);
   elements.closeSettingsButton.addEventListener('click', closeSettingsOverlay);
+  elements.openSettingsButton.addEventListener('click', () => {
+    try {
+      config.openSettings();
+    } catch {
+      setConnectionState('error', 'This shell did not grant NAP-CONFIG settings.');
+    }
+  });
   elements.settingsOverlay.addEventListener('click', (event) => {
     if (event.target === elements.settingsOverlay) closeSettingsOverlay();
   });
@@ -979,15 +1079,16 @@ function handleSettingsOverlayKeydown(event: KeyboardEvent): void {
 }
 
 function getSettingsFocusableElements(): HTMLElement[] {
-  return Array.from(elements.settingsOverlay.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), select:not([disabled])')).filter(
-    (element) => element.offsetParent !== null,
-  );
+  return Array.from(
+    elements.settingsOverlay.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), input:not([disabled]), select:not([disabled])',
+    ),
+  ).filter((element) => element.offsetParent !== null);
 }
 
 function openSettingsOverlay(): void {
   elements.settingsOverlay.classList.remove('hidden');
   elements.footerBar.setAttribute('aria-expanded', 'true');
-  renderSettingsSummary();
   getSettingsFocusableElements()[0]?.focus();
 }
 
@@ -999,19 +1100,28 @@ function closeSettingsOverlay(): void {
 
 async function bootstrap(): Promise<void> {
   setupControls();
-  let loadedStoredSettings = false;
-  try {
-    loadedStoredSettings = await loadStoredSettings();
-  } catch {
-    settings = { ...DEFAULT_SETTINGS };
+  if (isNapDomainPresent('config')) {
+    try {
+      settings = normalizeSettings(await config.get());
+      configSubscription = config.subscribe((values) => {
+        const next = normalizeSettings(values);
+        if (JSON.stringify(next) === JSON.stringify(settings)) return;
+        settings = next;
+        updateStats();
+        void startStream();
+      });
+    } catch {
+      settings = { ...DEFAULT_SETTINGS };
+    }
   }
-  if (!loadedStoredSettings) await applyIdentitySourceDefault();
-  try {
-    identitySubscription = identity.onChanged(() => {
-      void startStream();
-    });
-  } catch {
-    // startStream will surface missing identity support.
+  if (isNapDomainPresent('identity')) {
+    try {
+      identitySubscription = identity.onChanged(() => {
+        void startStream();
+      });
+    } catch {
+      // startStream will surface missing identity support.
+    }
   }
   animationFrame = window.requestAnimationFrame(animate);
   await startStream();
@@ -1021,11 +1131,16 @@ window.addEventListener('pagehide', () => {
   streamToken += 1;
   closeNostrSubscriptions();
   identitySubscription?.close();
+  configSubscription?.close();
   themeHandle.close();
   window.cancelAnimationFrame(animationFrame);
-  for (const entry of profileCache.values()) if (entry.objectUrl) URL.revokeObjectURL(entry.objectUrl);
+  for (const entry of profileCache.values())
+    if (entry.objectUrl) URL.revokeObjectURL(entry.objectUrl);
 });
 
 void bootstrap().catch((error: unknown) => {
-  setConnectionState('error', error instanceof Error ? error.message : 'Nostr Bubbles failed to start.');
+  setConnectionState(
+    'error',
+    error instanceof Error ? error.message : 'Nostr Bubbles failed to start.',
+  );
 });
