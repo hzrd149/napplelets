@@ -10,7 +10,9 @@
  */
 
 import {
+  config,
   fs,
+  incOn,
   storageGetItem,
   storageSetItem,
   type FsDirectoryEntry,
@@ -29,6 +31,13 @@ import {
 
 import './styles.css';
 import { describeFsError, isCancelled, isConflict } from './lib/fs-errors';
+import {
+  ARCHETYPE,
+  CONVENTIONS,
+  isProblem,
+  parseOpenIntent,
+  type ParsedIntent,
+} from './lib/intent';
 import {
   basename,
   formatBytes,
@@ -675,6 +684,17 @@ function toggleMenu(button: HTMLButtonElement): void {
 
 /* ── Document state ──────────────────────────────────────────────────── */
 
+/**
+ * Shows or hides the XP title bar and frame (NAP-CONFIG `windowFrame`).
+ *
+ * The close button lives in the title bar, so hiding it takes New away with it.
+ * That is the right trade: a shell drawing its own chrome owns closing the
+ * pane, and Ctrl+N and File ▸ New both still work.
+ */
+function setWindowFrame(on: boolean): void {
+  ui.window.classList.toggle('xp-frameless', !on);
+}
+
 function setWordWrap(on: boolean): void {
   state.wordWrap = on;
   ui.editor.dataset.wrap = on ? 'on' : 'off';
@@ -943,6 +963,7 @@ async function reloadFromDisk(): Promise<void> {
 
 let watchId: string | null = null;
 let changeSubscription: Subscription | null = null;
+let configSubscription: Subscription | null = null;
 let staleTimer: ReturnType<typeof setTimeout> | undefined;
 
 async function stopWatch(): Promise<void> {
@@ -1277,11 +1298,97 @@ const actions: Record<string, () => void | Promise<void>> = {
         '',
         `Filesystem: ${has('fs') ? `${roots} folder${roots === 1 ? '' : 's'} available` : 'not granted'}`,
         `Session storage: ${has('storage') ? 'granted' : 'not granted'}`,
+        `Opens files for other napplets: ${has('inc') ? `yes, as "${ARCHETYPE}"` : 'not granted'}`,
       ].join('\n'),
       'notepad',
     );
   },
 };
+
+/* ── Opening on request from another napplet ─────────────────────────────
+ * NAP-INTENT, handler side. The manifest declares the `text-editor` archetype
+ * on the `napplet:text-editor/open` convention; the shell resolves this napplet
+ * from that tag and then delivers the caller's payload as a NAP-INC event on
+ * the convention topic. There is no reply channel back to the caller -- the
+ * shell already told it whether *dispatch* succeeded -- so everything that can
+ * go wrong from here on is reported to the person looking at the editor.
+ */
+
+let intentSubscriptions: Subscription[] = [];
+let pendingIntent: ParsedIntent | null = null;
+let intentRetryTimer: ReturnType<typeof setTimeout> | undefined;
+/** Intents are queued until the session has been restored (see `boot`). */
+let bootComplete = false;
+
+function queueIntent(parsed: ParsedIntent): void {
+  // Only the most recent request survives. A burst from one caller means the
+  // last one is what the user is meant to end up looking at, and replaying the
+  // earlier ones would flash through files nobody asked to see -- each with its
+  // own unsaved-changes prompt.
+  pendingIntent = parsed;
+  drainIntent();
+}
+
+function drainIntent(): void {
+  clearTimeout(intentRetryTimer);
+  const parsed = pendingIntent;
+  if (!parsed || !bootComplete) return;
+
+  // Never cut in on work already in progress. A message box is a singleton that
+  // dismisses whatever is already up, so an intent arriving while the user is
+  // typing in Find would destroy that dialog; and opening a document under a
+  // save in flight would race its writes. Both resolve on their own, so wait
+  // for them rather than dropping what the caller asked for.
+  if (documentOperationInFlight || dialogIsOpen() || !ui.fileLayer.hidden) {
+    intentRetryTimer = setTimeout(drainIntent, 200);
+    return;
+  }
+
+  pendingIntent = null;
+  void withDocumentLock(() => applyIntent(parsed));
+}
+
+/** Puts the caret where the caller asked, and the editor in front of the user. */
+function goToIntentLine(line: number | undefined): void {
+  if (line === undefined) {
+    ui.editor.focus();
+    return;
+  }
+  // `indexOfLine` clamps, so a line past the end lands on the last one. That is
+  // not worth a message box: the file opened, which is what was asked for.
+  const start = indexOfLine(line, lineOffsets);
+  selectRange(start, start);
+  // `setSelectionRange` moves the caret but does not reliably scroll a textarea
+  // to it. Re-focusing does, and is a no-op when the caret is already in view.
+  ui.editor.blur();
+  ui.editor.focus();
+}
+
+async function applyIntent(parsed: ParsedIntent): Promise<void> {
+  if (isProblem(parsed)) {
+    await alertDialog('Notepad', parsed.problem);
+    return;
+  }
+  if (!has('fs')) {
+    await alertDialog(
+      'Notepad',
+      'Another napplet asked Notepad to open a file, but this shell did not grant filesystem access.',
+    );
+    return;
+  }
+
+  // Already editing exactly this file: do not re-read it, and above all do not
+  // ask about unsaved changes. The caller wants the user looking at this
+  // document and they already are, so discarding their buffer to re-read the
+  // same path would lose work in exchange for nothing.
+  if (parsed.path === doc.path) {
+    goToIntentLine(parsed.line);
+    return;
+  }
+
+  if (!(await confirmDiscard())) return;
+  if (await openPath(parsed.path)) goToIntentLine(parsed.line);
+}
 
 /** Actions that touch the document and must not overlap each other. */
 const EXCLUSIVE_ACTIONS = new Set(['new', 'open', 'save', 'saveAs', 'reload']);
@@ -1300,12 +1407,24 @@ async function runAction(name: string): Promise<void> {
     await action();
     return;
   }
+  await withDocumentLock(action);
+}
+
+/**
+ * Runs a document operation exclusively, dropping it if one is already running.
+ *
+ * Dropping is right for a user action -- a second Ctrl+S is the same save --
+ * but not for an inbound intent, which is why `drainIntent` waits for the lock
+ * instead of racing it, and why releasing the lock gives it a chance to run.
+ */
+async function withDocumentLock(operation: () => void | Promise<void>): Promise<void> {
   if (documentOperationInFlight) return;
   documentOperationInFlight = true;
   try {
-    await action();
+    await operation();
   } finally {
     documentOperationInFlight = false;
+    drainIntent();
   }
 }
 
@@ -1387,8 +1506,11 @@ ui.closeButton.addEventListener('click', () => void runAction('new'));
 window.addEventListener('beforeunload', () => {
   clearTimeout(sessionTimer);
   clearTimeout(staleTimer);
+  clearTimeout(intentRetryTimer);
   void stopWatch();
   changeSubscription?.close();
+  for (const subscription of intentSubscriptions) subscription.close();
+  configSubscription?.close();
 });
 
 /* ── Boot ────────────────────────────────────────────────────────────── */
@@ -1404,6 +1526,38 @@ async function restoreSession(): Promise<Session> {
 
 async function boot(): Promise<void> {
   ui.fileUpIcon.style.backgroundImage = `url(${up})`;
+
+  // Subscribed first, so an intent that opens this napplet cold is not missed
+  // while the session is still being read back. `drainIntent` holds anything
+  // that arrives until `bootComplete` below, rather than letting it race the
+  // restore and be overwritten by the file the session remembers.
+  if (has('inc')) {
+    try {
+      // One subscription per declared convention -- `open` and `edit` mean the
+      // same thing here, so they share a handler.
+      intentSubscriptions = CONVENTIONS.map((convention) =>
+        incOn(convention, (event) => queueIntent(parseOpenIntent(event.payload))),
+      );
+    } catch {
+      // A shell that cannot route intents simply never sends one; every other
+      // way of opening a file still works.
+    }
+  }
+
+  // The shell is the sole writer, and pushes a snapshot immediately on
+  // subscribe, so there is no separate `get()` -- and a later change from the
+  // settings UI arrives on the same subscription.
+  if (has('config')) {
+    try {
+      configSubscription = config.subscribe((values) => {
+        // A shell that dropped the property, or sent something that is not a
+        // boolean, gets the framed default rather than a guess.
+        setWindowFrame(values.windowFrame !== false);
+      });
+    } catch {
+      // Without config the frame simply stays on, which is the default anyway.
+    }
+  }
 
   const session = await restoreSession();
   setWordWrap(session.wordWrap);
@@ -1448,6 +1602,10 @@ async function boot(): Promise<void> {
   reindex();
   renderStatus();
   ui.editor.focus();
+
+  // The editor is now in a state an inbound open can safely replace.
+  bootComplete = true;
+  drainIntent();
 }
 
 void boot();

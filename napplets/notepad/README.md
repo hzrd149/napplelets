@@ -26,17 +26,28 @@ pnpm --filter notepad test:conformance  # NAP conformance check
 | --------- | --------------------------------------------------------------------------- |
 | `fs`      | everything: roots, listing, read, write, stat, pickers, and change watching |
 | `storage` | the editor's own state — open path, unsaved buffer, word wrap, last folder  |
+| `inc`     | delivery rail for payloads resolved through NAP-INTENT                     |
+| `config`  | shell-owned option to show or hide the Windows XP window frame              |
 
-The documents live on the filesystem; `storage` never holds one. `config` is not
-used, so word wrap is a menu toggle persisted in `storage` rather than a
-shell-owned setting. `keys` is not used either — every action has a menu item, so
-there is no shell shortcut worth reserving, and Ctrl+S/Ctrl+O/F3 are handled
-locally, which means a shell that wants those keys keeps them. `theme` is not
-used, so the napplet always renders authentic Luna instead of following the
-shell palette.
+The documents live on the filesystem; `storage` never holds one. Word wrap is a
+menu toggle persisted in `storage`, while `config.windowFrame` belongs to the
+shell placement: it defaults to the authentic XP title bar and border, and can
+remove both when the shell already supplies its own chrome. `keys` is not used —
+every action has a menu item, so there is no shell shortcut worth reserving, and
+Ctrl+S/Ctrl+O/F3 are handled locally. `theme` is not used, so the napplet always
+renders authentic Luna instead of following the shell palette.
 
-Both domains are feature-checked at call time. With no `fs`, this degrades to a
-working scratch text editor that says so when you try to open or save.
+Notepad advertises the `text-editor` archetype for the
+`napplet:text-editor/open` and `napplet:text-editor/edit` conventions. Callers
+use NAP-INTENT exclusively to resolve and open Notepad; they do not address this
+napplet directly. In the current NAP-INTENT contract, the shell delivers the
+resolved convention payload to the handler as an INC topic event after the
+target is ready, so `inc` remains a required delivery rail rather than a second
+dispatch API.
+
+Every runtime domain is feature-checked at call time. With no `fs`, this
+degrades to a working scratch text editor that says so when you try to open or
+save; without `config`, the XP frame stays visible.
 
 ## Behaviour worth knowing
 
