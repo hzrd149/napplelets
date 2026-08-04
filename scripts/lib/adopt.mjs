@@ -11,10 +11,13 @@ import { join } from 'node:path';
 // Napplet folder names double as deploy `d` tags in @napplet/cli monorepo mode.
 const D_TAG_PATTERN = /^[a-z0-9-]{1,13}$/;
 const SHIM_PACKAGE = '@napplet/shim';
+// Caret ranges on 0.x only widen within the minor, so these do not drift forward
+// on their own — a stale entry here mints stale napplets. Keep them level with
+// what the existing napplets resolve to.
 const CURRENT_NAPPLET_PACKAGES = {
-  '@napplet/sdk': '^0.24.4',
-  '@napplet/conformance-cli': '^0.2.15',
-  '@napplet/vite-plugin': '^0.11.3',
+  '@napplet/sdk': '^0.27.2',
+  '@napplet/conformance-cli': '^0.2.18',
+  '@napplet/vite-plugin': '^0.14.1',
 };
 const STATIC_SHIM_IMPORT =
   /^[\t ]*import(?:[\t ]+[^'"\r\n]+[\t ]+from)?[\t ]*['"]@napplet\/shim(?:\/[^'"]*)?['"];?[\t ]*(?:\/\/[^\r\n]*)?\r?\n?/gm;
@@ -32,7 +35,18 @@ export async function adoptNapplet(dir, { name, title } = {}) {
 
   // 1. Remove duplicated shared context and the standalone template's guidance
   // test. Repo-level guidance and its validation live once at the root.
-  for (const shared of ['docs', '.codex', 'tests/guidance.test.mjs', 'LICENSE']) {
+  //
+  // `pnpm-lock.yaml` and `.gitignore` go too: a nested lockfile is meaningless
+  // inside a pnpm workspace (the root lockfile resolves every package) and would
+  // only drift, and the root `.gitignore` is a superset of the template's.
+  for (const shared of [
+    'docs',
+    '.codex',
+    'tests/guidance.test.mjs',
+    'LICENSE',
+    'pnpm-lock.yaml',
+    '.gitignore',
+  ]) {
     await rm(join(dir, shared), { recursive: true, force: true });
   }
 
@@ -48,6 +62,10 @@ export async function adoptNapplet(dir, { name, title } = {}) {
   }
   const pkgPath = join(dir, 'package.json');
   const pkg = JSON.parse(await readFile(pkgPath, 'utf8'));
+  // The generator names the package after the target directory, which is the
+  // napplet name for us anyway — but be explicit, since pnpm filters and the
+  // deploy `d` tag both key off it.
+  pkg.name = name;
   for (const dependencyGroup of ['dependencies', 'devDependencies']) {
     if (!pkg[dependencyGroup]) continue;
     delete pkg[dependencyGroup][SHIM_PACKAGE];
@@ -82,6 +100,22 @@ export async function adoptNapplet(dir, { name, title } = {}) {
   }
   if (normalizedMain !== mainSource) {
     await writeFile(mainPath, normalizedMain);
+  }
+
+  // 1c. The generator hardcodes the manifest's `nappletType` to its template
+  // placeholder. That value is the napplet's identity in the NIP-5A manifest, so
+  // it has to match the folder name (which is also the deploy `d` tag).
+  const viteConfigPath = join(dir, 'vite.config.ts');
+  const viteConfig = await readFile(viteConfigPath, 'utf8');
+  const retypedViteConfig = viteConfig.replace(
+    /(\bnappletType\s*:\s*)(['"])[^'"]*\2/,
+    `$1$2${name}$2`,
+  );
+  if (!/\bnappletType\s*:/.test(viteConfig)) {
+    throw new Error(`${viteConfigPath} has no nappletType to adopt; check the generator output`);
+  }
+  if (retypedViteConfig !== viteConfig) {
+    await writeFile(viteConfigPath, retypedViteConfig);
   }
 
   // 2. Extend the shared base tsconfig instead of carrying a full copy.
