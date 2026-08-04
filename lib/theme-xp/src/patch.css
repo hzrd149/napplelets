@@ -168,6 +168,32 @@ body,
   overflow: auto;
 }
 
+/*
+ * The same window with its chrome dropped, for a shell that draws its own.
+ *
+ * A napplet is an embedded pane: when the host already provides a title bar and
+ * a frame, drawing a second one inside it reads as a window in a window. This
+ * removes the frame (padding, inset bevels, corner radius) and the title bar,
+ * and takes the body margin with them -- an 8px gutter with nothing framing it
+ * looks like a mistake rather than a frame, and the point of going frameless is
+ * to give the content the whole pane.
+ *
+ * The status bar stays: it is the napplet's own surface, not window chrome.
+ */
+.window.xp-fill.xp-frameless {
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+}
+
+.window.xp-fill.xp-frameless > .title-bar {
+  display: none;
+}
+
+.window.xp-fill.xp-frameless > .window-body {
+  margin: 0;
+}
+
 /* `min-width: 0` lets flex children shrink below their content width; without
  * it a long label or a wide input forces the whole pane to scroll sideways. */
 .field-row > *,
