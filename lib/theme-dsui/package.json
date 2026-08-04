@@ -20,8 +20,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@napplet/sdk": "^0.27.0",
-    "daisyui": "^5.7.9",
+    "@napplet/sdk": "^0.27.2",
+    "daisyui": "^5.7.14",
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {

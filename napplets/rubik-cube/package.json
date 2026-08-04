@@ -18,8 +18,8 @@
   },
   "devDependencies": {
     "@napplet/conformance-cli": "^0.2.18",
-    "@napplet/vite-plugin": "^0.14.0",
-    "@types/three": "^0.185.1",
+    "@napplet/vite-plugin": "^0.14.1",
+    "@types/three": "^0.185.3",
     "typescript": "^7.0.2",
     "vite": "^8.2.0",
     "vite-plugin-singlefile": "^2.3.3",

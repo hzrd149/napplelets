@@ -9,6 +9,6 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@napplet/cli": "jsr:^0.5.0"
+    "@napplet/cli": "jsr:^0.5.1"
   }
 }

@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@napplelets/theme-dsui": "workspace:*",
-    "@napplet/sdk": "^0.27.0",
+    "@napplet/sdk": "^0.27.2",
     "applesauce-common": "^6.2.0",
     "applesauce-content": "^6.2.0",
     "applesauce-core": "^6.2.0",
@@ -26,7 +26,7 @@
   },
   "devDependencies": {
     "@napplet/conformance-cli": "^0.2.18",
-    "@napplet/vite-plugin": "^0.14.0",
+    "@napplet/vite-plugin": "^0.14.1",
     "@tailwindcss/typography": "^0.5.20",
     "@tailwindcss/vite": "^4.3.3",
     "@types/react": "^19.2.18",

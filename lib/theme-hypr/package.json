@@ -20,7 +20,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@napplet/sdk": "^0.27.0",
+    "@napplet/sdk": "^0.27.2",
     "@unocss/reset": "^66.7.5"
   },
   "devDependencies": {
