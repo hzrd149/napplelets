@@ -129,6 +129,11 @@
   min-width: 0;
 }
 
+.dialog-note {
+  margin: 8px 0 0;
+  color: var(--xp-text-dim);
+}
+
 .dialog-fields {
   display: flex;
   flex-direction: column;

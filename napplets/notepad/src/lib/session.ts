@@ -33,6 +33,17 @@ export type Session = {
   wordWrap: boolean;
   /** Directory the file dialog should open in next time. */
   lastDir: string | null;
+  /**
+   * The file state the buffer was based on, carried across reloads.
+   *
+   * Without this, restoring unsaved work would have to re-`stat` the file and
+   * would adopt whatever revision it has *now* -- so a file edited by something
+   * else while the napplet was closed would be silently overwritten by the next
+   * save instead of raising a conflict.
+   */
+  revision: string | null;
+  size: number | null;
+  modifiedAt: number | null;
 };
 
 export const DEFAULT_SESSION: Session = {
@@ -43,10 +54,17 @@ export const DEFAULT_SESSION: Session = {
   bom: false,
   wordWrap: true,
   lastDir: null,
+  revision: null,
+  size: null,
+  modifiedAt: null,
 };
 
 function optionalString(value: unknown): string | null {
   return typeof value === 'string' && value ? value : null;
+}
+
+function optionalNumber(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
 }
 
 export function parseSession(raw: string | null | undefined): Session | null {
@@ -69,6 +87,9 @@ export function parseSession(raw: string | null | undefined): Session | null {
     // Absent means "never set", and word wrap was on by default in XP.
     wordWrap: record.wordWrap === undefined ? true : record.wordWrap === true,
     lastDir: optionalString(record.lastDir),
+    revision: optionalString(record.revision),
+    size: optionalNumber(record.size),
+    modifiedAt: optionalNumber(record.modifiedAt),
   };
 }
 

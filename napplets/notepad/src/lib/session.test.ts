@@ -76,4 +76,45 @@ describe('serializeSession', () => {
     const stored = parseSession(serializeSession(session({ lastDir: '/docs' })).raw);
     expect(stored?.lastDir).toBe('/docs');
   });
+
+  it('carries the revision the buffer was based on', () => {
+    // Without this, restoring unsaved work would have to re-stat and would
+    // adopt the file's *current* revision -- so a file changed while the
+    // napplet was closed would be overwritten silently instead of conflicting.
+    const stored = parseSession(
+      serializeSession(
+        session({
+          path: '/docs/a.txt',
+          text: 'edited',
+          dirty: true,
+          revision: 'rev-7',
+          size: 12,
+          modifiedAt: 1700000000000,
+        }),
+      ).raw,
+    );
+    expect(stored?.revision).toBe('rev-7');
+    expect(stored?.size).toBe(12);
+    expect(stored?.modifiedAt).toBe(1700000000000);
+  });
+
+  it('defaults the file state to null when the runtime disclosed none', () => {
+    const stored = parseSession(serializeSession(session({ path: '/docs/a.txt' })).raw);
+    expect(stored?.revision).toBeNull();
+    expect(stored?.size).toBeNull();
+  });
+});
+
+describe('parseSession file state', () => {
+  it('rejects wrong-typed revision and size', () => {
+    const parsed = parseSession('{"revision":42,"size":"big","modifiedAt":null}');
+    expect(parsed?.revision).toBeNull();
+    expect(parsed?.size).toBeNull();
+    expect(parsed?.modifiedAt).toBeNull();
+  });
+
+  it('rejects a non-finite size', () => {
+    // JSON has no Infinity, but a hand-edited or truncated record can produce one.
+    expect(parseSession('{"size":1e999}')?.size).toBeNull();
+  });
 });

@@ -137,6 +137,13 @@
             <div class="dialog-content">
               <p class="xp-dialog-message" id="dialogMessage"></p>
               <div class="dialog-fields" id="dialogFields" hidden></div>
+              <!--
+                Feedback from a button that keeps the dialog open (Find Next,
+                Replace All). It goes here rather than in a second message box:
+                the modal is a singleton, so nesting one inside another would
+                destroy the dialog underneath it.
+              -->
+              <p class="dialog-note" id="dialogNote" role="status" hidden></p>
             </div>
           </div>
           <div class="xp-dialog-buttons" id="dialogButtons"></div>

@@ -93,6 +93,7 @@ const ui = {
   dialogIcon: el<HTMLDivElement>('dialogIcon'),
   dialogMessage: el<HTMLParagraphElement>('dialogMessage'),
   dialogFields: el<HTMLDivElement>('dialogFields'),
+  dialogNote: el<HTMLParagraphElement>('dialogNote'),
   dialogButtons: el<HTMLDivElement>('dialogButtons'),
   dialogClose: el<HTMLButtonElement>('dialogClose'),
 
@@ -136,6 +137,17 @@ const state = {
 
 let info: FsInfo | null = null;
 let lineOffsets: number[] = [0];
+
+/**
+ * Whether a document operation (new/open/save/reload) is running.
+ *
+ * Saves are not atomic: a buffer larger than `maxWriteBytes` is written as a
+ * truncating first chunk followed by appends, so a second save starting
+ * mid-flight would interleave its truncate with the first one's appends and
+ * leave a mangled file. Guards the user-facing entry points; the internal
+ * nested calls (conflict retry, save-before-discard) run inside the lock.
+ */
+let documentOperationInFlight = false;
 
 /* ── Status bar and title ────────────────────────────────────────────── */
 
@@ -207,6 +219,25 @@ function backdrops(): HTMLElement[] {
 }
 
 /**
+ * Dismisses whatever message box is currently up, resolving it as cancelled.
+ *
+ * The modal is a singleton: a second `showDialog()` reuses the same DOM, so
+ * without this the dialog underneath would be silently overwritten and its
+ * promise left unresolved forever. Callers that want to say something while a
+ * dialog is open should use `setDialogNote()` instead of nesting.
+ */
+let closeActiveDialog: (() => void) | null = null;
+
+/** Whether a message box is currently up. */
+const dialogIsOpen = (): boolean => closeActiveDialog !== null;
+
+/** Feedback inside the open dialog, for buttons that do not dismiss it. */
+function setDialogNote(message: string): void {
+  ui.dialogNote.textContent = message;
+  ui.dialogNote.hidden = !message;
+}
+
+/**
  * One message box at a time, resolved by whichever button the user picks.
  *
  * The window beneath goes `.is-inactive`, which is what XP does and what makes
@@ -218,7 +249,12 @@ function showDialog(
 ): Promise<{ action: string; values: DialogValues } | null> {
   const buttons = options.buttons ?? [{ label: 'OK', value: 'ok', primary: true }];
 
+  // Safety net. Nesting is a bug (see `setDialogNote`), but leaving the outer
+  // promise pending forever would be a worse one.
+  closeActiveDialog?.();
+
   ui.dialogTitle.textContent = options.title;
+  setDialogNote('');
   ui.dialogMessage.textContent = options.message ?? '';
   ui.dialogMessage.hidden = !options.message;
   ui.dialogIcon.style.backgroundImage = options.icon ? `url(${ICONS[options.icon]})` : '';
@@ -266,7 +302,9 @@ function showDialog(
   return new Promise((resolve) => {
     const finish = (action: string | null): void => {
       const values = readValues();
+      closeActiveDialog = null;
       ui.modalLayer.hidden = true;
+      setDialogNote('');
       for (const node of backdrops()) node.classList.remove('is-inactive');
       ui.dialogClose.onclick = null;
       document.removeEventListener('keydown', onKey, true);
@@ -310,6 +348,7 @@ function showDialog(
     }
 
     ui.dialogClose.onclick = () => finish(null);
+    closeActiveDialog = () => finish(null);
     // Capture phase: this dialog owns Escape while it is up, not the menu bar.
     document.addEventListener('keydown', onKey, true);
 
@@ -673,6 +712,10 @@ function currentSession(): Session {
     bom: doc.bom,
     wordWrap: state.wordWrap,
     lastDir: state.lastDir,
+    // Carried so a restored buffer keeps the revision it was based on.
+    revision: doc.revision ?? null,
+    size: doc.size ?? null,
+    modifiedAt: doc.modifiedAt ?? null,
   };
 }
 
@@ -935,6 +978,13 @@ function onFsChanged(): void {
 
 async function checkForOutsideChange(): Promise<void> {
   if (!doc.path) return;
+  // Never cut in on work already in progress: reloading mid-save would race the
+  // write, and opening a message box over an open dialog would destroy it.
+  // Boot calls this directly, so the guard lives here rather than in onFsChanged.
+  if (documentOperationInFlight || dialogIsOpen()) {
+    onFsChanged();
+    return;
+  }
   try {
     const metadata = await fs.stat(doc.path);
     // Prefer the revision token; fall back to size/mtime when the runtime
@@ -1003,9 +1053,7 @@ function runFind(needle: string, matchCase: boolean, backwards: boolean): boolea
   return true;
 }
 
-async function notFound(needle: string): Promise<void> {
-  await alertDialog('Notepad', `Cannot find "${needle}"`, 'notepad');
-}
+const cannotFind = (needle: string): string => `Cannot find "${needle}"`;
 
 async function findAgain(): Promise<void> {
   if (!lastSearch.needle) {
@@ -1013,7 +1061,9 @@ async function findAgain(): Promise<void> {
     return;
   }
   if (!runFind(lastSearch.needle, lastSearch.matchCase, lastSearch.backwards)) {
-    await notFound(lastSearch.needle);
+    // No dialog is open on this path (F3 / Edit ▸ Find Next), so a message box
+    // is the right surface.
+    await alertDialog('Notepad', cannotFind(lastSearch.needle), 'notepad');
   }
 }
 
@@ -1035,7 +1085,9 @@ async function openFindDialog(): Promise<void> {
       lastSearch.matchCase = values.matchCase === true;
       lastSearch.backwards = values.backwards === true;
       if (!needle) return;
-      if (!runFind(needle, lastSearch.matchCase, lastSearch.backwards)) await notFound(needle);
+      setDialogNote(
+        runFind(needle, lastSearch.matchCase, lastSearch.backwards) ? '' : cannotFind(needle),
+      );
     },
   });
 }
@@ -1065,7 +1117,7 @@ async function openReplaceDialog(): Promise<void> {
       if (!needle) return;
 
       if (action === 'find') {
-        if (!runFind(needle, matchCase, false)) await notFound(needle);
+        setDialogNote(runFind(needle, matchCase, false) ? '' : cannotFind(needle));
         return;
       }
 
@@ -1077,19 +1129,21 @@ async function openReplaceDialog(): Promise<void> {
           ? selected === needle
           : selected.toLowerCase() === needle.toLowerCase();
         if (matched) insertText(replacement);
-        if (!runFind(needle, matchCase, false) && !matched) await notFound(needle);
+        const advanced = runFind(needle, matchCase, false);
+        setDialogNote(advanced || matched ? '' : cannotFind(needle));
         return;
       }
 
       const result = replaceAll(ui.editor.value, needle, replacement, { matchCase });
       if (!result.count) {
-        await notFound(needle);
+        setDialogNote(cannotFind(needle));
         return;
       }
       // Select-all then insert, so the whole rewrite is a single undo step.
       ui.editor.select();
       insertText(result.text);
       selectRange(0, 0);
+      setDialogNote(`Replaced ${result.count} occurrence${result.count === 1 ? '' : 's'}.`);
     },
   });
 }
@@ -1229,6 +1283,32 @@ const actions: Record<string, () => void | Promise<void>> = {
   },
 };
 
+/** Actions that touch the document and must not overlap each other. */
+const EXCLUSIVE_ACTIONS = new Set(['new', 'open', 'save', 'saveAs', 'reload']);
+
+/**
+ * The single entry point for menu items and shortcuts.
+ *
+ * Document actions take a lock, so hammering Ctrl+S cannot start a second save
+ * over the first. Everything else (find, clipboard, word wrap) runs freely --
+ * gating those behind the same lock would let an open Find dialog block saving.
+ */
+async function runAction(name: string): Promise<void> {
+  const action = actions[name];
+  if (!action) return;
+  if (!EXCLUSIVE_ACTIONS.has(name)) {
+    await action();
+    return;
+  }
+  if (documentOperationInFlight) return;
+  documentOperationInFlight = true;
+  try {
+    await action();
+  } finally {
+    documentOperationInFlight = false;
+  }
+}
+
 /* ── Wiring ──────────────────────────────────────────────────────────── */
 
 ui.editor.addEventListener('input', markDirty);
@@ -1252,7 +1332,7 @@ for (const menu of document.querySelectorAll<HTMLUListElement>('.xp-menu')) {
     const action = item.dataset.action;
     if (!action) return;
     closeMenu();
-    void actions[action]?.();
+    void runAction(action);
   });
 }
 
@@ -1273,7 +1353,7 @@ document.addEventListener('keydown', (event) => {
   }
   if (event.key === 'F5') {
     event.preventDefault();
-    void actions.timestamp?.();
+    void runAction('timestamp');
     return;
   }
 
@@ -1284,7 +1364,7 @@ document.addEventListener('keydown', (event) => {
 
   if (key === 's') {
     event.preventDefault();
-    void (event.shiftKey ? saveAs() : save());
+    void runAction(event.shiftKey ? 'saveAs' : 'save');
     return;
   }
 
@@ -1299,10 +1379,10 @@ document.addEventListener('keydown', (event) => {
   if (!action) return;
   if (action === 'goTo' && state.wordWrap) return;
   event.preventDefault();
-  void actions[action]?.();
+  void runAction(action);
 });
 
-ui.closeButton.addEventListener('click', () => void newDocument());
+ui.closeButton.addEventListener('click', () => void runAction('new'));
 
 window.addEventListener('beforeunload', () => {
   clearTimeout(sessionTimer);
@@ -1347,8 +1427,19 @@ async function boot(): Promise<void> {
     // Unsaved work wins over what is on disk -- re-reading would destroy it.
     loadIntoEditor(session.text, session);
     doc.dirty = true;
-    await refreshMetadata();
+
+    // Restore the file state this buffer was *based on*, not the file's current
+    // state. Re-stat'ing here would adopt whatever revision the file has now,
+    // so a file something else edited while the napplet was closed would sail
+    // past the `ifRevision` guard on the next save and be overwritten silently.
+    doc.revision = session.revision ?? undefined;
+    doc.size = session.size ?? undefined;
+    doc.modifiedAt = session.modifiedAt ?? undefined;
+
     await startWatch();
+    // Now compare against disk: if it moved on while we were away, this is
+    // exactly the conflict the user needs to be told about.
+    await checkForOutsideChange();
   } else if (session.path && has('fs')) {
     const opened = await openPath(session.path);
     if (!opened) doc.path = null;
