@@ -39,7 +39,13 @@ const ui = {
   friendsTab: requireElement<HTMLButtonElement>('#friendsTab'),
   gameView: requireElement<HTMLElement>('#gameView'),
   friendsView: requireElement<HTMLElement>('#friendsView'),
-  publishRow: requireElement<HTMLDivElement>('#publishRow'),
+  resultDialog: requireElement<HTMLDialogElement>('#resultDialog'),
+  resultTitle: requireElement<HTMLDivElement>('#resultTitle'),
+  resultIcon: requireElement<HTMLSpanElement>('#resultIcon'),
+  resultHeading: requireElement<HTMLElement>('#resultHeading'),
+  resultDetails: requireElement<HTMLParagraphElement>('#resultDetails'),
+  closeResult: requireElement<HTMLButtonElement>('#closeResultButton'),
+  playAgain: requireElement<HTMLButtonElement>('#playAgainButton'),
   publishButton: requireElement<HTMLButtonElement>('#publishButton'),
   publishMessage: requireElement<HTMLInputElement>('#publishMessage'),
   publishStatus: requireElement<HTMLSpanElement>('#publishStatus'),
@@ -118,10 +124,14 @@ function paintCell(button: HTMLButtonElement, index: number): void {
 }
 
 function renderPublish(): void {
-  ui.publishRow.hidden = completedResult === null;
   ui.publishButton.disabled = publishState === 'publishing' || publishState === 'published';
   ui.publishMessage.disabled = publishState === 'publishing' || publishState === 'published';
-  ui.publishButton.textContent = publishState === 'error' ? 'Retry Publish' : 'Publish Result';
+  ui.publishButton.textContent =
+    publishState === 'published'
+      ? 'Published'
+      : publishState === 'error'
+        ? 'Retry Publish'
+        : 'Publish to Friends';
   ui.publishStatus.textContent =
     publishState === 'publishing'
       ? 'Publishing…'
@@ -132,6 +142,19 @@ function renderPublish(): void {
           : publishState === 'error'
             ? 'Publish failed.'
             : '';
+}
+
+function openResultDialog(): void {
+  if (!completedResult || ui.resultDialog.open) return;
+  const won = completedResult.result === 'won';
+  ui.resultTitle.textContent = won ? 'Field cleared!' : 'Mine detonated';
+  ui.resultIcon.textContent = won ? '😎' : '☹';
+  ui.resultHeading.textContent = won ? 'You won!' : 'You lost!';
+  ui.resultDetails.textContent = won
+    ? `${difficulty.label} cleared in ${completedResult.elapsedSeconds} seconds. Share your result with friends?`
+    : `${difficulty.label} ended after ${completedResult.elapsedSeconds} seconds. Share your result with friends?`;
+  ui.resultDialog.showModal();
+  ui.publishMessage.focus();
 }
 
 function render(): void {
@@ -193,6 +216,7 @@ function newGame(nextDifficulty: Difficulty = difficulty): void {
   completedResult = null;
   publishState = 'idle';
   ui.publishMessage.value = '';
+  if (ui.resultDialog.open) ui.resultDialog.close();
   for (const button of ui.difficulty.querySelectorAll<HTMLButtonElement>('button')) {
     button.setAttribute('aria-pressed', String(button.dataset.difficulty === difficulty.id));
   }
@@ -206,6 +230,7 @@ function afterMove(previousStatus: typeof game.status): void {
     if (!completedResult) completedResult = captureGameResult(game, difficulty, elapsed);
   }
   render();
+  if (completedResult) openResultDialog();
 }
 
 function indexFromTarget(target: EventTarget | null): number | null {
@@ -450,6 +475,9 @@ ui.board.addEventListener('pointerdown', (event) => {
 window.addEventListener('pointerup', () => render());
 
 ui.face.addEventListener('click', () => newGame());
+ui.playAgain.addEventListener('click', () => newGame());
+ui.closeResult.addEventListener('click', () => ui.resultDialog.close());
+ui.resultDialog.addEventListener('cancel', () => ui.resultDialog.close());
 ui.gameTab.addEventListener('click', () => showView('game'));
 ui.friendsTab.addEventListener('click', () => showView('friends'));
 ui.refreshFeed.addEventListener('click', () => void loadFeed());

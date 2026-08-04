@@ -53,17 +53,6 @@
               </div>
             </section>
             <p class="game-hint" id="gameHint" aria-live="polite"></p>
-            <div class="publish-row" id="publishRow" hidden>
-              <label for="publishMessage">Message</label>
-              <input
-                id="publishMessage"
-                type="text"
-                maxlength="280"
-                placeholder="How did that game go?"
-              />
-              <button type="button" id="publishButton">Publish Result</button>
-              <span id="publishStatus" aria-live="polite"></span>
-            </div>
           </section>
 
           <section
@@ -83,6 +72,41 @@
           </section>
         </div>
       </div>
+
+      <dialog class="result-dialog window" id="resultDialog" aria-labelledby="resultTitle">
+        <div class="title-bar">
+          <div class="title-bar-text" id="resultTitle">Game complete</div>
+          <div class="title-bar-controls">
+            <button
+              type="button"
+              id="closeResultButton"
+              aria-label="Close"
+              title="Close result dialog"
+            ></button>
+          </div>
+        </div>
+        <div class="window-body result-dialog-body">
+          <div class="result-summary">
+            <span class="result-icon" id="resultIcon" aria-hidden="true">😎</span>
+            <div>
+              <strong id="resultHeading">You won!</strong>
+              <p id="resultDetails"></p>
+            </div>
+          </div>
+          <label for="publishMessage">Add a message for your friends</label>
+          <input
+            id="publishMessage"
+            type="text"
+            maxlength="280"
+            placeholder="How did that game go?"
+          />
+          <span class="publish-status" id="publishStatus" aria-live="polite"></span>
+          <div class="result-actions">
+            <button type="button" id="playAgainButton">Play Again</button>
+            <button type="button" id="publishButton">Publish to Friends</button>
+          </div>
+        </div>
+      </dialog>
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>

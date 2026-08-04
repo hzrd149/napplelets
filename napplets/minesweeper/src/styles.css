@@ -258,7 +258,6 @@ body {
   white-space: nowrap;
 }
 
-.publish-row,
 .friends-toolbar {
   display: flex;
   flex: 0 0 auto;
@@ -267,26 +266,64 @@ body {
   gap: 8px;
 }
 
-.publish-row {
-  flex-wrap: wrap;
-  min-height: 25px;
-  margin-top: 3px;
-  font-size: 11px;
+.result-dialog {
+  width: min(360px, calc(100% - 24px));
+  max-width: none;
+  max-height: calc(100% - 24px);
+  padding: 3px;
+  overflow: hidden;
+  border: 0;
+  background: var(--surface, #c0c0c0);
+  color: #000;
 }
 
-.publish-row input {
-  flex: 1 1 120px;
+.result-dialog::backdrop {
+  background: rgb(0 0 0 / 45%);
+}
+
+.result-dialog-body {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px;
+  overflow: auto;
+}
+
+.result-summary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+
+.result-icon {
+  font: 30px/1 Arial, sans-serif;
+}
+
+.result-summary p {
+  margin: 4px 0 0;
+}
+
+.result-dialog input {
+  box-sizing: border-box;
+  width: 100%;
   min-width: 0;
 }
 
-.publish-row button,
-.publish-row label,
-.publish-row span {
-  flex: 0 0 auto;
+.publish-status {
+  min-height: 14px;
+  font-size: 11px;
 }
 
-.publish-row[hidden] {
-  display: none;
+.result-actions {
+  display: flex;
+  flex-wrap: wrap-reverse;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.result-actions button {
+  flex: 1 1 130px;
 }
 
 .friends-view {
