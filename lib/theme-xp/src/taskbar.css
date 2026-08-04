@@ -1,0 +1,206 @@
+/*
+ * theme-xp -- taskbar and start button. OPT-IN, imported separately.
+ *
+ * This is deliberately not part of styles.css. CLAUDE.md tells napplets to
+ * "avoid adding page headers, hero sections, framed cards" and to "let the host
+ * shell provide surrounding navigation, chrome, and context" -- and a taskbar is
+ * exactly that kind of chrome. Reach for it only when the napplet genuinely owns
+ * a full-frame desktop metaphor rather than sitting as one pane among several.
+ *
+ * Reimplemented from winXP's `src/WinXP/Footer/index.js`
+ * (MIT, Copyright (c) 2019 Shizuku Yang). The gradients are its hand-tuned stop
+ * lists; the markup and class names are ours.
+ *
+ *   <div class="xp-taskbar">
+ *     <button class="xp-start-button">start</button>
+ *     <div class="xp-taskbar-windows">
+ *       <button class="xp-taskbar-button is-active">My Napplet</button>
+ *     </div>
+ *     <div class="xp-taskbar-tray"><span>12:00</span></div>
+ *   </div>
+ *
+ * The start button is the one part of winXP that is a bitmap rather than CSS.
+ * The default below is a CSS approximation, so this file works on its own. For
+ * the real thing, import the icon, point the variable at it, and add
+ * `.is-bitmap` -- the bitmap already has the word "start" painted into it, so
+ * that modifier also hides the element's own text:
+ *
+ *   import { startButton } from '@napplelets/theme-xp/icons';
+ *   el.classList.add('is-bitmap');
+ *   el.style.setProperty('--xp-start-button-image', `url(${startButton})`);
+ */
+
+.xp-taskbar {
+  box-sizing: border-box;
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  height: 30px;
+  padding: 0;
+  font-family: 'Trebuchet MS', Arial, sans-serif;
+  font-size: 11px;
+  color: #ffffff;
+  background: linear-gradient(
+    to bottom,
+    #1f2f86 0,
+    #3165c4 3%,
+    #3682e5 6%,
+    #4490e6 10%,
+    #3883e5 12%,
+    #2b71e0 15%,
+    #2663da 18%,
+    #235bd6 20%,
+    #2258d5 23%,
+    #2157d6 38%,
+    #245ddb 54%,
+    #2562df 86%,
+    #245fdc 89%,
+    #2158d4 92%,
+    #1d4ec0 95%,
+    #1941a5 98%
+  );
+}
+
+.xp-start-button {
+  flex: 0 0 auto;
+  min-width: 0;
+  height: 100%;
+  padding: 0 24px 2px 10px;
+  border: 0;
+  border-radius: 0 8px 8px 0;
+  font-family: inherit;
+  font-size: 15px;
+  font-style: italic;
+  font-weight: bold;
+  color: #ffffff;
+  text-shadow: 1px 1px 1px #14400d;
+  background-color: transparent;
+  background-image: var(
+    --xp-start-button-image,
+    linear-gradient(
+      to bottom,
+      #63ac48 0%,
+      #4e9b3a 6%,
+      #3f8f2f 45%,
+      #37881f 60%,
+      #2f7a1a 90%,
+      #266f14 100%
+    )
+  );
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: left center;
+  box-shadow: none;
+}
+
+/* Using the real bitmap: match its 106x34 aspect so it is not squashed, and
+ * silence the element's text, which the artwork already contains. */
+.xp-start-button.is-bitmap {
+  width: auto;
+  aspect-ratio: 106 / 34;
+  padding: 0;
+  border-radius: 0;
+  font-size: 0;
+  text-shadow: none;
+  background-size: auto 100%;
+}
+
+/* The bitmap already carries its own hover/active shading, so tint the whole
+ * button rather than repainting it. */
+.xp-start-button:hover,
+.xp-start-button.active,
+.xp-start-button:not(:disabled):active {
+  box-shadow: none;
+  filter: brightness(110%);
+}
+
+.xp-taskbar-windows {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  padding: 0 4px;
+  overflow: hidden;
+}
+
+.xp-taskbar-button {
+  flex: 0 1 160px;
+  min-width: 0;
+  height: 22px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 2px;
+  font-family: inherit;
+  font-size: 11px;
+  color: #ffffff;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background-color: #3c81f3;
+  /* XP.css paints every <button> with its raised SVG chrome. Leaving that in
+     * place would hide the taskbar tint underneath it entirely. */
+  background-image: none;
+  box-shadow:
+    inset -1px 0 rgba(0, 0, 0, 0.3),
+    inset 1px 1px 1px rgba(255, 255, 255, 0.2);
+}
+
+.xp-taskbar-button:hover {
+  background-color: #4e8ef5;
+  background-image: none;
+  box-shadow:
+    inset -1px 0 rgba(0, 0, 0, 0.3),
+    inset 1px 1px 1px rgba(255, 255, 255, 0.2);
+}
+
+.xp-taskbar-button.is-active {
+  background-color: #1e52b7;
+  background-image: none;
+  box-shadow:
+    inset 0 0 1px 1px rgba(0, 0, 0, 0.2),
+    inset 1px 0 1px rgba(0, 0, 0, 0.7);
+}
+
+.xp-taskbar-tray {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border-left: 1px solid #1042af;
+  box-shadow: inset 1px 0 1px #18bbff;
+  background: linear-gradient(
+    to bottom,
+    #0c59b9 1%,
+    #139ee9 6%,
+    #18b5f2 10%,
+    #139beb 14%,
+    #1290e8 19%,
+    #0d8dea 63%,
+    #0d9ff1 81%,
+    #0f9eed 88%,
+    #119be9 91%,
+    #1392e2 94%,
+    #137ed7 97%,
+    #095bc9 100%
+  );
+}
+
+/* In a narrow frame the tray and the window list are what give way; the start
+ * button stays, because it is the only affordance that opens anything. */
+@media (max-width: 380px) {
+  .xp-start-button {
+    padding: 0 16px 2px 8px;
+    font-size: 13px;
+  }
+
+  .xp-taskbar-button {
+    flex: 0 1 96px;
+  }
+
+  .xp-taskbar-tray {
+    padding: 0 6px;
+  }
+}

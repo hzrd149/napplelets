@@ -1,0 +1,13 @@
+/*
+ * @napplelets/theme-xp -- the unthemed GUI base.
+ *
+ *   import '@napplelets/theme-xp/gui.css';
+ *
+ * Upstream's shared layer with neither the XP nor the 98 skin applied. Its
+ * `--surface` default is literally `lightblue`, so this is only useful as a
+ * starting point for a skin of your own -- set the `--surface`,
+ * `--button-*`, `--window-frame` and `--dialog-blue` tokens yourself.
+ */
+@import './generated/fonts.css';
+@import './generated/gui.css';
+@import './patch.css';

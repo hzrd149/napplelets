@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>theme-xp kitchen sink</title>
+  </head>
+  <body>
+    <div id="app">
+      <div class="window xp-fill" id="root-window">
+        <div class="title-bar">
+          <div class="title-bar-text">theme-xp — kitchen sink</div>
+          <div class="title-bar-controls">
+            <button aria-label="Minimize"></button>
+            <button aria-label="Maximize"></button>
+            <button aria-label="Restore"></button>
+            <button aria-label="Help"></button>
+            <button aria-label="Close"></button>
+          </div>
+        </div>
+
+        <div class="window-body">
+          <!-- ── Harness ─────────────────────────────────────────────── -->
+          <fieldset>
+            <legend>Fake host</legend>
+            <div class="field-row">
+              <label for="skin">Skin</label>
+              <select id="skin">
+                <option value="xp">XP (Luna)</option>
+                <option value="98">Windows 98</option>
+                <option value="gui">GUI base</option>
+              </select>
+              <label for="preset">Palette</label>
+              <select id="preset">
+                <option value="">(none — authentic)</option>
+                <option value="#1e1b16|#f5f1e8|#9be564">Dark olive</option>
+                <option value="#f8fafc|#0f172a|#2563eb">Light slate</option>
+                <option value="#2b1930|#f6e9ff|#c084fc">Dark violet</option>
+                <option value="#101418|#e6edf3|#f97316">Dark amber</option>
+                <option value="#fdf6e3|#3b3228|#b58900">Solarized</option>
+                <option value="#202020|#e0e0e0|#808080">Desaturated</option>
+              </select>
+            </div>
+            <div class="field-row">
+              <label for="bg">bg</label>
+              <input type="color" id="bg" value="#ece9d8" />
+              <label for="fg">text</label>
+              <input type="color" id="fg" value="#222222" />
+              <label for="pri">primary</label>
+              <input type="color" id="pri" value="#0050ee" />
+              <button id="apply">Apply</button>
+              <button id="reset">Reset</button>
+            </div>
+            <div class="field-row">
+              <input type="checkbox" id="narrow" />
+              <label for="narrow">Squeeze to 320px (narrow-frame layer)</label>
+            </div>
+            <p class="xp-dialog-message">
+              <small id="status-line">Authentic Luna — no host theme applied.</small>
+            </p>
+          </fieldset>
+
+          <!-- ── Tabs ────────────────────────────────────────────────── -->
+          <section class="tabs" style="margin-top: 12px">
+            <menu role="tablist" aria-label="Demo sections">
+              <button role="tab" aria-selected="true" aria-controls="tab-controls">Controls</button>
+              <button role="tab" aria-controls="tab-windows">Windows</button>
+              <button role="tab" aria-controls="tab-menus">Menus &amp; dialogs</button>
+              <button role="tab" aria-controls="tab-icons">Icons</button>
+            </menu>
+
+            <article role="tabpanel" id="tab-controls">
+              <div class="field-row">
+                <button>Normal</button>
+                <button class="focused">Focused</button>
+                <button class="active">Active</button>
+                <button disabled>Disabled</button>
+              </div>
+
+              <fieldset>
+                <legend>Checkboxes &amp; radios</legend>
+                <div class="field-row">
+                  <input type="checkbox" id="c1" checked />
+                  <label for="c1">Checked</label>
+                </div>
+                <div class="field-row">
+                  <input type="checkbox" id="c2" />
+                  <label for="c2">Unchecked</label>
+                </div>
+                <div class="field-row">
+                  <input type="checkbox" id="c3" disabled checked />
+                  <label for="c3">Disabled (should be grey — upstream bug we fixed)</label>
+                </div>
+                <div class="field-row">
+                  <input type="radio" id="r1" name="rg" checked />
+                  <label for="r1">Radio one</label>
+                </div>
+                <div class="field-row">
+                  <input type="radio" id="r2" name="rg" />
+                  <label for="r2">Radio two</label>
+                </div>
+                <div class="field-row">
+                  <input type="radio" id="r3" name="rg2" disabled checked />
+                  <label for="r3">Disabled radio</label>
+                </div>
+              </fieldset>
+
+              <fieldset>
+                <legend>Text &amp; selection</legend>
+                <div class="field-row-stacked">
+                  <label for="t1">Text</label>
+                  <input type="text" id="t1" value="npub1…" />
+                </div>
+                <div class="field-row-stacked">
+                  <label for="t2">Password</label>
+                  <input type="password" id="t2" value="hunter2" />
+                </div>
+                <div class="field-row-stacked">
+                  <label for="t3">Textarea</label>
+                  <textarea id="t3" rows="3">Sandboxed Nostr web applets, in Luna blue.</textarea>
+                </div>
+                <div class="field-row">
+                  <label for="s1">Select</label>
+                  <select id="s1">
+                    <option>wss://relay.damus.io</option>
+                    <option>wss://nos.lol</option>
+                  </select>
+                </div>
+              </fieldset>
+
+              <fieldset>
+                <legend>Ranges &amp; progress</legend>
+                <div class="field-row">
+                  <label for="rg1">Volume</label>
+                  <input type="range" id="rg1" min="1" max="11" value="7" />
+                </div>
+                <div class="field-row">
+                  <label for="rg2b">Boxed</label>
+                  <input
+                    type="range"
+                    id="rg2b"
+                    class="has-box-indicator"
+                    min="1"
+                    max="5"
+                    value="3"
+                  />
+                </div>
+                <div class="field-row">
+                  <label for="rg3">Vertical</label>
+                  <div class="is-vertical">
+                    <input
+                      type="range"
+                      id="rg3"
+                      class="has-box-indicator"
+                      min="1"
+                      max="5"
+                      value="2"
+                    />
+                  </div>
+                </div>
+                <div class="field-row-stacked">
+                  <label for="p1">Determinate</label>
+                  <progress id="p1" max="100" value="64"></progress>
+                </div>
+                <div class="field-row-stacked">
+                  <label>Indeterminate (XP skin only)</label>
+                  <progress></progress>
+                </div>
+              </fieldset>
+
+              <fieldset>
+                <legend>Tree view</legend>
+                <ul class="tree-view">
+                  <li>napplets</li>
+                  <li>
+                    <details open>
+                      <summary>lib</summary>
+                      <ul>
+                        <li>theme-dsui</li>
+                        <li>theme-hypr</li>
+                        <li>theme-xp</li>
+                      </ul>
+                    </details>
+                  </li>
+                  <li>docs</li>
+                </ul>
+              </fieldset>
+            </article>
+
+            <article role="tabpanel" id="tab-windows" hidden>
+              <p>
+                <small
+                  >XP.css only ever draws a focused window. <code>.is-inactive</code> is ours,
+                  reimplemented from winXP's gradient.</small
+                >
+              </p>
+              <div class="window" style="max-width: 320px; margin-bottom: 12px">
+                <div class="title-bar">
+                  <div class="title-bar-text">Active window</div>
+                  <div class="title-bar-controls"><button aria-label="Close"></button></div>
+                </div>
+                <div class="window-body"><p>This one has focus.</p></div>
+                <div class="status-bar">
+                  <p class="status-bar-field">Ready</p>
+                  <p class="status-bar-field">
+                    A very long status field that must ellipsis rather than overflow
+                  </p>
+                </div>
+              </div>
+
+              <div class="window is-inactive" style="max-width: 320px">
+                <div class="title-bar">
+                  <div class="title-bar-text">Inactive window</div>
+                  <div class="title-bar-controls"><button aria-label="Close"></button></div>
+                </div>
+                <div class="window-body"><p>This one does not.</p></div>
+              </div>
+
+              <p style="margin-top: 16px">
+                <small>Opt-in taskbar (<code>theme-xp/taskbar.css</code>):</small>
+              </p>
+              <div class="xp-taskbar">
+                <button class="xp-start-button">start</button>
+                <div class="xp-taskbar-windows">
+                  <button class="xp-taskbar-button is-active">theme-xp</button>
+                  <button class="xp-taskbar-button">nap-feed</button>
+                </div>
+                <div class="xp-taskbar-tray"><span id="clock">12:00</span></div>
+              </div>
+            </article>
+
+            <article role="tabpanel" id="tab-menus" hidden>
+              <div class="field-row" style="align-items: flex-start; gap: 24px; flex-wrap: wrap">
+                <ul class="xp-menu">
+                  <li>Copy</li>
+                  <li>Paste</li>
+                  <li class="xp-menu-sep"></li>
+                  <li>Refresh</li>
+                  <li aria-disabled="true">Properties</li>
+                </ul>
+
+                <div class="window xp-dialog" style="max-width: 340px">
+                  <div class="title-bar">
+                    <div class="title-bar-text">Error</div>
+                    <div class="title-bar-controls"><button aria-label="Close"></button></div>
+                  </div>
+                  <div class="window-body">
+                    <div class="xp-dialog-body">
+                      <div class="xp-dialog-icon" id="dialog-icon"></div>
+                      <p class="xp-dialog-message">
+                        Could not reach the relay. The napplet will keep retrying in the background.
+                      </p>
+                    </div>
+                    <div class="xp-dialog-buttons">
+                      <button>Retry</button>
+                      <button>Cancel</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article role="tabpanel" id="tab-icons" hidden>
+              <p>
+                <small
+                  >A sample of the 125 vendored icons. Import individually from
+                  <code>@napplelets/theme-xp/icons</code> — they are ES module bindings, so a
+                  bundler drops the ones you do not use.</small
+                >
+              </p>
+              <div id="icon-grid"></div>
+            </article>
+          </section>
+        </div>
+
+        <div class="status-bar">
+          <p class="status-bar-field" id="skin-label">Skin: XP</p>
+          <p class="status-bar-field" id="size-label">—</p>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,358 @@
+{
+  "111(48x48).png": [
+    "cd"
+  ],
+  "119(16x16).png": [
+    "utility"
+  ],
+  "120(16x16).png": [
+    "volume"
+  ],
+  "127(16x16).png": [
+    "characterMap"
+  ],
+  "128(16x16).png": [
+    "cleanDisk"
+  ],
+  "153(16x16).png": [
+    "wordPad"
+  ],
+  "156(16x16).png": [
+    "winExplorer"
+  ],
+  "159(16x16).png": [
+    "MSN"
+  ],
+  "17(32x32).png": [
+    "printer"
+  ],
+  "182(16x16).png": [
+    "sync"
+  ],
+  "214(16x16).png": [
+    "security"
+  ],
+  "227(16x16).png": [
+    "access"
+  ],
+  "227(32x32).png": [
+    "setAccess"
+  ],
+  "229(16x16).png": [
+    "risk"
+  ],
+  "23(16x16).png": [
+    "backup"
+  ],
+  "234(16x16).png": [
+    "wireless"
+  ],
+  "238(16x16).png": [
+    "accessibility"
+  ],
+  "290.png": [
+    "go",
+    "switcher"
+  ],
+  "299(32x32).png": [
+    "search"
+  ],
+  "300(16x16).png": [
+    "control"
+  ],
+  "300(32x32).png": [
+    "controlPanel"
+  ],
+  "301(32x32).png": [
+    "recentDocuments"
+  ],
+  "302(16x16).png": [
+    "remove"
+  ],
+  "307(32x32).png": [
+    "pictures"
+  ],
+  "308(16x16).png": [
+    "document"
+  ],
+  "308(32x32).png": [
+    "documents"
+  ],
+  "309(16x16).png": [
+    "connection"
+  ],
+  "309(32x32).png": [
+    "connect"
+  ],
+  "310(32x32).png": [
+    "off",
+    "shut"
+  ],
+  "318(16x16).png": [
+    "folderSmall"
+  ],
+  "318(48x48).png": [
+    "folder"
+  ],
+  "322(16x16).png": [
+    "update"
+  ],
+  "327(16x16).png": [
+    "notepad"
+  ],
+  "327(32x32).png": [
+    "notepad",
+    "notepadLarge"
+  ],
+  "334(48x48).png": [
+    "disk"
+  ],
+  "337(32x32).png": [
+    "folderOpen"
+  ],
+  "357(16x16).png": [
+    "networkAssistance"
+  ],
+  "358(16x16).png": [
+    "menu"
+  ],
+  "358(32x32).png": [
+    "menu"
+  ],
+  "367(16x16).png": [
+    "transfer"
+  ],
+  "374(16x16).png": [
+    "defragmenter"
+  ],
+  "392(16x16).png": [
+    "catalog"
+  ],
+  "394(16x16).png": [
+    "usb"
+  ],
+  "404(16x16).png": [
+    "networkConnection"
+  ],
+  "505(16x16).png": [
+    "info"
+  ],
+  "546(32x32).png": [
+    "lock"
+  ],
+  "549(32x32).png": [
+    "printer"
+  ],
+  "550(32x32).png": [
+    "music"
+  ],
+  "554(16x16).png": [
+    "address"
+  ],
+  "56(16x16).png": [
+    "cmd"
+  ],
+  "58(16x16).png": [
+    "keyboard"
+  ],
+  "663(16x16).png": [
+    "connectionWizard"
+  ],
+  "664(16x16).png": [
+    "networkSetup"
+  ],
+  "669(16x16).png": [
+    "hyperCmd"
+  ],
+  "676(16x16).png": [
+    "computer"
+  ],
+  "676(32x32).png": [
+    "computer",
+    "computerLarge"
+  ],
+  "680(16x16).png": [
+    "paint",
+    "painter"
+  ],
+  "680(32x32).png": [
+    "paint",
+    "paintLarge"
+  ],
+  "690(16x16).png": [
+    "sound"
+  ],
+  "693(16x16).png": [
+    "network"
+  ],
+  "716(16x16).png": [
+    "recent"
+  ],
+  "74(16x16).png": [
+    "calculator"
+  ],
+  "743(32x32).png": [
+    "run"
+  ],
+  "744(32x32).png": [
+    "favorite"
+  ],
+  "747(16x16).png": [
+    "compatibility"
+  ],
+  "747(32x32).png": [
+    "help"
+  ],
+  "817(16x16).png": [
+    "magnifier"
+  ],
+  "846(16x16).png": [
+    "mediaPlayer"
+  ],
+  "846(32x32).png": [
+    "mediaPlayer"
+  ],
+  "853(32x32).png": [
+    "tour"
+  ],
+  "887(16x16).png": [
+    "outlook"
+  ],
+  "887(32x32).png": [
+    "outlook"
+  ],
+  "888(16x16).png": [
+    "spade"
+  ],
+  "889(16x16).png": [
+    "reversi"
+  ],
+  "890(16x16).png": [
+    "onlineHeart"
+  ],
+  "891(16x16).png": [
+    "checker"
+  ],
+  "892(16x16).png": [
+    "backgammon"
+  ],
+  "894(16x16).png": [
+    "movieMaker"
+  ],
+  "896(16x16).png": [
+    "ie"
+  ],
+  "897(16x16).png": [
+    "error"
+  ],
+  "897(32x32).png": [
+    "error"
+  ],
+  "all-programs.ico": [
+    "allProgramsIcon"
+  ],
+  "back.png": [
+    "back"
+  ],
+  "checked.png": [
+    "check"
+  ],
+  "dropdown.png": [
+    "dropdown"
+  ],
+  "earth.png": [
+    "earth"
+  ],
+  "edit.png": [
+    "edit"
+  ],
+  "folder.png": [
+    "folder"
+  ],
+  "forward.png": [
+    "forward"
+  ],
+  "freecell.png": [
+    "freecell"
+  ],
+  "heart.png": [
+    "heart"
+  ],
+  "history.png": [
+    "history"
+  ],
+  "home.png": [
+    "home"
+  ],
+  "ie-book.png": [
+    "ieBook"
+  ],
+  "ie-paper.png": [
+    "ie",
+    "iePaper"
+  ],
+  "ie.png": [
+    "ie"
+  ],
+  "links.png": [
+    "links"
+  ],
+  "mail.png": [
+    "mail"
+  ],
+  "msn.png": [
+    "messenger",
+    "msn"
+  ],
+  "narrator.ico": [
+    "narrator"
+  ],
+  "pinball.png": [
+    "pinball"
+  ],
+  "pullup.png": [
+    "pullup"
+  ],
+  "rdp.png": [
+    "rdp"
+  ],
+  "refresh.png": [
+    "refresh"
+  ],
+  "restart.ico": [
+    "restart"
+  ],
+  "restore.ico": [
+    "restore"
+  ],
+  "solitaire.png": [
+    "solitaire"
+  ],
+  "spider.png": [
+    "spider"
+  ],
+  "start.png": [
+    "startButton"
+  ],
+  "stop.png": [
+    "stop"
+  ],
+  "up.png": [
+    "up"
+  ],
+  "user.png": [
+    "user"
+  ],
+  "view-info.ico": [
+    "viewInfo"
+  ],
+  "winamp.png": [
+    "winamp"
+  ],
+  "windows-off.png": [
+    "windowsLogo"
+  ],
+  "windows.png": [
+    "windows"
+  ]
+}

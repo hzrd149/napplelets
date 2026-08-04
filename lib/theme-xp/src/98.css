@@ -1,0 +1,16 @@
+/*
+ * @napplelets/theme-xp -- Windows 98.
+ *
+ *   import '@napplelets/theme-xp/98.css';
+ *
+ * Same component API as the XP skin, different chrome: flat title bars, hard
+ * bevels, and the pixel font throughout rather than only in the status bar.
+ * Note that upstream's 98 skin has no `<progress>` styling -- that component
+ * exists only in the XP theme.
+ *
+ * No patch-xp.css here: the 98 chrome already goes through `--title-bar-bg` and
+ * `--border-window-*`, so it re-tints from `--dialog-blue` / `--surface` alone.
+ */
+@import './generated/fonts.css';
+@import './generated/98.css';
+@import './patch.css';

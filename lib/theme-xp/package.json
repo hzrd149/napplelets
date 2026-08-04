@@ -1,0 +1,47 @@
+{
+  "name": "@napplelets/theme-xp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    },
+    "./styles.css": "./src/styles.css",
+    "./98.css": "./src/98.css",
+    "./gui.css": "./src/gui.css",
+    "./taskbar.css": "./src/taskbar.css",
+    "./icons.css": "./src/generated/icons.css",
+    "./icons": {
+      "types": "./src/generated/icons.ts",
+      "import": "./src/generated/icons.ts"
+    },
+    "./xp-theme": {
+      "types": "./src/xp-theme.ts",
+      "import": "./src/xp-theme.ts"
+    }
+  },
+  "scripts": {
+    "generate": "node scripts/generate-css.mjs && node scripts/generate-icons.mjs",
+    "generate:check": "node scripts/generate-css.mjs --check && node scripts/generate-icons.mjs --check",
+    "build": "tsc --noEmit",
+    "type-check": "tsc --noEmit",
+    "test": "pnpm generate:check && vitest run",
+    "demo": "vite demo"
+  },
+  "dependencies": {
+    "@napplet/sdk": "^0.27.2"
+  },
+  "devDependencies": {
+    "jsdom": "^30.0.1",
+    "postcss": "^8.5.6",
+    "postcss-import": "^16.1.1",
+    "postcss-inline-svg": "^6.0.0",
+    "postcss-nested": "^7.0.2",
+    "typescript": "^7.0.2",
+    "vite": "^7.2.2",
+    "vitest": "^4.1.10",
+    "xp.css": "0.2.6"
+  }
+}

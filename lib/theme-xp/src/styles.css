@@ -1,0 +1,16 @@
+/*
+ * @napplelets/theme-xp -- Windows XP (Luna).
+ *
+ *   import '@napplelets/theme-xp/styles.css';
+ *   import { installThemeClient } from '@napplelets/theme-xp';
+ *   installThemeClient();
+ *
+ * Remember to add 'theme' to the `requires` array in your vite.config.ts
+ * manifest -- the host derives injected domains from it.
+ *
+ * The taskbar is opt-in: `@napplelets/theme-xp/taskbar.css`.
+ */
+@import './generated/fonts.css';
+@import './generated/xp.css';
+@import './patch.css';
+@import './patch-xp.css';

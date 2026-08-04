@@ -1,0 +1,173 @@
+/*
+ * theme-xp -- XP (Luna) re-tinting hooks.
+ *
+ * The 98 and GUI skins express their chrome through `--title-bar-bg` and
+ * `--border-window-*`, so setting `--dialog-blue` and `--surface` re-themes them
+ * for free. The XP skin does not: its title-bar gradient, window frame and
+ * title-bar borders are literal hex, baked in by upstream. These rules re-route
+ * them through variables.
+ *
+ * Every default below is the exact upstream value, so a napplet that never
+ * installs the theme client renders byte-identical authentic Luna.
+ *
+ * Still not re-tintable, by design: the scrollbar arrows, the min/max/restore/
+ * help/close glyphs and the button chrome are baked SVG data URIs, and a
+ * variable cannot reach inside them.
+ */
+
+:root {
+  /* The nine-stop Luna gradient. */
+  --xp-title-bar-bg: linear-gradient(
+    180deg,
+    #0997ff 0%,
+    #0053ee 8%,
+    #0050ee 40%,
+    #0066ff 88%,
+    #0066ff 93%,
+    #005bff 95%,
+    #003dd7 96%,
+    #003dd7 100%
+  );
+
+  /* Reimplemented from winXP's inactive gradient (MIT, (c) 2019 Shizuku Yang). */
+  --xp-title-bar-bg-inactive: linear-gradient(
+    180deg,
+    #7697e7 0%,
+    #7e9ee3 3%,
+    #94afe8 6%,
+    #97b4e9 8%,
+    #82a5e4 14%,
+    #7c9fe2 17%,
+    #7996de 25%,
+    #7b99e1 56%,
+    #82a9e9 81%,
+    #80a5e7 89%,
+    #7b96e1 94%,
+    #7a93df 97%,
+    #abbae3 100%
+  );
+
+  --xp-title-bar-text-inactive: #e3ebfb;
+  --xp-title-bar-text-shadow: #0f1089;
+  --xp-frame-inactive: #5c78c4;
+
+  /* The six box-shadow layers of `.window`, outermost first. */
+  --xp-frame-outer-br: #00138c;
+  --xp-frame-outer-tl: #0831d9;
+  --xp-frame-mid-br: #001ea0;
+  --xp-frame-mid-tl: #166aee;
+  --xp-frame-inner-br: #003bda;
+  --xp-frame-inner-tl: #0855dd;
+
+  /*
+     * The XP skin also hardcodes a white fieldset, a blue legend and a
+     * near-white tab strip. Those are the rules that decide whether a dark shell
+     * theme is readable at all -- without hooks here, a dark theme puts light
+     * body text on a white fieldset.
+     */
+  --xp-button-text: #222222;
+  --xp-fieldset-bg: #ffffff;
+  --xp-fieldset-border: #d0d0bf;
+  --xp-legend-text: #0046d5;
+  --xp-tab-bg: linear-gradient(180deg, #ffffff 0%, #fafaf9 26%, #f0f0ea 95%, #ecebe5 100%);
+  --xp-tab-bg-selected: #fcfcfe;
+  --xp-tab-border: #919b9c;
+  --xp-tab-accent: #e68b2c;
+  --xp-tab-accent-light: #ffc73c;
+  --xp-panel-edge: #fcfcfe;
+  --xp-treeview-border: #7f9db9;
+}
+
+/*
+ * The XP button face is a baked SVG data URI -- permanently light, and beyond
+ * the reach of any variable. Its label therefore has to stay dark whatever the
+ * shell sends, or a dark theme paints light text onto a light button.
+ *
+ * This is XP-only on purpose: the 98 and GUI skins draw their buttons from
+ * `--button-face`, so there the label correctly follows `--xp-text`.
+ */
+button {
+  color: var(--xp-button-text);
+}
+
+fieldset {
+  background: var(--xp-fieldset-bg);
+  border-color: var(--xp-fieldset-border);
+}
+
+/* Upstream sets `background: transparent` here, which is invisible only because
+ * the fieldset behind it is white. Once the fieldset is themeable the legend
+ * needs to mask the border it sits on, the way the GUI base already does. */
+legend {
+  color: var(--xp-legend-text);
+  background: var(--xp-fieldset-bg);
+  padding: 0 3px;
+}
+
+ul.tree-view {
+  border-color: var(--xp-treeview-border);
+}
+
+/* Only the background is XP-specific; the label colour is fixed in the shared
+ * GUI base, so patch.css handles it for every skin. */
+menu[role='tablist'] button {
+  background: var(--xp-tab-bg);
+}
+
+menu[role='tablist'] button:hover {
+  border-top-color: var(--xp-tab-accent);
+  box-shadow: inset 0 2px var(--xp-tab-accent-light);
+}
+
+/* Declaration order matters here as much as it does upstream: the shorthand
+ * paints all four sides, then bottom and top are put back. */
+menu[role='tablist'] button[aria-selected='true'] {
+  background: var(--xp-tab-bg-selected);
+  border-color: var(--xp-tab-border);
+  border-bottom-color: transparent;
+  border-top-color: var(--xp-tab-accent);
+  box-shadow: inset 0 2px var(--xp-tab-accent-light);
+}
+
+[role='tabpanel'] {
+  box-shadow:
+    inset 1px 1px var(--xp-panel-edge),
+    inset -1px -1px var(--xp-panel-edge),
+    1px 2px 2px 0 rgba(0, 0, 0, 0.12);
+}
+
+.window {
+  box-shadow:
+    inset -1px -1px var(--xp-frame-outer-br),
+    inset 1px 1px var(--xp-frame-outer-tl),
+    inset -2px -2px var(--xp-frame-mid-br),
+    inset 2px 2px var(--xp-frame-mid-tl),
+    inset -3px -3px var(--xp-frame-inner-br),
+    inset 3px 3px var(--xp-frame-inner-tl);
+}
+
+.title-bar {
+  background: var(--xp-title-bar-bg);
+  border-top: 1px solid var(--xp-frame-outer-tl);
+  border-left: 1px solid var(--xp-frame-outer-tl);
+  border-right: 1px solid var(--xp-frame-mid-br);
+  text-shadow: 1px 1px var(--xp-title-bar-text-shadow);
+}
+
+/* An inactive Luna window loses the saturated frame as well as the title bar. */
+.window.is-inactive {
+  box-shadow:
+    inset -1px -1px var(--xp-frame-inactive),
+    inset 1px 1px var(--xp-frame-mid-tl),
+    inset -2px -2px var(--xp-frame-inactive),
+    inset 2px 2px var(--xp-frame-mid-tl),
+    inset -3px -3px var(--xp-frame-inactive),
+    inset 3px 3px var(--xp-frame-mid-tl);
+}
+
+.window.is-inactive > .title-bar {
+  border-top-color: var(--xp-frame-mid-tl);
+  border-left-color: var(--xp-frame-mid-tl);
+  border-right-color: var(--xp-frame-mid-tl);
+  text-shadow: none;
+}

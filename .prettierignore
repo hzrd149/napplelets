@@ -11,6 +11,11 @@ hyprgate/
 pnpm-lock.yaml
 .nip5a-manifest.json
 
+# theme-xp build output — reformatting it would break the generator's drift check
+# (`pnpm --filter @napplelets/theme-xp generate:check`), which compares byte for byte.
+lib/theme-xp/src/generated/
+lib/theme-xp/vendor/
+
 # Symlink (its target AGENTS.md is formatted directly)
 CLAUDE.md
 .agents

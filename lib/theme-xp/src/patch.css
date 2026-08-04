@@ -1,0 +1,340 @@
+/*
+ * theme-xp -- shared patch layer.
+ *
+ * Loaded after the generated XP.css so equal-specificity rules here win. Three
+ * jobs: fix two upstream bugs, make the napplet survive an arbitrary host frame,
+ * and add the components XP.css never had.
+ *
+ * Skin-specific re-tinting lives in patch-xp.css -- the 98 and GUI skins already
+ * express their chrome through `--title-bar-bg` and `--border-window-*`, so they
+ * follow `--dialog-blue` / `--surface` for free.
+ */
+
+/*-------------------------------------------*\
+    Upstream fixes
+\*-------------------------------------------*/
+
+/*
+ * `var()` substitution is textual, not arithmetic. Upstream declares
+ *
+ *     --radio-total-width-precalc: var(--radio-width) + var(--radio-label-spacing);
+ *     --radio-left: calc(-1 * var(--radio-total-width-precalc));
+ *
+ * which expands to `calc(-1 * 12px + 6px)` -- that is -6px, not -18px. Upstream
+ * never hits it because postcss-css-variables flattens the arithmetic away at
+ * build time, and we never hit it because `--radio-left` and `--checkbox-left`
+ * turn out to be declared-but-unused. Wrapping the precalc in `calc()` fixes
+ * them anyway, so the bug cannot surface if anything ever does use them.
+ */
+:root {
+  --radio-total-width-precalc: calc(var(--radio-width) + var(--radio-label-spacing));
+  --checkbox-total-width-precalc: calc(var(--checkbox-width) + var(--radio-label-spacing));
+}
+
+/*
+ * gui/_forms.scss:74 has a stray top-level `&:disabled` with no parent selector.
+ * It reaches the stylesheet as the literal invalid selector `&:disabled`, which
+ * every browser drops -- so disabled checkbox and radio labels never grey out,
+ * even though upstream already ships the greyed-out *glyphs* for them. This is
+ * the rule that was meant to be there.
+ */
+input[type='checkbox']:disabled,
+input[type='checkbox']:disabled + label,
+input[type='radio']:disabled,
+input[type='radio']:disabled + label {
+  color: var(--button-shadow);
+  text-shadow: 1px 1px 0 var(--button-highlight);
+}
+
+/*-------------------------------------------*\
+    Host-theme hooks
+\*-------------------------------------------*/
+
+:root {
+  /* Overwritten by installXpThemeClient() when the shell sends a theme. */
+  --xp-font-body: Arial, 'Pixelated MS Sans Serif', sans-serif;
+  --xp-text: #222222;
+  --xp-text-dim: var(--button-shadow);
+  --xp-field-text: #000000;
+  --xp-title-bar-text: #ffffff;
+
+  /* Right for 98/GUI; patch-xp.css replaces it with the Luna gradient. */
+  --xp-title-bar-bg-inactive: #808080;
+  --xp-title-bar-text-inactive: #d8d8d8;
+
+  --xp-menu-highlight: var(--dialog-blue);
+  --xp-menu-highlight-text: #ffffff;
+
+  /* The GUI base hardcodes `color: #222` on tab buttons, so every skin needs
+     * this hook -- in the 98 skin those buttons sit on `--button-face`, which a
+     * dark shell theme turns dark, leaving dark text on dark. */
+  --xp-tab-text: #222222;
+}
+
+menu[role='tablist'] button {
+  color: var(--xp-tab-text);
+}
+
+body {
+  font-family: var(--xp-font-body);
+  color: var(--xp-text);
+  /* Upstream sets no background at all, which leaves a napplet transparent
+     * over whatever the host shell paints behind the frame. */
+  background: var(--surface);
+}
+
+.title-bar-text {
+  color: var(--xp-title-bar-text);
+}
+
+/* Fields sit on `--button-highlight`, not on the window surface, so their text
+ * needs its own colour -- inheriting the body's would put light text on a light
+ * field under a dark shell theme. */
+input[type='text'],
+input[type='password'],
+input[type='email'],
+input[type='number'],
+input[type='search'],
+textarea,
+select,
+ul.tree-view {
+  color: var(--xp-field-text);
+}
+
+/*-------------------------------------------*\
+    Fitting an arbitrary host frame
+
+    Napplets are embedded panes, not pages: a shell may hand this napplet a
+    sidebar, a tile, or a full window. XP.css was written for fixed-size desktop
+    dialogs, so these rules make it stretch and, more importantly, stop it from
+    overflowing.
+
+    Deliberately NOT here: a universal `box-sizing: border-box`. XP.css is
+    content-box throughout and depends on it -- `.title-bar` is `height: 21px`
+    plus `padding: 3px 5px`, so border-box would silently shrink the title bar
+    (and every control) by its padding. Use `.xp-content` to opt a subtree of
+    your own markup into border-box instead.
+\*-------------------------------------------*/
+
+html,
+body,
+#app {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+/*
+ * The `hidden` attribute is only a UA-stylesheet `display: none`, so *any*
+ * author rule that sets `display` silently defeats it. XP.css sets `display` on
+ * `ul.tree-view`, `menu[role="tablist"]`, `.title-bar` and more, and napplets
+ * routinely lay out their own panels with flex -- so `hidden` on any of them
+ * stops working, and an invisible overlay keeps swallowing clicks.
+ *
+ * Restating it is the standard fix, and it needs `!important` to outrank the
+ * class and element rules it is undoing.
+ */
+[hidden] {
+  display: none !important;
+}
+
+.xp-content,
+.xp-content *,
+.xp-content *::before,
+.xp-content *::after {
+  box-sizing: border-box;
+}
+
+/* A window that fills the host frame and scrolls its body rather than the page. */
+.window.xp-fill {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+.window.xp-fill > .window-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* `min-width: 0` lets flex children shrink below their content width; without
+ * it a long label or a wide input forces the whole pane to scroll sideways. */
+.field-row > *,
+.field-row-stacked > * {
+  min-width: 0;
+}
+
+.status-bar-field {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Narrow frames: the window controls are the first thing to give, but Close
+ * always stays reachable. */
+@media (max-width: 380px) {
+  .title-bar-controls button:not([aria-label='Close']) {
+    display: none;
+  }
+
+  .window-body {
+    margin: 6px;
+  }
+}
+
+/*-------------------------------------------*\
+    Dialog
+
+    XP.css ships no dialog at all, so napplet error and confirm states had
+    nowhere to live.
+
+    <div class="window xp-dialog">
+      <div class="title-bar">…</div>
+      <div class="window-body">
+        <div class="xp-dialog-body">
+          <div class="xp-dialog-icon" style="background-image: url(…)"></div>
+          <p class="xp-dialog-message">Could not reach the relay.</p>
+        </div>
+        <div class="xp-dialog-buttons"><button>Retry</button><button>Cancel</button></div>
+      </div>
+    </div>
+\*-------------------------------------------*/
+
+.xp-dialog-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.xp-dialog-icon {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  font-size: 26px;
+  line-height: 32px;
+  text-align: center;
+}
+
+.xp-dialog-message {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.xp-dialog-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--grouped-button-spacing);
+  margin-top: 14px;
+}
+
+/*-------------------------------------------*\
+    Menu
+
+    Styling only -- positioning, opening and keyboard handling stay with the
+    napplet, which is the half that has to know about its own state.
+
+    <ul class="xp-menu">
+      <li>Copy</li>
+      <li class="xp-menu-sep"></li>
+      <li aria-disabled="true">Properties</li>
+    </ul>
+\*-------------------------------------------*/
+
+.xp-menu {
+  box-sizing: border-box;
+  min-width: 120px;
+  max-width: 100%;
+  margin: 0;
+  padding: 2px;
+  list-style: none;
+  background: var(--surface);
+  box-shadow: var(--border-raised-outer), var(--border-raised-inner);
+}
+
+.xp-menu li {
+  padding: 3px 20px 3px 22px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: default;
+}
+
+.xp-menu li:hover:not([aria-disabled='true']):not(.xp-menu-sep) {
+  background: var(--xp-menu-highlight);
+  color: var(--xp-menu-highlight-text);
+}
+
+.xp-menu li[aria-disabled='true'] {
+  color: var(--button-shadow);
+  text-shadow: 1px 1px 0 var(--button-highlight);
+}
+
+.xp-menu .xp-menu-sep {
+  height: 0;
+  margin: 3px 1px;
+  padding: 0;
+  border-top: 1px solid var(--button-shadow);
+  border-bottom: 1px solid var(--button-highlight);
+}
+
+/*
+    The bar the menus hang off. Its buttons deliberately shed XP's raised button
+    chrome -- a menu bar is flat until you hover it.
+
+    <div class="xp-menu-bar" role="menubar">
+      <button role="menuitem" aria-haspopup="true" aria-expanded="false">File</button>
+    </div>
+*/
+
+.xp-menu-bar {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 1px 2px;
+  user-select: none;
+}
+
+.xp-menu-bar button {
+  min-width: 0;
+  min-height: 0;
+  padding: 2px 8px;
+  border: 0;
+  font: inherit;
+  color: var(--xp-text);
+  background: none;
+  background-image: none;
+  box-shadow: none;
+}
+
+.xp-menu-bar button:hover,
+.xp-menu-bar button:focus,
+.xp-menu-bar button[aria-expanded='true'] {
+  color: var(--xp-menu-highlight-text);
+  background: var(--xp-menu-highlight);
+  background-image: none;
+  box-shadow: none;
+  outline: none;
+}
+
+/*-------------------------------------------*\
+    Inactive window
+
+    XP.css only ever draws a focused window. A napplet showing more than one
+    window-like panel needs to say which one is live.
+\*-------------------------------------------*/
+
+.window.is-inactive > .title-bar {
+  background: var(--xp-title-bar-bg-inactive);
+}
+
+.window.is-inactive > .title-bar .title-bar-text {
+  color: var(--xp-title-bar-text-inactive);
+}
