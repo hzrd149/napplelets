@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Notepad</title>
+  </head>
+  <body>
+    <div id="app">
+      <div class="window xp-fill" id="mainWindow">
+        <div class="title-bar">
+          <div class="title-bar-text" id="windowTitle">Untitled - Notepad</div>
+          <div class="title-bar-controls">
+            <button aria-label="Minimize" type="button" disabled></button>
+            <button aria-label="Maximize" type="button" disabled></button>
+            <button aria-label="Close" type="button" id="closeButton"></button>
+          </div>
+        </div>
+
+        <div class="window-body">
+          <div class="xp-menu-bar" role="menubar" id="menuBar">
+            <button
+              type="button"
+              role="menuitem"
+              aria-haspopup="true"
+              aria-expanded="false"
+              data-menu="file"
+            >
+              File
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              aria-haspopup="true"
+              aria-expanded="false"
+              data-menu="edit"
+            >
+              Edit
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              aria-haspopup="true"
+              aria-expanded="false"
+              data-menu="format"
+            >
+              Format
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              aria-haspopup="true"
+              aria-expanded="false"
+              data-menu="help"
+            >
+              Help
+            </button>
+          </div>
+
+          <div class="editor-wrap">
+            <textarea id="editor" aria-label="File contents" spellcheck="false"></textarea>
+          </div>
+        </div>
+
+        <div class="status-bar">
+          <p class="status-bar-field" id="statusState">Ready</p>
+          <p class="status-bar-field" id="statusPos">Ln 1, Col 1</p>
+          <p class="status-bar-field" id="statusSize">0 B</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dropdown menus. Positioned by main.ts under whichever bar button opened them. -->
+    <ul class="xp-menu" id="menu-file" role="menu" hidden>
+      <li role="menuitem" data-action="new">New<span class="xp-menu-key">Ctrl+N</span></li>
+      <li role="menuitem" data-action="open">Open…<span class="xp-menu-key">Ctrl+O</span></li>
+      <li role="menuitem" data-action="save">Save<span class="xp-menu-key">Ctrl+S</span></li>
+      <li role="menuitem" data-action="saveAs">
+        Save As…<span class="xp-menu-key">Ctrl+Shift+S</span>
+      </li>
+      <li class="xp-menu-sep" role="separator"></li>
+      <li role="menuitem" data-action="reload">Reload from disk</li>
+    </ul>
+
+    <ul class="xp-menu" id="menu-edit" role="menu" hidden>
+      <li role="menuitem" data-action="undo">Undo<span class="xp-menu-key">Ctrl+Z</span></li>
+      <li class="xp-menu-sep" role="separator"></li>
+      <li role="menuitem" data-action="cut">Cut<span class="xp-menu-key">Ctrl+X</span></li>
+      <li role="menuitem" data-action="copy">Copy<span class="xp-menu-key">Ctrl+C</span></li>
+      <li role="menuitem" data-action="paste">Paste<span class="xp-menu-key">Ctrl+V</span></li>
+      <li role="menuitem" data-action="delete">Delete<span class="xp-menu-key">Del</span></li>
+      <li class="xp-menu-sep" role="separator"></li>
+      <li role="menuitem" data-action="find">Find…<span class="xp-menu-key">Ctrl+F</span></li>
+      <li role="menuitem" data-action="findNext">Find Next<span class="xp-menu-key">F3</span></li>
+      <li role="menuitem" data-action="replace">Replace…<span class="xp-menu-key">Ctrl+H</span></li>
+      <li role="menuitem" data-action="goTo" id="menuGoTo">
+        Go To…<span class="xp-menu-key">Ctrl+G</span>
+      </li>
+      <li class="xp-menu-sep" role="separator"></li>
+      <li role="menuitem" data-action="selectAll">
+        Select All<span class="xp-menu-key">Ctrl+A</span>
+      </li>
+      <li role="menuitem" data-action="timestamp">Time/Date<span class="xp-menu-key">F5</span></li>
+    </ul>
+
+    <ul class="xp-menu" id="menu-format" role="menu" hidden>
+      <li role="menuitemcheckbox" data-action="wordWrap" id="menuWordWrap" aria-checked="true">
+        Word Wrap
+      </li>
+    </ul>
+
+    <ul class="xp-menu" id="menu-help" role="menu" hidden>
+      <li role="menuitem" data-action="about">About Notepad</li>
+    </ul>
+
+    <!--
+      The message box. One reusable modal; main.ts fills in the title, icon,
+      message, any input fields, and the buttons.
+    -->
+    <div class="modal-layer" id="modalLayer" hidden>
+      <div
+        class="window xp-dialog"
+        id="dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="dialogTitle"
+      >
+        <div class="title-bar">
+          <div class="title-bar-text" id="dialogTitle">Notepad</div>
+          <div class="title-bar-controls">
+            <button aria-label="Close" type="button" id="dialogClose"></button>
+          </div>
+        </div>
+        <div class="window-body">
+          <div class="xp-dialog-body">
+            <div class="xp-dialog-icon" id="dialogIcon"></div>
+            <div class="dialog-content">
+              <p class="xp-dialog-message" id="dialogMessage"></p>
+              <div class="dialog-fields" id="dialogFields" hidden></div>
+            </div>
+          </div>
+          <div class="xp-dialog-buttons" id="dialogButtons"></div>
+        </div>
+      </div>
+    </div>
+
+    <!--
+      The Open / Save As browser, over NAP-FS roots. Its own layer, so an
+      ordinary message box ("Replace existing file?") can stack on top of it.
+    -->
+    <div class="modal-layer" id="fileLayer" hidden>
+      <div
+        class="window xp-dialog file-dialog"
+        id="fileDialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="fileDialogTitle"
+      >
+        <div class="title-bar">
+          <div class="title-bar-text" id="fileDialogTitle">Open</div>
+          <div class="title-bar-controls">
+            <button aria-label="Close" type="button" id="fileDialogClose"></button>
+          </div>
+        </div>
+        <div class="window-body">
+          <div class="field-row file-look">
+            <label for="fileLookIn">Look in:</label>
+            <select id="fileLookIn"></select>
+            <!--
+              The icon lives in a child span, not the button's own
+              background-image: XP.css paints button chrome with a baked SVG
+              background, so setting one here would replace the button face.
+            -->
+            <button type="button" id="fileUp" aria-label="Up one level" title="Up one level">
+              <span class="file-icon" id="fileUpIcon"></span>
+            </button>
+          </div>
+
+          <ul class="tree-view file-list" id="fileList" role="listbox" aria-label="Files"></ul>
+          <p class="file-note" id="fileNote" hidden></p>
+
+          <div class="field-row file-name">
+            <label for="fileNameInput">File name:</label>
+            <input id="fileNameInput" type="text" autocomplete="off" spellcheck="false" />
+          </div>
+          <div class="field-row file-type">
+            <label for="fileTypeSelect">Files of type:</label>
+            <select id="fileTypeSelect">
+              <option value="text">Text Documents (*.txt)</option>
+              <option value="all">All Files (*.*)</option>
+            </select>
+          </div>
+
+          <div class="xp-dialog-buttons">
+            <button type="button" id="fileBrowse">Browse…</button>
+            <button type="button" id="fileAccept" class="focused">Open</button>
+            <button type="button" id="fileCancel">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

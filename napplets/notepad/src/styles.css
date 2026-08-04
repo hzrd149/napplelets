@@ -1,0 +1,290 @@
+/*
+ * Notepad — napplet-local layer on top of @napplelets/theme-xp.
+ *
+ * Everything that looks like Windows XP comes from the theme. What is here is
+ * only the layout this app needs: the editor filling the window, the two modal
+ * layers, and the file dialog's grid.
+ */
+@import '@napplelets/theme-xp/styles.css';
+
+/* This app is nothing but text, so selection is the point. */
+:root {
+  --napplet-text-selection: text;
+}
+
+/*
+ * `.window.xp-fill` already makes `.window-body` the scrolling region. Notepad
+ * wants the opposite: the menu bar stays put and the *textarea* scrolls. So the
+ * body becomes a column that does not scroll, and the editor takes the slack.
+ */
+.window.xp-fill > .window-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  overflow: hidden;
+}
+
+.editor-wrap {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+#editor {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  resize: none;
+  /* Notepad is monospace-ish and, importantly, not the theme's pixel font --
+     this is where you actually read the file. */
+  font-family: 'Lucida Console', 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.45;
+  tab-size: 8;
+}
+
+/* Format ▸ Word Wrap. `off` is the only reason a napplet pane should ever
+   scroll sideways, and only inside the editor. */
+#editor[data-wrap='off'] {
+  white-space: pre;
+  overflow-wrap: normal;
+  overflow-x: auto;
+}
+
+/*-------------------------------------------*\
+    Menus
+
+    The theme styles menus but deliberately ships no positioning — that is the
+    app's job, as its README says.
+\*-------------------------------------------*/
+
+.xp-menu {
+  position: absolute;
+  z-index: 20;
+}
+
+/* Shortcut hints sit right-aligned, the way XP drew them. */
+.xp-menu li:not(.xp-menu-sep) {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.xp-menu-key {
+  flex: 0 0 auto;
+  color: var(--xp-text-dim);
+}
+
+.xp-menu li[aria-disabled='true'] .xp-menu-key,
+.xp-menu li:hover:not([aria-disabled='true']) .xp-menu-key {
+  color: inherit;
+}
+
+/* The 22px left gutter the theme reserves is exactly for this. */
+.xp-menu li[aria-checked='true']::before {
+  content: '✔';
+  position: absolute;
+  left: 7px;
+  font-size: 10px;
+}
+
+/*-------------------------------------------*\
+    Modals
+
+    The theme styles the dialog; positioning is the app's job. Dimming the
+    window behind it is what makes `.is-inactive` mean something.
+\*-------------------------------------------*/
+
+.modal-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  background: rgb(0 0 0 / 25%);
+}
+
+/* The file dialog opens first, so a message box over it needs a higher layer. */
+#modalLayer {
+  z-index: 12;
+}
+
+.modal-layer .window {
+  display: flex;
+  flex-direction: column;
+  width: min(380px, 100%);
+  max-height: 100%;
+}
+
+.modal-layer .window-body {
+  min-height: 0;
+  overflow: auto;
+}
+
+.dialog-content {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.dialog-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.dialog-fields .field-row {
+  gap: 6px;
+}
+
+.dialog-fields label {
+  flex: 0 0 auto;
+}
+
+/* A fixed label column, so stacked text inputs start at the same x. */
+.dialog-fields .field-row:not(.is-check) label {
+  min-width: 84px;
+}
+
+.dialog-fields input[type='text'] {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/*-------------------------------------------*\
+    File dialog
+\*-------------------------------------------*/
+
+.file-dialog {
+  width: min(460px, 100%);
+}
+
+.file-dialog .field-row {
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.file-look select {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Icon-only toolbar button. The accessible name is on the button itself. */
+#fileUp {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 2px 6px;
+}
+
+.file-name input,
+.file-type select {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* The two labels line up, the way the real dialog's did. */
+.file-name label,
+.file-type label {
+  flex: 0 0 auto;
+  width: 72px;
+}
+
+.file-list {
+  height: 180px;
+  margin: 0 0 6px;
+  overflow: auto;
+}
+
+.file-list li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 1px 3px;
+  cursor: default;
+}
+
+.file-list li[aria-selected='true'] {
+  background: var(--xp-menu-highlight);
+  color: var(--xp-menu-highlight-text);
+}
+
+.file-icon {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
+
+.file-entry-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-entry-size,
+.file-entry-when {
+  flex: 0 0 auto;
+  color: var(--xp-text-dim);
+  font-size: 10px;
+}
+
+.file-list li[aria-selected='true'] .file-entry-size,
+.file-list li[aria-selected='true'] .file-entry-when {
+  color: inherit;
+}
+
+.file-note {
+  margin: 0 0 6px;
+  color: var(--xp-text-dim);
+}
+
+/* Browse… reaches past the advertised roots, so it sits apart from Open/Cancel. */
+#fileBrowse {
+  margin-right: auto;
+}
+
+/*-------------------------------------------*\
+    Narrow frames
+
+    A host pane can be a sidebar. Drop the least load-bearing detail first and
+    keep every control reachable.
+\*-------------------------------------------*/
+
+@media (max-width: 380px) {
+  #statusSize {
+    display: none;
+  }
+
+  .xp-dialog-icon {
+    display: none;
+  }
+
+  .file-list {
+    height: 140px;
+  }
+
+  .file-entry-when {
+    display: none;
+  }
+
+  .file-name label,
+  .file-type label {
+    width: auto;
+  }
+}
+
+@media (max-width: 300px) {
+  .file-entry-size {
+    display: none;
+  }
+}
