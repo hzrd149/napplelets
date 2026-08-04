@@ -73,6 +73,25 @@ For a text-heavy napplet, set the root variable instead:
 }
 ```
 
+## Inputs And Actions
+
+Never use HTML `<form>` elements or form submission APIs in a napplet. Build
+input flows from plain containers, inputs, and `type="button"` buttons with
+explicit event handlers. If pressing Enter should confirm an action, handle the
+input's `keydown` event directly and preserve IME composition:
+
+```ts
+confirmButton.addEventListener('click', () => void confirm());
+nameInput.addEventListener('keydown', (event) => {
+  if (event.key !== 'Enter' || event.isComposing) return;
+  event.preventDefault();
+  void confirm();
+});
+```
+
+Surface validation and runtime failures in the napplet UI. Do not rely on native
+form submission, implicit submit buttons, or `method="dialog"` behavior.
+
 ## OUTBOX-First Nostr Access
 
 Use OUTBOX for normal social event reads and publishes so the runtime owns relay
@@ -104,6 +123,22 @@ const blob = await resource.bytes('https://example.com/avatar.png');
 
 For images, prefer `bytesAsObjectURL()` and revoke the handle when the element is
 done using it.
+
+## Virtual Filesystem Access
+
+Use NAP-FS for shell-mediated files and directories. The napplet sees virtual
+absolute paths only; roots, permissions, limits, watches, and operation results
+are advisory or policy-bound runtime data.
+
+```ts
+const { roots, limits } = await fs.info();
+const entries = await fs.list(roots[0].path);
+const result = await fs.read(entries[0].path, { length: limits.maxReadBytes });
+```
+
+Treat watch events as invalidation hints and re-list after receiving them.
+Respect read/write limits, handle every operation rejection, and never translate
+virtual paths into assumptions about the host filesystem.
 
 ## Deferred NAPs (direct network access, security class)
 

@@ -4,6 +4,8 @@ Use this checklist before shipping meaningful changes to a napplet.
 
 ## App Boundary
 
+- [ ] The app contains no HTML `<form>` elements or form submission APIs;
+      inputs and actions use explicit event handlers.
 - [ ] The app does not import or depend on `@napplet/shim`; the runtime injects
       `window.napplet`.
 - [ ] Protocol calls use `@napplet/sdk` helpers. Direct

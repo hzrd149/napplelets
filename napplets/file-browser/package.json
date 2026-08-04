@@ -1,0 +1,31 @@
+{
+  "name": "file-browser",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 3001 --strictPort",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "type-check": "tsc --noEmit",
+    "test": "vitest run",
+    "verify": "pnpm test && pnpm type-check && pnpm build",
+    "test:conformance": "pnpm build && napplet-conformance ./dist",
+    "test:conformance:ui": "napplet-conformance --ui . --exec \"vite build --watch\""
+  },
+  "dependencies": {
+    "@napplelets/theme-dsui": "workspace:*",
+    "@napplet/sdk": "^0.27.2",
+    "lucide": "^1.28.0"
+  },
+  "devDependencies": {
+    "@napplet/conformance-cli": "^0.2.18",
+    "@napplet/vite-plugin": "^0.14.1",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.0",
+    "vite-plugin-singlefile": "^2.3.3",
+    "vitest": "^4.1.10"
+  },
+  "packageManager": "pnpm@11.10.0",
+  "license": "MIT"
+}

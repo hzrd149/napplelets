@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>File Browser</title>
+  </head>
+  <body>
+    <main id="app" class="app-shell" aria-label="File browser">
+      <header class="toolbar">
+        <div class="toolbar-group navigation-actions">
+          <button id="backButton" class="btn btn-ghost btn-sm square" type="button" aria-label="Go up" title="Go up"></button>
+          <button id="refreshButton" class="btn btn-ghost btn-sm square" type="button" aria-label="Refresh" title="Refresh"></button>
+        </div>
+        <nav id="breadcrumbs" class="breadcrumbs" aria-label="Current folder"></nav>
+        <div class="toolbar-divider" aria-hidden="true"></div>
+        <div class="toolbar-group create-actions" aria-label="Create">
+          <button id="newFolderButton" class="btn btn-sm" type="button">Folder</button>
+          <button id="newFileButton" class="btn btn-sm" type="button">Text</button>
+        </div>
+        <div class="toolbar-divider selection-divider" aria-hidden="true"></div>
+        <div class="toolbar-group selection-actions" aria-label="Selected item actions">
+          <output id="selectionLabel" class="selection-label"></output>
+          <button id="renameButton" class="btn btn-ghost btn-sm compact-action" type="button" aria-label="Rename selected item" title="Rename"></button>
+          <button id="moveButton" class="btn btn-ghost btn-sm compact-action" type="button" aria-label="Move selected items" title="Move"></button>
+          <button id="deleteButton" class="btn btn-error btn-outline btn-sm compact-action" type="button" aria-label="Delete selected items" title="Delete"></button>
+        </div>
+      </header>
+
+      <section class="browser-grid">
+        <section class="file-pane" aria-label="Files and folders">
+          <div id="columnHeaders" class="entry-row column-headers" aria-hidden="true">
+            <span></span><span>Name</span><span>Size</span><span>Modified</span>
+          </div>
+          <div id="entries" class="entries" role="list"></div>
+          <div id="emptyState" class="empty-state" hidden></div>
+        </section>
+        <aside id="preview" class="preview" aria-live="polite">
+          <p class="muted">Select a file to preview it.</p>
+        </aside>
+      </section>
+
+      <footer class="statusbar">
+        <output id="status" aria-live="polite">Connecting…</output>
+      </footer>
+
+      <dialog id="nameDialog" class="modal">
+        <section class="modal-box" aria-labelledby="nameDialogTitle">
+          <h2 id="nameDialogTitle">Name</h2>
+          <label class="field"><span id="nameDialogLabel">Name</span><input id="nameInput" class="input input-bordered" autocomplete="off" /></label>
+          <p id="nameError" class="field-error" role="alert"></p>
+          <div class="modal-action"><button id="nameCancel" class="btn btn-ghost" type="button">Cancel</button><button id="nameConfirm" class="btn btn-primary" type="button">Create</button></div>
+        </section>
+      </dialog>
+
+      <dialog id="moveDialog" class="modal">
+        <section class="modal-box move-box" aria-labelledby="moveDialogTitle">
+          <h2 id="moveDialogTitle">Move selected items</h2>
+          <nav id="moveBreadcrumbs" class="breadcrumbs" aria-label="Destination folder"></nav>
+          <div id="moveEntries" class="move-entries" role="list"></div>
+          <p id="moveError" class="field-error" role="alert"></p>
+          <div class="modal-action"><button id="moveCancel" class="btn btn-ghost" type="button">Cancel</button><button id="moveConfirm" class="btn btn-primary" type="button">Move here</button></div>
+        </section>
+      </dialog>
+
+      <dialog id="deleteDialog" class="modal">
+        <section class="modal-box" aria-labelledby="deleteDialogTitle">
+          <h2 id="deleteDialogTitle">Delete permanently?</h2>
+          <p id="deleteMessage"></p>
+          <p class="danger-note">This cannot be undone. Non-empty folders and their contents will also be removed.</p>
+          <div class="modal-action"><button id="deleteCancel" class="btn btn-ghost" type="button">Cancel</button><button id="deleteConfirm" class="btn btn-error" type="button">Delete</button></div>
+        </section>
+      </dialog>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

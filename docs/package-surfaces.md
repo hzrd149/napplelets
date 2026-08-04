@@ -18,12 +18,17 @@ or depend on this package. Runtime implementers use it to install the granted
 Named helpers for napplet app code.
 
 ```ts
-import { outbox, storage, identity, config, resource } from '@napplet/sdk';
+import { outbox, storage, identity, config, resource, fs } from '@napplet/sdk';
 ```
 
 Use this for app calls. It wraps runtime-injected domains at call time and
 re-exports types and constants. Prefer OUTBOX or a higher-level social domain
 for normal Nostr work; RELAY is the low-level relay-local escape hatch.
+
+NAP-FS is available as the `fs` namespace and named `fs*` helpers. It exposes
+runtime-curated roots and virtual paths through `info`, picker, metadata,
+listing, byte read/write, directory, move/remove, and advisory watch operations.
+The runtime retains host paths, mounts, backing storage, and authorization.
 
 ### `@napplet/nap`
 

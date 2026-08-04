@@ -20,6 +20,8 @@ The template should stay on the napplet side of that line.
 - User identity and signer state.
 - Storage persistence and quota.
 - External byte fetching through NAP-RESOURCE.
+- Virtual filesystem mounts, host-path isolation, authorization, and backing
+  storage through NAP-FS.
 - Settings UI for NAP-CONFIG.
 - Injection of the granted `window.napplet.<domain>` objects before app scripts.
 
@@ -28,6 +30,8 @@ currently deferred on the NAPs track — not part of the active surface.)
 
 ## Forbidden In Napplet Code
 
+- HTML `<form>` elements and form submission APIs. Napplet interactions must
+  use explicit input and button event handlers.
 - Direct signer access or NIP-07 assumptions.
 - Direct host DOM access.
 - `localStorage` or `sessionStorage` for durable user data.
@@ -45,3 +49,5 @@ currently deferred on the NAPs track — not part of the active surface.)
   semantics that OUTBOX cannot express.
 - `storage.setItem()` for durable key-value app state.
 - `resource.bytes()` for external read-only bytes.
+- `fs.info()` / `fs.list()` / `fs.read()` and mutation helpers for
+  policy-bound virtual paths; never infer or expose host paths.
