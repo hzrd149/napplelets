@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Minesweeper</title>
+  </head>
+  <body>
+    <div id="app">
+      <div class="window xp-fill" id="gameWindow">
+        <div class="title-bar">
+          <div class="title-bar-text"><span aria-hidden="true">💣</span> Minesweeper</div>
+          <div class="title-bar-controls">
+            <button aria-label="Minimize" type="button" disabled></button>
+            <button aria-label="Maximize" type="button" disabled></button>
+            <button aria-label="Close" type="button" disabled></button>
+          </div>
+        </div>
+
+        <div class="window-body xp-content">
+          <nav class="view-tabs" aria-label="Minesweeper views">
+            <button type="button" id="gameTab" aria-selected="true">Game</button>
+            <button type="button" id="friendsTab" aria-selected="false">Friends</button>
+          </nav>
+
+          <section class="app-view game-view" id="gameView" aria-labelledby="gameTab">
+            <div class="game-toolbar">
+              <div class="difficulty-picker" id="difficultyPicker" aria-label="Difficulty">
+                <button type="button" data-difficulty="beginner" aria-pressed="true">
+                  Beginner
+                </button>
+                <button type="button" data-difficulty="intermediate" aria-pressed="false">
+                  Intermediate
+                </button>
+                <button type="button" data-difficulty="expert" aria-pressed="false">Expert</button>
+              </div>
+              <button type="button" id="settingsButton" aria-label="Open napplet settings">
+                Settings…
+              </button>
+            </div>
+
+            <section class="mine-panel" aria-label="Minesweeper game">
+              <div class="scoreboard">
+                <output class="counter" id="mineCounter" aria-label="Mines remaining">010</output>
+                <button class="face" id="faceButton" type="button" aria-label="Start a new game">
+                  ☺
+                </button>
+                <output class="counter" id="timer" aria-label="Elapsed seconds">000</output>
+              </div>
+
+              <div class="board-scroll">
+                <div class="board" id="board" role="group"></div>
+              </div>
+            </section>
+            <p class="game-hint" id="gameHint" aria-live="polite"></p>
+            <div class="publish-row" id="publishRow" hidden>
+              <label for="publishMessage">Message</label>
+              <input
+                id="publishMessage"
+                type="text"
+                maxlength="280"
+                placeholder="How did that game go?"
+              />
+              <button type="button" id="publishButton">Publish Result</button>
+              <span id="publishStatus" aria-live="polite"></span>
+            </div>
+          </section>
+
+          <section
+            class="app-view friends-view"
+            id="friendsView"
+            aria-labelledby="friendsTab"
+            hidden
+          >
+            <div class="friends-toolbar">
+              <strong>Friends' games</strong>
+              <button type="button" id="refreshFeed">Refresh</button>
+            </div>
+            <p class="feed-status" id="feedStatus" aria-live="polite">
+              Open this tab to load games.
+            </p>
+            <div class="feed-list" id="feedList"></div>
+          </section>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
