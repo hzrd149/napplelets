@@ -6,7 +6,10 @@
  *
  *   1. `installThemeClient()` is the *integration*. It subscribes to the
  *      shell's theme and maps three colours onto the whole XP token surface.
- *      Any napplet using this theme writes that one line and stops.
+ *      Any napplet using this theme writes that one line and stops. Here it is
+ *      behind a switch (lib/theme-follow.ts) so a re-tinted window can be
+ *      compared against authentic Luna -- a showcase affordance, not something
+ *      a real napplet wants.
  *
  *   2. Everything else here is the *showcase*. It subscribes a second time
  *      purely to report what arrived, applies the parts of a NAP-THEME payload
@@ -19,7 +22,6 @@ import './styles.css';
 
 import { config, storage, themeGet, themeOnChanged } from '@napplet/sdk';
 import type { Theme } from '@napplet/sdk';
-import { installThemeClient } from '@napplelets/theme-xp';
 import { startButton } from '@napplelets/theme-xp/icons';
 
 import { attempt, hasDomain } from './lib/shell';
@@ -27,6 +29,7 @@ import { SKINS, SKIN_ORDER, installSkins } from './lib/skins';
 import type { SkinName } from './lib/skins';
 import { createThemeAssets } from './lib/theme-assets';
 import type { ThemeAssets } from './lib/theme-assets';
+import { createThemeFollower } from './lib/theme-follow';
 import { summarize } from './lib/theme-report';
 import type { ThemeSource } from './lib/theme-report';
 import {
@@ -75,7 +78,8 @@ const overlay = createOverlay();
 \*-------------------------------------------*/
 
 function renderTheme(): void {
-  renderThemePanel(theme, source, assets);
+  const following = view.followTheme;
+  renderThemePanel(theme, source, assets, following);
   renderTokenTable();
 
   // `theme.title` is the shell's name for its own theme -- surfacing it in the
@@ -84,21 +88,26 @@ function renderTheme(): void {
     ? `XP Theme Showcase — ${theme.title}`
     : 'XP Theme Showcase';
 
+  // The font and the wallpaper are the other two ways a payload changes how the
+  // window looks, so they follow the same switch the colours do. The Theme tab
+  // keeps reporting them either way -- what was sent and what was fetched are
+  // facts about the shell, not about whether we chose to wear them.
+  //
   // A shell title font only becomes real once its bytes are registered; until
   // then the family name would resolve to nothing and silently fall back.
   const titleFont = theme?.fonts?.title?.name;
   byId<HTMLElement>('window-title').style.fontFamily =
-    assets.titleFont.status === 'ready' && titleFont
+    following && assets.titleFont.status === 'ready' && titleFont
       ? `"${titleFont}", "Trebuchet MS", Arial, sans-serif`
       : '';
 
   const app = byId<HTMLElement>('app');
-  const wallpaper = assets.background.objectUrl;
+  const wallpaper = following ? assets.background.objectUrl : undefined;
   app.classList.toggle('xs-has-wallpaper', Boolean(wallpaper));
   app.style.backgroundImage = wallpaper ? `url("${wallpaper}")` : '';
   app.style.backgroundSize = wallpaper ? theme?.background?.mode || 'cover' : '';
 
-  byId('status-theme').textContent = summarize(theme, source);
+  byId('status-theme').textContent = summarize(theme, source, following);
 }
 
 function renderSkin(): void {
@@ -124,8 +133,10 @@ function renderFrame(): void {
     NAP-THEME
 \*-------------------------------------------*/
 
-// (1) The integration. One line; everything the theme package promises.
-installThemeClient();
+// (1) The integration. `installThemeClient()` is the whole of it; the follower
+//     only decides whether it is installed right now.
+const themeFollower = createThemeFollower();
+themeFollower.set(view.followTheme);
 
 // (2) The report. A second subscription, so the tab shows what the client above
 //     is acting on rather than a guess at it.
@@ -173,12 +184,25 @@ if (hasTheme) {
   themeSubscription = attempt(() => themeOnChanged((next) => acceptTheme(next, 'changed')));
 }
 
-// Two things the browser will not clean up on its own: the object URL behind
-// the wallpaper, and the theme subscription.
+// Three things the browser will not clean up on its own: the object URL behind
+// the wallpaper, and the two theme subscriptions.
 window.addEventListener('beforeunload', () => {
   themeAssets.dispose();
+  themeFollower.dispose();
   themeSubscription?.close();
 });
+
+/**
+ * Turning following off leaves the payload arriving and the report live -- it
+ * only stops the window from wearing it. That is the comparison the switch is
+ * for: the same shell theme, described on the left, not applied on the right.
+ */
+function setFollowTheme(following: boolean): void {
+  view = { ...view, followTheme: following };
+  themeFollower.set(following);
+  renderTheme();
+  persistView();
+}
 
 /*-------------------------------------------*\
     Config and storage
@@ -265,6 +289,13 @@ function menuItems(name: string): MenuItem[] {
         { kind: 'separator' },
         {
           kind: 'item',
+          label: 'Follow the shell theme',
+          checked: view.followTheme,
+          run: () => setFollowTheme(!view.followTheme),
+        },
+        { kind: 'separator' },
+        {
+          kind: 'item',
           label: 'Forget my skin choice',
           disabled: !hasStorage || view.skin === null,
           run: () => {
@@ -309,6 +340,13 @@ for (const button of byId('menu-bar').querySelectorAll<HTMLButtonElement>('butto
 }
 
 byId('help-button').addEventListener('click', () => overlay.openDialog(aboutDialog));
+
+// The same state as the View menu item, from the place the consequence is
+// explained. One state, two affordances -- `renderTheme` puts the checkbox back
+// in sync whichever one was used.
+byId<HTMLInputElement>('follow-theme').addEventListener('change', (event) => {
+  setFollowTheme((event.target as HTMLInputElement).checked);
+});
 
 /*-------------------------------------------*\
     Static furniture
@@ -359,7 +397,9 @@ if (hasStorage) {
   attempt(() => storage.getItem(STORAGE_KEY))
     ?.then((raw) => {
       view = parseViewState(raw);
+      themeFollower.set(view.followTheme);
       renderSkin();
+      renderTheme();
       selectTab(view.tab);
     })
     .catch(() => undefined);

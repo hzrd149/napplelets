@@ -127,6 +127,13 @@ describe('describePalette', () => {
     expect(describePalette(DARK, GET)).toMatch(/^Dark theme/);
     expect(describePalette(LIGHT, GET)).toMatch(/^Light theme/);
   });
+
+  it('leads with "not following" over anything the payload says', () => {
+    // The payload is perfectly good here; it is just not on the window, and
+    // describing its dark palette would explain a window that is not dark.
+    expect(describePalette(DARK, GET, false)).toMatch(/^Not following/);
+    expect(describePalette(null, { kind: 'unavailable' }, false)).toMatch(/^Not following/);
+  });
 });
 
 describe('describeSource', () => {
@@ -157,5 +164,9 @@ describe('summarize', () => {
 
   it('says so plainly when there is no theme domain', () => {
     expect(summarize(null, { kind: 'unavailable' })).toBe('Theme: none (Luna)');
+  });
+
+  it('reports Luna when a live theme is deliberately not being followed', () => {
+    expect(summarize(FULL, GET, false)).toBe('Theme: not followed (Luna)');
   });
 });

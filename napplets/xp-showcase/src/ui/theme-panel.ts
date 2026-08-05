@@ -35,7 +35,10 @@ export function renderThemePanel(
   theme: Theme | null,
   source: ThemeSource,
   assets: ThemeAssets,
+  following: boolean,
 ): void {
+  byId<HTMLInputElement>('follow-theme').checked = following;
+
   const sourceFact = describeSource(source);
   const sourceLine = byId('theme-source');
   sourceLine.textContent = sourceFact.value;
@@ -64,7 +67,7 @@ export function renderThemePanel(
     }),
   );
 
-  byId('theme-verdict').textContent = describePalette(theme, source);
+  byId('theme-verdict').textContent = describePalette(theme, source, following);
 
   replaceChildren(
     byId('theme-assets'),

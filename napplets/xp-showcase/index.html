@@ -73,6 +73,17 @@
           <article role="tabpanel" class="xp-content" id="panel-theme" aria-labelledby="tab-theme">
             <fieldset>
               <legend>NAP-THEME payload</legend>
+              <!--
+                The switch a real napplet does not have. A shell is free to send
+                any three colours, and theme-xp obeys them — which is correct,
+                and which can leave a window that no longer reads as Windows XP.
+                Turning this off falls back to authentic Luna without stopping
+                the payload below from updating, so the two can be compared.
+              -->
+              <div class="field-row">
+                <input type="checkbox" id="follow-theme" checked />
+                <label for="follow-theme">Follow the shell theme</label>
+              </div>
               <p class="xs-note" id="theme-source">Waiting for the shell…</p>
               <dl class="xs-facts" id="theme-facts"></dl>
             </fieldset>

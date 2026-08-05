@@ -104,6 +104,71 @@ describe('live theme changes', () => {
   });
 });
 
+describe('the follow-the-shell-theme switch', () => {
+  const followBox = (): HTMLInputElement => $('follow-theme') as HTMLInputElement;
+  // Via length/item rather than spreading: jsdom's CSSStyleDeclaration is not
+  // iterable, and this is the part of the API it does implement.
+  const inlineTokens = (): string[] => {
+    const style = document.documentElement.style;
+    return Array.from({ length: style.length }, (_, index) => style.item(index)).filter((name) =>
+      name.startsWith('--'),
+    );
+  };
+
+  it('is on by default, and the shell theme is on the window', async () => {
+    shell.pushTheme(DARK_THEME);
+    await vi.waitFor(() => expect(followBox().checked).toBe(true));
+    expect(document.documentElement.style.getPropertyValue('--surface')).toBe('#101211');
+    expect(document.documentElement.dataset.xpTheme).toBe('dark');
+  });
+
+  it('strips every token the client wrote when switched off', () => {
+    followBox().checked = false;
+    followBox().dispatchEvent(new Event('change'));
+
+    expect(inlineTokens()).toEqual([]);
+    // Authentic Luna is a light theme, whatever the shell was sending.
+    expect(document.documentElement.dataset.xpTheme).toBe('light');
+  });
+
+  it('keeps reporting the payload it is no longer wearing', () => {
+    expect(text('theme-facts')).toContain('Luna Dark');
+    expect(text('theme-verdict')).toMatch(/^Not following/);
+    expect(text('status-theme')).toBe('Theme: not followed (Luna)');
+  });
+
+  it('drops the wallpaper too, since that is also the shell dressing the window', () => {
+    expect($('app').classList.contains('xs-has-wallpaper')).toBe(false);
+  });
+
+  it('remembers the choice', async () => {
+    await vi.waitFor(() => expect(shell.stored['view-state']).toContain('"followTheme":false'));
+  });
+
+  it('repaints from the shell’s current theme when switched back on', async () => {
+    followBox().checked = true;
+    followBox().dispatchEvent(new Event('change'));
+
+    // Switching on re-installs the client, which re-runs theme.get.
+    await vi.waitFor(() =>
+      expect(document.documentElement.style.getPropertyValue('--surface')).toBe('#101211'),
+    );
+    expect(text('theme-verdict')).toMatch(/^Dark theme/);
+    expect($('app').classList.contains('xs-has-wallpaper')).toBe(true);
+  });
+
+  it('is also reachable from the View menu, sharing one state', () => {
+    $('menu-bar').querySelector<HTMLButtonElement>('[data-menu="view"]')?.click();
+    const items = [...$('overlay').querySelectorAll<HTMLElement>('.xp-menu li')];
+    const item = items.find((entry) => entry.textContent === 'Follow the shell theme');
+    expect(item?.getAttribute('aria-checked')).toBe('true');
+
+    item?.click();
+    expect(followBox().checked).toBe(false);
+    expect(inlineTokens()).toEqual([]);
+  });
+});
+
 describe('the derived-token table', () => {
   it('lists every token the mapping writes', () => {
     const rows = $('token-table').querySelectorAll('tr:not(.xs-token-group)');

@@ -84,7 +84,15 @@ export function describeColors(theme: Theme | null): ColorSwatch[] {
  * half-applied, it is dropped, and the stylesheet's own Luna palette shows
  * through. That is a feature worth naming out loud rather than a bug to hide.
  */
-export function describePalette(theme: Theme | null, source: ThemeSource): string {
+export function describePalette(
+  theme: Theme | null,
+  source: ThemeSource,
+  following = true,
+): string {
+  // Checked before everything else: when the window is not wearing the payload,
+  // nothing about the payload explains what is on screen.
+  if (!following)
+    return 'Not following the shell theme. The window is authentic Luna; the payload above is still live, it is just not being applied. Turn it back on from View, or the checkbox above.';
   if (source.kind === 'unavailable')
     return 'Authentic Luna. theme-xp writes no fallback palette on install — its stylesheet already carries a complete one, so there is nothing to fall back to.';
   if (!theme) return 'Nothing applied yet.';
@@ -143,7 +151,8 @@ export function describePayload(theme: Theme | null): Fact[] {
 }
 
 /** The status-bar summary: short enough for a field that ellipsises. */
-export function summarize(theme: Theme | null, source: ThemeSource): string {
+export function summarize(theme: Theme | null, source: ThemeSource, following = true): string {
+  if (!following) return 'Theme: not followed (Luna)';
   if (source.kind === 'unavailable') return 'Theme: none (Luna)';
   if (!theme) return 'Theme: …';
   const name = theme.title ?? (hasUsableColors(theme) ? theme.colors.primary : 'unusable');

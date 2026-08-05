@@ -10,7 +10,7 @@ import {
 
 describe('parseViewState', () => {
   it('round-trips what it wrote', () => {
-    const state = { skin: '98' as const, tab: 'icons' as const };
+    const state = { skin: '98' as const, tab: 'icons' as const, followTheme: false };
     expect(parseViewState(serializeViewState(state))).toEqual(state);
   });
 
@@ -32,11 +32,31 @@ describe('parseViewState', () => {
   });
 
   it('drops a tab that no longer exists', () => {
-    expect(parseViewState('{"skin":"gui","tab":"relays"}')).toEqual({ skin: 'gui', tab: 'theme' });
+    expect(parseViewState('{"skin":"gui","tab":"relays"}')).toEqual({
+      skin: 'gui',
+      tab: 'theme',
+      followTheme: true,
+    });
   });
 
   it('keeps the half it understands', () => {
-    expect(parseViewState('{"tab":"windows"}')).toEqual({ skin: null, tab: 'windows' });
+    expect(parseViewState('{"tab":"windows"}')).toEqual({
+      skin: null,
+      tab: 'windows',
+      followTheme: true,
+    });
+  });
+
+  it.each([
+    ['a build that predates the setting', '{"tab":"theme"}'],
+    ['a corrupted value', '{"followTheme":"no"}'],
+    ['an explicit true', '{"followTheme":true}'],
+  ])('follows the shell for %s, because that is what a napplet should do', (_label, raw) => {
+    expect(parseViewState(raw).followTheme).toBe(true);
+  });
+
+  it('opts out only on an explicit false', () => {
+    expect(parseViewState('{"followTheme":false}').followTheme).toBe(false);
   });
 });
 

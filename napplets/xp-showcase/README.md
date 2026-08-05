@@ -58,6 +58,33 @@ package needs only the `theme` domain, and folding this in would make every
 consumer declare `resource` as well. If it earns its way upstream it lifts out
 whole.
 
+### Following the shell is a switch
+
+**View → Follow the shell theme**, or the checkbox at the top of the Theme tab.
+
+A shell is free to send any three colours, and some send a near-black
+background. theme-xp then does exactly what it promises: `--surface` and
+`--button-face` become that background, every bevel and fieldset is re-derived
+around it, and the result is a correct, readable, theme-obeying window that no
+longer reads as Windows XP. Kehto Paja's dark theme (`#101211`) is the case that
+prompted this.
+
+That is a real tension rather than a bug — "obey the shell" and "look like Luna"
+genuinely conflict once the shell's palette is far from XP's — and a showcase is
+where it should be possible to see both sides. Switching off strips every token
+the client wrote and falls back to authentic Luna, which is the state theme-xp
+degrades into anyway. The payload keeps arriving and the Theme tab keeps
+reporting it; the window just stops wearing it, so the two can be compared
+directly. The wallpaper and the title font follow the same switch, for the same
+reason.
+
+`src/lib/theme-follow.ts` derives the property list to strip from
+`buildXpThemeVariables` rather than restating it, so a token added to the theme
+package is cleaned up here for free.
+
+**A napplet that is not a showcase does not want this.** It writes
+`installThemeClient()` once and follows the shell, full stop.
+
 ### Degradation is a feature, not a fallback
 
 theme-xp is deliberately all-or-nothing — a payload it cannot map is dropped
@@ -89,6 +116,7 @@ is the regression.
 | ------------ | ------------------------ | -------------------------------------------------------------------------------------------------------- |
 | Window frame | `config`                 | Whether the host already draws a title bar is knowledge only the host has                                |
 | Skin         | `config`, then `storage` | The placement picks what it opens with; whoever is looking may flip skins to compare, and that is theirs |
+| Follow theme | `storage`                | A comparison affordance for whoever is looking; defaults to on, because obeying the shell is correct     |
 | Open tab     | `storage`                | Pure view state                                                                                          |
 
 Turning **Window frame** off is what shows `.xp-frameless`; there is no in-app
@@ -127,6 +155,7 @@ src/
     shell.ts          hasDomain / attempt: the two ways a shell can be missing
     skins.ts          the three skins, swapped at runtime
     theme-report.ts   a Theme payload turned into readable facts (pure, tested)
+    theme-follow.ts   installing and un-installing the theme client
     theme-assets.ts   fonts and wallpaper, via NAP-RESOURCE
     resource-errors.ts  the code out of a NAP-RESOURCE rejection (pure, tested)
     tokens.ts         the derived-token catalogue

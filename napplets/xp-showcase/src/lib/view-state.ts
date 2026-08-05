@@ -21,11 +21,19 @@ export type ViewState = {
   /** null means "no preference yet" -- config's default still applies. */
   skin: SkinName | null;
   tab: TabId;
+  /**
+   * Whether the window wears the shell's theme.
+   *
+   * Defaults to true: obeying the shell is the correct behaviour and the one a
+   * real napplet has. Turning it off is a showcase affordance for comparing a
+   * re-tinted window against authentic Luna -- see lib/theme-follow.ts.
+   */
+  followTheme: boolean;
 };
 
 export const STORAGE_KEY = 'view-state';
 
-export const DEFAULT_VIEW_STATE: ViewState = { skin: null, tab: 'theme' };
+export const DEFAULT_VIEW_STATE: ViewState = { skin: null, tab: 'theme', followTheme: true };
 
 export function isTabId(value: unknown): value is TabId {
   return typeof value === 'string' && (TAB_IDS as readonly string[]).includes(value);
@@ -41,10 +49,18 @@ export function parseViewState(raw: string | null): ViewState {
   }
   if (typeof parsed !== 'object' || parsed === null) return { ...DEFAULT_VIEW_STATE };
 
-  const { skin, tab } = parsed as { skin?: unknown; tab?: unknown };
+  const { skin, tab, followTheme } = parsed as {
+    skin?: unknown;
+    tab?: unknown;
+    followTheme?: unknown;
+  };
   return {
     skin: isSkinName(skin) ? skin : null,
     tab: isTabId(tab) ? tab : DEFAULT_VIEW_STATE.tab,
+    // Only an explicit `false` opts out. Anything else -- a build that predates
+    // the setting, a corrupted value -- follows the shell, because that is the
+    // behaviour a napplet is supposed to have.
+    followTheme: followTheme !== false,
   };
 }
 
