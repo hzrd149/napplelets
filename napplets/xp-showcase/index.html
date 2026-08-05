@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>XP Theme Showcase</title>
+  </head>
+  <body>
+    <!--
+      `#app` is the element theme-xp's patch layer sizes to the host frame, so
+      the name is load-bearing. It also carries the wallpaper when the shell's
+      NAP-THEME payload includes `background`.
+    -->
+    <div id="app">
+      <div class="window xp-fill" id="root-window">
+        <div class="title-bar">
+          <div class="title-bar-text" id="window-title">XP Theme Showcase</div>
+          <div class="title-bar-controls">
+            <!--
+              Only Help. Minimise, maximise, restore and close are the shell's
+              decisions about the pane, and no NAP lets a napplet make them -- a
+              button that cannot do its job is worse than no button. The full
+              five-button set is on the Windows tab, as a visual reference.
+            -->
+            <button aria-label="Help" id="help-button" title="About this napplet"></button>
+          </div>
+        </div>
+
+        <div class="xp-menu-bar" role="menubar" id="menu-bar">
+          <button role="menuitem" aria-haspopup="true" aria-expanded="false" data-menu="view">
+            View
+          </button>
+          <button role="menuitem" aria-haspopup="true" aria-expanded="false" data-menu="shell">
+            Shell
+          </button>
+          <button role="menuitem" aria-haspopup="true" aria-expanded="false" data-menu="help">
+            Help
+          </button>
+        </div>
+
+        <!--
+          Note what is NOT here: `.xp-content`. It opts a whole subtree into
+          border-box, and the Windows and Dialogs tabs below contain real
+          `.title-bar`s, which are `height: 21px` *plus* `padding: 3px 5px` and
+          shrink if you border-box them. It goes on the two panels that hold
+          only this napplet's own markup instead.
+        -->
+        <div class="window-body">
+          <menu role="tablist" aria-label="Showcase sections" id="tablist">
+            <button role="tab" aria-selected="true" aria-controls="panel-theme" id="tab-theme">
+              Theme
+            </button>
+            <button
+              role="tab"
+              aria-selected="false"
+              aria-controls="panel-controls"
+              id="tab-controls"
+            >
+              Controls
+            </button>
+            <button role="tab" aria-selected="false" aria-controls="panel-windows" id="tab-windows">
+              Windows
+            </button>
+            <button role="tab" aria-selected="false" aria-controls="panel-dialogs" id="tab-dialogs">
+              Dialogs
+            </button>
+            <button role="tab" aria-selected="false" aria-controls="panel-icons" id="tab-icons">
+              Icons
+            </button>
+          </menu>
+
+          <!-- ── Theme: the live NAP-THEME payload ─────────────────────── -->
+          <article role="tabpanel" class="xp-content" id="panel-theme" aria-labelledby="tab-theme">
+            <fieldset>
+              <legend>NAP-THEME payload</legend>
+              <p class="xs-note" id="theme-source">Waiting for the shell…</p>
+              <dl class="xs-facts" id="theme-facts"></dl>
+            </fieldset>
+
+            <fieldset>
+              <legend>Colours</legend>
+              <div class="xs-swatch-row" id="theme-colors"></div>
+              <p class="xs-note" id="theme-verdict"></p>
+            </fieldset>
+
+            <fieldset>
+              <legend>Fonts &amp; background</legend>
+              <dl class="xs-facts" id="theme-assets"></dl>
+              <div class="xs-wallpaper" id="wallpaper-preview" hidden></div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Derived XP tokens</legend>
+              <p class="xs-note">
+                Read live off <code>&lt;html&gt;</code>. Three shell colours in, every XP token out
+                — or authentic Luna when the shell sends nothing usable.
+              </p>
+              <div class="xs-scroll">
+                <table class="xs-tokens" id="token-table"></table>
+              </div>
+            </fieldset>
+          </article>
+
+          <!-- ── Controls: everything XP.css styles ────────────────────── -->
+          <article role="tabpanel" id="panel-controls" aria-labelledby="tab-controls" hidden>
+            <fieldset>
+              <legend>Buttons</legend>
+              <div class="field-row">
+                <button>Normal</button>
+                <button class="focused">Focused</button>
+                <button class="active">Active</button>
+                <button disabled>Disabled</button>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Checkboxes &amp; radios</legend>
+              <div class="field-row">
+                <input type="checkbox" id="c1" checked />
+                <label for="c1">Checked</label>
+              </div>
+              <div class="field-row">
+                <input type="checkbox" id="c2" />
+                <label for="c2">Unchecked</label>
+              </div>
+              <div class="field-row">
+                <input type="checkbox" id="c3" disabled checked />
+                <label for="c3">Disabled — greys out, which upstream XP.css does not</label>
+              </div>
+              <div class="field-row">
+                <input type="radio" id="r1" name="rg" checked />
+                <label for="r1">Radio one</label>
+              </div>
+              <div class="field-row">
+                <input type="radio" id="r2" name="rg" />
+                <label for="r2">Radio two</label>
+              </div>
+              <div class="field-row">
+                <input type="radio" id="r3" name="rg2" disabled checked />
+                <label for="r3">Disabled radio</label>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Text &amp; selection</legend>
+              <div class="field-row-stacked">
+                <label for="t1">Text</label>
+                <input type="text" id="t1" value="npub1…" />
+              </div>
+              <div class="field-row-stacked">
+                <label for="t2">Password</label>
+                <input type="password" id="t2" value="hunter2" />
+              </div>
+              <div class="field-row-stacked">
+                <label for="t3">Textarea</label>
+                <textarea id="t3" rows="3">Sandboxed Nostr web applets, in Luna blue.</textarea>
+              </div>
+              <div class="field-row">
+                <label for="s1">Select</label>
+                <select id="s1">
+                  <option>wss://relay.damus.io</option>
+                  <option>wss://nos.lol</option>
+                </select>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Ranges &amp; progress</legend>
+              <div class="field-row">
+                <label for="rg1">Volume</label>
+                <input type="range" id="rg1" min="1" max="11" value="7" />
+              </div>
+              <div class="field-row">
+                <label for="rg2b">Boxed indicator</label>
+                <input type="range" id="rg2b" class="has-box-indicator" min="1" max="5" value="3" />
+              </div>
+              <div class="field-row">
+                <label for="rg3">Vertical</label>
+                <div class="is-vertical">
+                  <input
+                    type="range"
+                    id="rg3"
+                    class="has-box-indicator"
+                    min="1"
+                    max="5"
+                    value="2"
+                  />
+                </div>
+              </div>
+              <div class="field-row-stacked">
+                <label for="p1">Determinate</label>
+                <progress id="p1" max="100" value="64"></progress>
+              </div>
+              <div class="field-row-stacked">
+                <label>Indeterminate — XP skin only; the 98 skin has no progress bar</label>
+                <progress></progress>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Tree view</legend>
+              <ul class="tree-view">
+                <li>napplets</li>
+                <li>
+                  <details open>
+                    <summary>lib</summary>
+                    <ul>
+                      <li>theme-dsui</li>
+                      <li>theme-hypr</li>
+                      <li>theme-xp</li>
+                    </ul>
+                  </details>
+                </li>
+                <li>docs</li>
+              </ul>
+            </fieldset>
+          </article>
+
+          <!-- ── Windows: frames, chrome, taskbar ──────────────────────── -->
+          <article role="tabpanel" id="panel-windows" aria-labelledby="tab-windows" hidden>
+            <fieldset>
+              <legend>Title bar controls</legend>
+              <p class="xs-note">
+                Baked SVG glyphs — a custom property cannot reach inside them, so these five stay
+                Luna-blue under any shell theme.
+              </p>
+              <div class="window xs-sample">
+                <div class="title-bar">
+                  <div class="title-bar-text">All five controls</div>
+                  <div class="title-bar-controls">
+                    <button aria-label="Minimize"></button>
+                    <button aria-label="Maximize"></button>
+                    <button aria-label="Restore"></button>
+                    <button aria-label="Help"></button>
+                    <button aria-label="Close"></button>
+                  </div>
+                </div>
+                <div class="window-body">
+                  <p>Below 380px the patch layer hides all of them but Close.</p>
+                </div>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Active vs inactive</legend>
+              <p class="xs-note">
+                <code>.is-inactive</code> is this package's addition; XP.css only ever draws a
+                focused window.
+              </p>
+              <div class="window xs-sample">
+                <div class="title-bar">
+                  <div class="title-bar-text">Active window</div>
+                  <div class="title-bar-controls"><button aria-label="Close"></button></div>
+                </div>
+                <div class="window-body"><p>This one has focus.</p></div>
+                <div class="status-bar">
+                  <p class="status-bar-field">Ready</p>
+                  <p class="status-bar-field">
+                    A status field long enough that it has to ellipsis rather than overflow the pane
+                  </p>
+                </div>
+              </div>
+              <div class="window is-inactive xs-sample">
+                <div class="title-bar">
+                  <div class="title-bar-text">Inactive window</div>
+                  <div class="title-bar-controls"><button aria-label="Close"></button></div>
+                </div>
+                <div class="window-body"><p>This one does not.</p></div>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Filling the host frame</legend>
+              <p class="xs-note">
+                The window around this tab is <code>.window.xp-fill</code>: it takes the whole frame
+                and scrolls its body instead of the page. <code>.xp-frameless</code> drops the title
+                bar and border for a shell that draws its own — which is the
+                <strong>Window frame</strong> setting, because only the host knows.
+              </p>
+              <p class="xs-note" id="frame-state">Window frame: on</p>
+            </fieldset>
+
+            <fieldset>
+              <legend>Taskbar — opt-in</legend>
+              <p class="xs-note">
+                A separate import (<code>theme-xp/taskbar.css</code>), because a taskbar is host
+                chrome. This one is a sample inside the pane, not this napplet's own navigation.
+              </p>
+              <div class="xp-taskbar">
+                <button class="xp-start-button" id="start-button">start</button>
+                <div class="xp-taskbar-windows">
+                  <button class="xp-taskbar-button is-active">XP Theme Showcase</button>
+                  <button class="xp-taskbar-button">nap-feed</button>
+                </div>
+                <div class="xp-taskbar-tray"><span id="clock">12:00</span></div>
+              </div>
+            </fieldset>
+          </article>
+
+          <!-- ── Dialogs & menus ───────────────────────────────────────── -->
+          <article role="tabpanel" id="panel-dialogs" aria-labelledby="tab-dialogs" hidden>
+            <fieldset>
+              <legend>Dialogs</legend>
+              <p class="xs-note">
+                XP.css ships no dialog at all, so napplet error and confirm states had nowhere to
+                live. These are <code>.xp-dialog</code> and its parts.
+              </p>
+              <div class="xs-sample-row">
+                <div class="window xp-dialog xs-sample">
+                  <div class="title-bar">
+                    <div class="title-bar-text">Error</div>
+                    <div class="title-bar-controls"><button aria-label="Close"></button></div>
+                  </div>
+                  <div class="window-body">
+                    <div class="xp-dialog-body">
+                      <div class="xp-dialog-icon" id="dialog-icon-error"></div>
+                      <p class="xp-dialog-message">
+                        Could not reach the relay. The napplet will keep retrying in the background.
+                      </p>
+                    </div>
+                    <div class="xp-dialog-buttons">
+                      <button>Retry</button>
+                      <button>Cancel</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="window xp-dialog xs-sample">
+                  <div class="title-bar">
+                    <div class="title-bar-text">Confirm</div>
+                    <div class="title-bar-controls"><button aria-label="Close"></button></div>
+                  </div>
+                  <div class="window-body">
+                    <div class="xp-dialog-body">
+                      <div class="xp-dialog-icon" id="dialog-icon-help"></div>
+                      <p class="xp-dialog-message">Discard the unsaved buffer?</p>
+                    </div>
+                    <div class="xp-dialog-buttons">
+                      <button>Discard</button>
+                      <button>Keep editing</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Context menu</legend>
+              <p class="xs-note">
+                <code>.xp-menu</code> is styling only — positioning, opening and keyboard handling
+                stay with the napplet, which is the half that knows its own state. The
+                <strong>View</strong>, <strong>Shell</strong> and <strong>Help</strong> menus above
+                are the same markup, positioned.
+              </p>
+              <ul class="xp-menu xs-sample">
+                <li>Copy</li>
+                <li>Paste</li>
+                <li class="xp-menu-sep"></li>
+                <li>Refresh</li>
+                <li aria-disabled="true">Properties</li>
+              </ul>
+            </fieldset>
+          </article>
+
+          <!-- ── Icons ─────────────────────────────────────────────────── -->
+          <article
+            role="tabpanel"
+            class="xp-content"
+            id="panel-icons"
+            aria-labelledby="tab-icons"
+            hidden
+          >
+            <fieldset>
+              <legend>Icons</legend>
+              <p class="xs-note" id="icon-note"></p>
+              <div class="xs-icon-grid" id="icon-grid"></div>
+            </fieldset>
+          </article>
+        </div>
+
+        <div class="status-bar">
+          <p class="status-bar-field" id="status-skin">Skin: XP</p>
+          <p class="status-bar-field" id="status-theme">Theme: —</p>
+          <p class="status-bar-field" id="status-size">—</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Menus and the About dialog are drawn over the window, so they live
+         outside it and are positioned when opened. -->
+    <div id="overlay" hidden></div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

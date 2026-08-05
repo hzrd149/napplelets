@@ -1,0 +1,308 @@
+/*
+ * xp-showcase -- layout only.
+ *
+ * Everything visual comes from @napplelets/theme-xp. This file adds no colours
+ * of its own: every value below is either a layout number or one of the theme's
+ * tokens, so the showcase re-tints with whatever the shell's NAP-THEME payload
+ * turns into. The `xs-` prefix marks markup that belongs to this napplet rather
+ * than to the theme -- if a class here starts with `xp-`, it is the theme's and
+ * this file must not redefine it.
+ *
+ * The skin stylesheet is prepended to <head> at runtime (see src/lib/skins.ts),
+ * so it always sorts before this file and these rules win on ties.
+ */
+
+/*-------------------------------------------*\
+    Frame
+
+    theme-xp's patch layer already sizes html/body/#app to the host frame and
+    makes `.window.xp-fill` a column flexbox whose body scrolls. These are the
+    two additions that layout needs on top of it.
+\*-------------------------------------------*/
+
+/* The menu bar is a fixed strip between the title bar and the scrolling body;
+   without this it would stretch or shrink with the flex column. */
+.window.xp-fill > .xp-menu-bar {
+  flex: 0 0 auto;
+}
+
+/*
+ * A NAP-THEME payload may carry `background` -- wallpaper. There is nowhere to
+ * put it while the window fills the frame edge to edge, so a themed background
+ * insets the window by a few pixels and shows through: the XP desktop metaphor,
+ * at pane scale. `background-size` is whatever the shell's `mode` said.
+ */
+#app.xs-has-wallpaper {
+  box-sizing: border-box;
+  padding: 10px;
+  background-repeat: no-repeat;
+  background-position: center center;
+}
+
+/*-------------------------------------------*\
+    Tabs
+
+    XP.css lays the tab strip out as a single unwrapped flex row. Five tabs
+    overflow a narrow pane, so let them wrap -- XP's own property sheets did
+    exactly this once the tabs ran out of room.
+\*-------------------------------------------*/
+
+menu[role='tablist'] {
+  flex-wrap: wrap;
+}
+
+[role='tabpanel'] {
+  /* `padding: 14px` plus a full-width table is horizontal overflow waiting to
+     happen; border-box keeps the panel inside the pane. */
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+/*-------------------------------------------*\
+    Showcase furniture
+\*-------------------------------------------*/
+
+.xs-note {
+  margin: 0 0 8px;
+  font-size: 11px;
+  color: var(--xp-text-dim);
+  overflow-wrap: anywhere;
+}
+
+.xs-note code {
+  font-size: inherit;
+}
+
+.xs-note:last-child {
+  margin-bottom: 0;
+}
+
+/* Key/value list for the theme payload. Two columns while there is room, one
+   when there is not -- `minmax(0, …)` so a long URL wraps instead of pushing
+   the pane sideways. */
+.xs-facts {
+  display: grid;
+  grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
+  gap: 3px 10px;
+  margin: 0;
+  font-size: 11px;
+}
+
+.xs-facts dt {
+  color: var(--xp-text-dim);
+  white-space: nowrap;
+}
+
+.xs-facts dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* A napplet's viewport *is* the host frame, so a width media query is the
+   frame-size query -- the same lever theme-xp's own narrow layer pulls at
+   380px. Below this the two columns stop fitting a label and a URL. */
+@media (max-width: 420px) {
+  .xs-facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .xs-facts dd {
+    margin-bottom: 4px;
+  }
+}
+
+/*
+ * Tone, without inventing a palette. There is no "error red" in a NAP-THEME
+ * payload and no token for one, so a field the shell got wrong is marked by
+ * weight rather than by a colour this file made up.
+ */
+.xs-ok {
+  color: var(--xp-text);
+}
+
+.xs-muted {
+  color: var(--xp-text-dim);
+}
+
+.xs-warn {
+  color: var(--xp-text);
+  font-weight: bold;
+}
+
+.xs-swatch-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.xs-swatch {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-size: 11px;
+}
+
+.xs-swatch-chip {
+  width: 100%;
+  min-width: 46px;
+  height: 26px;
+  /* The theme's own sunken-field border, so a swatch reads as an XP control
+     rather than as a floating rectangle. */
+  box-shadow: var(--border-field);
+}
+
+.xs-swatch-name {
+  color: var(--xp-text-dim);
+}
+
+.xs-wallpaper {
+  height: 96px;
+  margin-top: 8px;
+  background-repeat: no-repeat;
+  background-position: center center;
+  box-shadow: var(--border-field);
+}
+
+/* Wide content scrolls inside its own box; the pane itself never scrolls
+   sideways. */
+.xs-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.xs-tokens {
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.xs-tokens th {
+  padding: 3px 8px 3px 0;
+  text-align: left;
+  font-weight: bold;
+  color: var(--xp-text-dim);
+  white-space: nowrap;
+}
+
+.xs-tokens td {
+  padding: 2px 8px 2px 0;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.xs-tokens tr.xs-token-group th {
+  padding-top: 10px;
+}
+
+.xs-token-chip {
+  display: block;
+  width: 40px;
+  height: 14px;
+  box-shadow: var(--border-field);
+}
+
+.xs-token-value {
+  color: var(--xp-text-dim);
+  max-width: 30ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Sample windows inside a panel. They are illustrations, so they stop growing
+   well before the pane does. */
+.xs-sample {
+  max-width: 340px;
+}
+
+.xs-sample + .xs-sample {
+  margin-top: 12px;
+}
+
+.xs-sample-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.xs-sample-row .xs-sample + .xs-sample {
+  margin-top: 0;
+}
+
+.xs-icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 10px 6px;
+}
+
+.xs-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  font-size: 10px;
+  text-align: center;
+}
+
+.xs-icon img {
+  /* XP's shell icons are bitmaps; browser smoothing turns them to mush. */
+  image-rendering: pixelated;
+}
+
+.xs-icon span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--xp-text-dim);
+}
+
+/*-------------------------------------------*\
+    Overlay: menus and the About dialog
+
+    `.xp-menu` is styling only -- the package says so explicitly -- so
+    positioning is this napplet's job. Both live in `#overlay`, outside the
+    window, so no ancestor's `overflow: auto` can clip them.
+\*-------------------------------------------*/
+
+#overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+}
+
+#overlay .xp-menu {
+  position: absolute;
+  /* XP menus cast a hard shadow; the theme's raised border alone reads flat
+     when it is floating over content. */
+  filter: drop-shadow(2px 2px 2px rgb(0 0 0 / 0.35));
+}
+
+#overlay .xp-menu li[aria-checked='true']::before {
+  content: '✓';
+  position: absolute;
+  margin-left: -14px;
+}
+
+#overlay .xp-menu li {
+  position: relative;
+}
+
+.xs-modal {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  box-sizing: border-box;
+  background: rgb(0 0 0 / 0.25);
+}
+
+.xs-modal .window {
+  width: 320px;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: auto;
+}
