@@ -21,8 +21,8 @@
     "@napplet/conformance-cli": "^0.2.18",
     "@napplet/vite-plugin": "^0.14.1",
     "jsdom": "^30.0.1",
-    "typescript": "^5.9.3",
-    "vite": "^6.4.3",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.0",
     "vite-plugin-singlefile": "^2.3.3",
     "vitest": "^4.1.10"
   },

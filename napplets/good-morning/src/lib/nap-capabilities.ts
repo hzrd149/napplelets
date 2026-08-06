@@ -21,7 +21,7 @@
 
 import {
   IDENTITY_DOMAIN,
-  INC_DOMAIN,
+  INTENT_DOMAIN,
   LINK_DOMAIN,
   OUTBOX_DOMAIN,
   RESOURCE_DOMAIN,
@@ -56,13 +56,6 @@ export const GM_NAP_REQUIREMENTS: NapRequirement[] = [
     severity: 'essential',
   },
   {
-    domain: INC_DOMAIN,
-    label: 'NAP-INC',
-    purpose:
-      'Follows identity changes and opens notes, profiles, and the composer when you tap a row.',
-    severity: 'essential',
-  },
-  {
     domain: OUTBOX_DOMAIN,
     label: 'NAP-OUTBOX',
     purpose: "Routes note fetches to each author's own relays and publishes your Quick GM replies.",
@@ -78,6 +71,13 @@ export const GM_NAP_REQUIREMENTS: NapRequirement[] = [
     domain: THEME_DOMAIN,
     label: 'NAP-THEME',
     purpose: 'Applies the host shell theme. Falls back to built-in colors when absent.',
+    severity: 'degraded',
+  },
+  {
+    domain: INTENT_DOMAIN,
+    label: 'NAP-INTENT',
+    purpose:
+      'Opens notes, profiles, and the composer through installed archetype handlers. Related controls hide when unavailable.',
     severity: 'degraded',
   },
   {

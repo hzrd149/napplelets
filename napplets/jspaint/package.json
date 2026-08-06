@@ -20,10 +20,10 @@
   "devDependencies": {
     "@napplet/conformance-cli": "^0.2.18",
     "@napplet/vite-plugin": "^0.14.1",
-    "esbuild": "^0.25.12",
+    "esbuild": "^0.28.1",
     "jspaint-upstream": "github:1j01/jspaint#53be67ab8c47cc0d2168899e7481bc04839c4c81",
-    "typescript": "^5.9.3",
-    "vite": "^6.4.2",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.0",
     "vite-plugin-singlefile": "^2.3.3"
   },
   "packageManager": "pnpm@10.8.0",

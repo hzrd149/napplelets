@@ -1,7 +1,5 @@
 import * as nip19 from 'nostr-tools/nip19';
 
-export const NOTE_VIEWER_OPEN_TOPIC = 'note:open' as const;
-
 export type NoteViewerOpenTarget =
   | { type: 'event'; id: string; kind?: number; pubkey?: string; nip19?: string }
   | { type: 'address'; kind: number; pubkey: string; identifier: string; nip19?: string };

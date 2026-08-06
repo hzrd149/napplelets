@@ -1,11 +1,11 @@
 <script lang="ts">
   import * as nip19 from 'nostr-tools/nip19';
-  import { inc as ipc } from '@napplet/sdk';
   import { resourceImageBatch as resourceImage } from '../lib/resource-image';
   import type { GMThread } from '../lib/gm-store';
   import type { ProfileContent } from '../lib/profile-metadata';
   import { buildGalleryItems } from '../lib/gm-media';
-  import { createGMNoteOpenPayload, NOTE_VIEWER_OPEN_TOPIC } from '../lib/gm-actions';
+  import { createGMNoteOpenPayload } from '../lib/gm-actions';
+  import { NOTE_ARCHETYPE, openNoteIntent } from '../lib/intent-client';
   import { isNapDomainPresent } from '../lib/runtime-domain';
 
   interface Props {
@@ -13,9 +13,11 @@
     threads: GMThread[];
     /** Author profile metadata, keyed by pubkey, for the floating avatars. */
     profiles: Map<string, ProfileContent>;
+    availableArchetypes: Set<string>;
   }
 
-  let { threads, profiles }: Props = $props();
+  let { threads, profiles, availableArchetypes }: Props = $props();
+  let noteViewerAvailable = $derived(availableArchetypes.has(NOTE_ARCHETYPE));
   const resourceAvailable = isNapDomainPresent('resource');
 
   // Only GMs that carry an image become gallery tiles; the note content rides
@@ -53,7 +55,7 @@
   function openNote(event: GMThread['note']): void {
     const payload = createGMNoteOpenPayload(event);
     if (!payload) return;
-    ipc.emit(NOTE_VIEWER_OPEN_TOPIC, [], JSON.stringify(payload));
+    void openNoteIntent(payload);
   }
 </script>
 
@@ -63,60 +65,70 @@
   <div class="gm-gallery">
     {#each items as item (item.note.id)}
       <figure class="gm-tile">
-        <button
-          type="button"
-          class="gm-tile-image"
-          onclick={() => openNote(item.note)}
-          data-gm-note-id={item.note.id}
-          aria-label="Open GM note"
-        >
-          {#if resourceAvailable}
-            <img use:resourceImage={item.imageSource} alt={item.note.content} loading="lazy" />
-          {:else}
-            <span class="gm-tile-unavailable">media unavailable</span>
-          {/if}
-
-          <!-- Author avatar floating in the upper-left corner (decorative — the
-               whole tile opens the note). -->
-          <span
-            class="gm-tile-avatar"
-            title={authorName(item.note.pubkey)}
-            data-gm-author-pubkey={item.note.pubkey}
+        {#if noteViewerAvailable}
+          <button
+            type="button"
+            class="gm-tile-image"
+            onclick={() => openNote(item.note)}
+            data-gm-note-id={item.note.id}
+            aria-label="Open GM note"
           >
-            {#if resourceAvailable && avatarUrl(item.note.pubkey) != null}
-              <img
-                use:resourceImage={avatarUrl(item.note.pubkey)}
-                alt={authorName(item.note.pubkey)}
-                loading="lazy"
-              />
+            {#if resourceAvailable}
+              <img use:resourceImage={item.imageSource} alt={item.note.content} loading="lazy" />
             {:else}
-              <span class="gm-tile-avatar-fallback">{avatarFallback(item.note.pubkey)}</span>
+              <span class="gm-tile-unavailable">media unavailable</span>
             {/if}
-          </span>
 
-          <!-- Responded check in the lower-right corner when we've GM'd back. -->
-          {#if readByNoteId.get(item.note.id)}
+            <!-- Author avatar floating in the upper-left corner (decorative — the
+               whole tile opens the note). -->
             <span
-              class="gm-tile-check"
-              title="You replied with a GM"
-              aria-label="Responded with a GM"
+              class="gm-tile-avatar"
+              title={authorName(item.note.pubkey)}
+              data-gm-author-pubkey={item.note.pubkey}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="3"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
+              {#if resourceAvailable && avatarUrl(item.note.pubkey) != null}
+                <img
+                  use:resourceImage={avatarUrl(item.note.pubkey)}
+                  alt={authorName(item.note.pubkey)}
+                  loading="lazy"
+                />
+              {:else}
+                <span class="gm-tile-avatar-fallback">{avatarFallback(item.note.pubkey)}</span>
+              {/if}
             </span>
-          {/if}
-        </button>
+
+            <!-- Responded check in the lower-right corner when we've GM'd back. -->
+            {#if readByNoteId.get(item.note.id)}
+              <span
+                class="gm-tile-check"
+                title="You replied with a GM"
+                aria-label="Responded with a GM"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </span>
+            {/if}
+          </button>
+        {:else}
+          <div class="gm-tile-image" data-gm-note-id={item.note.id}>
+            {#if resourceAvailable}
+              <img use:resourceImage={item.imageSource} alt={item.note.content} loading="lazy" />
+            {:else}
+              <span class="gm-tile-unavailable">media unavailable</span>
+            {/if}
+          </div>
+        {/if}
         <figcaption class="gm-tile-caption" title={item.note.content}>
           {item.note.content}
         </figcaption>

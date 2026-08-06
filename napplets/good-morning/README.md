@@ -18,16 +18,17 @@ Ported from the standalone GM Protocol app onto a NIP-5D napplet runtime
    `e` tag is a GM reply. A row shows a green **✓ replied** when any of your GM
    replies e-tags that note — otherwise it shows **reply →** and counts toward
    the "to greet" badge.
-4. Clicking a row emits `note:open` (NAP-04); the shell opens/focuses the
-   **Note Reader** napplet where you reply inline. Avatars and names emit
-   `profile:open`.
+4. When the shell advertises an installed `note` archetype, rows expose an
+   **Open** action that calls `intent.open('note', …)` through **NAP-INTENT**.
+   The shell selects and opens/focuses the note viewer. Profile and composer
+   actions use their corresponding NAP-INTENT archetypes as well.
 5. A **List / Gallery** toggle in the header switches the inbox between the
    default row list and a **gallery** of the day's GM images: each tile is the
    first image resource found in a GM note (inline image URL or blossom/NAP-RESOURCE
    pointer), with the note content shown as the caption/`alt` underneath. Notes
-   with no image are omitted from the gallery. Clicking a tile emits the same
-   `note:open` intent. Both the replied/unreplied filter and the gallery honor
-   the same `visibleThreads`.
+   with no image are omitted from the gallery. Tiles become buttons only while
+   the `note` archetype is available. Both the replied/unreplied filter and the
+   gallery honor the same `visibleThreads`.
 
 ### GM matching
 
@@ -48,11 +49,13 @@ mounts the inbox it probes the host for the NAPs it needs and, if any are
 missing, says so plainly instead of failing into a blank or perpetually
 "loading" screen:
 
-- **Essential** (`identity`, `inc`, `outbox`) — the inbox can't function without
+- **Essential** (`identity`, `outbox`) — the inbox can't function without
   them. Missing → a full-surface diagnostic (`MissingNaps` screen variant)
   listing each absent NAP and what it's for.
-- **Degraded** (`resource`, `theme`) — the inbox still works but loses avatars or
-  theming. Missing → a dismissible warning banner above a working inbox.
+- **Degraded** (`resource`, `theme`, `link`, `intent`) — the inbox still works but
+  loses avatars, theming, external links, or note-opening controls. Missing → a
+  dismissible warning banner above a working inbox. When NAP-INTENT exists, its
+  live archetype catalog independently controls whether note buttons render.
 
 Detection checks `window.napplet.<domain>` presence (see
 `src/lib/nap-capabilities.ts`) — a domain object being installed means the
@@ -73,7 +76,8 @@ runtime exposes that NAP; absence means it's unavailable. The inbox is
 - `src/lib/gm-media.ts` — extracts the first image source from a note's content
   via the local `extractNoteContentEmbeds` parser for the gallery view (+ tests).
 - `src/lib/profile-metadata.ts` — shared kind-0 loader (kept in sync with feed).
-- `src/lib/gm-actions.ts` — `note:open` payload builders.
+- `src/lib/gm-actions.ts` — note-viewer payload builders.
+- `src/lib/intent-client.ts` — live archetype availability and NAP-INTENT dispatch.
 - `src/components/` — `GMInbox` (list/gallery view toggle + profile batching),
   `GMRow` (a list row), `GMGallery` (the image-wall view), `GMNoteContent` (local
   text/reference/link renderer).

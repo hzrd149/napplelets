@@ -6,6 +6,7 @@
   import { subscribeProfileMetadata, type ProfileContent } from '../lib/profile-metadata';
   import GMRow from './GMRow.svelte';
   import GMGallery from './GMGallery.svelte';
+  import { loadAvailableArchetypes, subscribeArchetypeAvailability } from '../lib/intent-client';
 
   interface Props {
     /** The logged-in user's pubkey. Null renders the empty state. */
@@ -24,6 +25,7 @@
   let contactCount = $state(0);
   let contactsLoaded = $state(false);
   let scanning = $state(false);
+  let availableArchetypes = $state(new Set<string>());
 
   function syncState(): void {
     const s = store.state;
@@ -127,6 +129,17 @@
   });
 
   onMount(() => {
+    let intentSub: Subscription | null = null;
+    void loadAvailableArchetypes().then((available) => {
+      availableArchetypes = available;
+    });
+    intentSub = subscribeArchetypeAvailability((availability) => {
+      const next = new Set(availableArchetypes);
+      if (availability.available) next.add(availability.archetype);
+      else next.delete(availability.archetype);
+      availableArchetypes = next;
+    });
+
     return () => {
       if (profileBatchTimer !== null) {
         clearTimeout(profileBatchTimer);
@@ -135,6 +148,7 @@
       for (const subscription of profileSubscriptions) subscription.close();
       profileSubscriptions.clear();
       store.destroy();
+      intentSub?.close();
     };
   });
 </script>
@@ -201,7 +215,7 @@
         {filter === 'replied' ? 'no replied GMs yet' : 'no unreplied GMs — all caught up'}
       </div>
     {:else if view === 'gallery'}
-      <GMGallery threads={visibleThreads} profiles={profileMap} />
+      <GMGallery threads={visibleThreads} profiles={profileMap} {availableArchetypes} />
     {:else}
       {#each visibleThreads as thread (thread.note.id)}
         <GMRow
@@ -209,6 +223,7 @@
           isRead={thread.isRead}
           profile={profileMap.get(thread.note.pubkey)}
           profiles={profileMap}
+          {availableArchetypes}
         />
       {/each}
     {/if}

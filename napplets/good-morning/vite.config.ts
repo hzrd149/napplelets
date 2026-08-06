@@ -16,7 +16,7 @@ export default defineConfig({
     // degraded paths so incomplete diagnostic runtimes do not crash it.
     nip5aManifest({
       nappletType: 'good-morning',
-      requires: ['identity', 'inc', 'outbox', 'resource', 'theme', 'link'],
+      requires: ['identity', 'outbox', 'resource', 'theme', 'link', 'intent'],
       artifactMode: 'single-file',
     }),
   ],

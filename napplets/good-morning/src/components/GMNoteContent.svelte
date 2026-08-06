@@ -1,12 +1,17 @@
 <script lang="ts">
-  import { inc as ipc } from '@napplet/sdk';
   import { isCanonicalHexPubkey } from '../lib/intent-topics';
   import { parseNoteContent } from '../lib/note-content';
   import {
     resourceImageBatch as resourceImage,
     resourceVideoBatch as resourceVideo,
   } from '../lib/resource-image';
-  import { createGMReferenceOpenPayload, NOTE_VIEWER_OPEN_TOPIC } from '../lib/gm-actions';
+  import { createGMReferenceOpenPayload } from '../lib/gm-actions';
+  import {
+    NOTE_ARCHETYPE,
+    PROFILE_ARCHETYPE,
+    openNoteIntent,
+    openProfileIntent,
+  } from '../lib/intent-client';
   import { openExternalLink } from '../lib/link-client';
   import { isNapDomainPresent } from '../lib/runtime-domain';
 
@@ -14,15 +19,18 @@
     content: string;
     emojiTags?: string[][];
     profileLabel?: (pubkey: string) => string;
+    availableArchetypes: Set<string>;
   }
 
-  let { content, emojiTags = [], profileLabel }: Props = $props();
+  let { content, emojiTags = [], profileLabel, availableArchetypes }: Props = $props();
+  let noteViewerAvailable = $derived(availableArchetypes.has(NOTE_ARCHETYPE));
+  let profileAvailable = $derived(availableArchetypes.has(PROFILE_ARCHETYPE));
   const resourceAvailable = isNapDomainPresent('resource');
   let blocks = $derived(parseNoteContent(content, emojiTags));
 
   function openProfile(pubkey: string): void {
     if (!isCanonicalHexPubkey(pubkey)) return;
-    ipc.emit('profile:open', [], JSON.stringify({ pubkey }));
+    void openProfileIntent(pubkey);
   }
 
   function handleLinkClick(event: MouseEvent, url: string): void {
@@ -44,7 +52,7 @@
   function openReference(source: string): void {
     const payload = createGMReferenceOpenPayload(source);
     if (!payload) return;
-    ipc.emit(NOTE_VIEWER_OPEN_TOPIC, [], JSON.stringify(payload));
+    void openNoteIntent(payload);
   }
 </script>
 
@@ -52,11 +60,11 @@
   {#each blocks as block, index (`${index}:${block.type}:${block.value}`)}
     {#if block.type === 'text'}
       {block.value}
-    {:else if block.type === 'profile'}
+    {:else if block.type === 'profile' && profileAvailable}
       <button type="button" class="gm-inline-link" onclick={() => openProfile(block.value)}>
         @{profileLabel?.(block.value) ?? block.source.replace(/^nostr:/, '').slice(0, 16)}
       </button>
-    {:else if block.type === 'event' || block.type === 'address'}
+    {:else if (block.type === 'event' || block.type === 'address') && noteViewerAvailable}
       <button type="button" class="gm-inline-link" onclick={() => openReference(block.source)}>
         {block.source.replace(/^nostr:/, '').slice(0, 24)}...
       </button>

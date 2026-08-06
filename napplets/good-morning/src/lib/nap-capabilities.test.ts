@@ -62,13 +62,13 @@ describe('classifyCapabilities', () => {
 describe('GM_NAP_REQUIREMENTS', () => {
   it('covers every domain declared in the manifest grant list', () => {
     const domains = GM_NAP_REQUIREMENTS.map((r) => r.domain).sort();
-    expect(domains).toEqual(['identity', 'inc', 'link', 'outbox', 'resource', 'theme'].sort());
+    expect(domains).toEqual(['identity', 'intent', 'link', 'outbox', 'resource', 'theme'].sort());
   });
 
-  it('marks identity, inc, and outbox essential', () => {
+  it('marks identity and outbox essential', () => {
     const essential = GM_NAP_REQUIREMENTS.filter((r) => r.severity === 'essential').map(
       (r) => r.domain,
     );
-    expect(essential.sort()).toEqual(['identity', 'inc', 'outbox'].sort());
+    expect(essential.sort()).toEqual(['identity', 'outbox'].sort());
   });
 });

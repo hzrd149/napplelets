@@ -1,10 +1,7 @@
 import type { NostrEvent } from './nostr';
 import { createNoteViewerOpenPayload, type NoteViewerOpenPayload } from './note-viewer-protocol';
-export { NOTE_VIEWER_OPEN_TOPIC } from './note-viewer-protocol';
 import { outbox } from '@napplet/sdk';
 import * as nip19 from 'nostr-tools/nip19';
-
-export const COMPOSER_OPEN_TOPIC = 'compose:open' as const;
 
 /** Source tag emitted on note-viewer intents so the shell can attribute them. */
 export const GM_NAPPLET_SOURCE = 'good-morning' as const;
@@ -17,8 +14,8 @@ export const QUICK_GM_CONTENT = 'GM' as const;
 
 /**
  * Build the note-viewer open payload for a GM inbox row. The shell intercepts
- * `note:open`, creates/focuses the note-viewer window, and the user replies to
- * the GM inline there — this napplet only emits the intent.
+ * the `note` archetype, creates/focuses the selected note-viewer window, and the
+ * user replies to the GM inline there — this napplet only supplies the payload.
  */
 export function createGMNoteOpenPayload(
   event: Pick<NostrEvent, 'id' | 'kind' | 'pubkey'>,
@@ -113,8 +110,8 @@ export async function publishQuickGM(event: Pick<NostrEvent, 'id' | 'pubkey'>): 
 
 /**
  * Build the composer open payload for a "GM Reply" — the user writes their own
- * reply in the composer napplet. The shell intercepts compose:open and
- * creates/focuses the composer window pre-seeded with this reply context.
+ * reply in the composer napplet. NAP-INTENT opens the selected composer handler
+ * pre-seeded with this reply context.
  */
 export function createGMReplyComposePayload(
   event: Pick<NostrEvent, 'id' | 'pubkey' | 'kind'> &

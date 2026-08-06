@@ -1,7 +1,6 @@
 <script lang="ts">
   import { format } from 'timeago.js';
   import * as nip19 from 'nostr-tools/nip19';
-  import { inc as ipc } from '@napplet/sdk';
   import { isCanonicalHexPubkey } from '../lib/intent-topics';
   import { pubkeyColorStyle } from '../lib/pubkey-color';
   import { resourceImageBatch as resourceImage } from '../lib/resource-image';
@@ -12,9 +11,15 @@
     createGMNoteOpenPayload,
     createGMReplyComposePayload,
     publishQuickGM,
-    COMPOSER_OPEN_TOPIC,
-    NOTE_VIEWER_OPEN_TOPIC,
   } from '../lib/gm-actions';
+  import {
+    COMPOSER_ARCHETYPE,
+    NOTE_ARCHETYPE,
+    PROFILE_ARCHETYPE,
+    openComposerIntent,
+    openNoteIntent,
+    openProfileIntent,
+  } from '../lib/intent-client';
   import GMNoteContent from './GMNoteContent.svelte';
 
   interface Props {
@@ -23,9 +28,13 @@
     isRead: boolean;
     profile?: ProfileContent;
     profiles: Map<string, ProfileContent>;
+    availableArchetypes: Set<string>;
   }
 
-  let { event, isRead, profile, profiles }: Props = $props();
+  let { event, isRead, profile, profiles, availableArchetypes }: Props = $props();
+  let noteViewerAvailable = $derived(availableArchetypes.has(NOTE_ARCHETYPE));
+  let profileAvailable = $derived(availableArchetypes.has(PROFILE_ARCHETYPE));
+  let composerAvailable = $derived(availableArchetypes.has(COMPOSER_ARCHETYPE));
   const resourceAvailable = isNapDomainPresent('resource');
 
   type QuickState = 'idle' | 'sending' | 'sent' | 'error';
@@ -53,7 +62,7 @@
   function openNote(): void {
     const payload = createGMNoteOpenPayload(event);
     if (!payload) return;
-    ipc.emit(NOTE_VIEWER_OPEN_TOPIC, [], JSON.stringify(payload));
+    void openNoteIntent(payload);
   }
 
   // Publish a one-tap "GM" reply directly. The user's own-replies subscription
@@ -72,12 +81,12 @@
 
   // Open the composer napplet so the user can write their own reply.
   function openComposer(): void {
-    ipc.emit(COMPOSER_OPEN_TOPIC, [], JSON.stringify(createGMReplyComposePayload(event)));
+    void openComposerIntent(createGMReplyComposePayload(event));
   }
 
   function openProfile(): void {
     if (!isCanonicalHexPubkey(event.pubkey)) return;
-    ipc.emit('profile:open', [], JSON.stringify({ pubkey: event.pubkey }));
+    void openProfileIntent(event.pubkey);
   }
 
   function profileLabel(pubkey: string): string {
@@ -106,23 +115,27 @@
 >
   <!-- Left column: avatar at top, big green check pinned to the bottom -->
   <div class="flex flex-col items-center flex-shrink-0">
-    <button
-      type="button"
-      class="w-8 h-8 rounded-full overflow-hidden cursor-pointer bg-bg-surface border border-border-dim flex items-center justify-center"
-      onclick={openProfile}
-      aria-label="Open profile for {authorName}"
-    >
-      {#if resourceAvailable && avatarUrl != null}
-        <img
-          use:resourceImage={avatarUrl}
-          alt={authorName}
-          class="w-full h-full object-cover"
-          loading="lazy"
-        />
-      {:else}
+    {#if profileAvailable}<button
+        type="button"
+        class="w-8 h-8 rounded-full overflow-hidden cursor-pointer bg-bg-surface border border-border-dim flex items-center justify-center"
+        onclick={openProfile}
+        aria-label="Open profile for {authorName}"
+      >
+        {#if resourceAvailable && avatarUrl != null}
+          <img
+            use:resourceImage={avatarUrl}
+            alt={authorName}
+            class="w-full h-full object-cover"
+            loading="lazy"
+          />
+        {:else}
+          <span class="text-text-muted text-xs font-mono">{avatarFallback}</span>
+        {/if}
+      </button>{:else}<div
+        class="w-8 h-8 rounded-full overflow-hidden bg-bg-surface border border-border-dim flex items-center justify-center"
+      >
         <span class="text-text-muted text-xs font-mono">{avatarFallback}</span>
-      {/if}
-    </button>
+      </div>{/if}
 
     <div class="flex-1"></div>
 
@@ -152,27 +165,37 @@
   <!-- Right column -->
   <div class="flex-1 min-w-0">
     <div class="flex items-baseline gap-2 mb-1">
-      <button
-        type="button"
-        class="text-sm font-semibold font-mono truncate hover:underline cursor-pointer bg-transparent border-none p-0"
-        style={pubkeyColorStyle(event.pubkey)}
-        onclick={openProfile}
-        data-gm-author-pubkey={event.pubkey}
-      >
-        {authorName}
-      </button>
+      {#if profileAvailable}<button
+          type="button"
+          class="text-sm font-semibold font-mono truncate hover:underline cursor-pointer bg-transparent border-none p-0"
+          style={pubkeyColorStyle(event.pubkey)}
+          onclick={openProfile}
+          data-gm-author-pubkey={event.pubkey}
+        >
+          {authorName}
+        </button>{:else}<span
+          class="text-sm font-semibold font-mono truncate"
+          style={pubkeyColorStyle(event.pubkey)}>{authorName}</span
+        >{/if}
       <span class="text-text-muted text-xs flex-shrink-0">{relativeTime}</span>
     </div>
 
     <div class="text-text-primary text-sm leading-relaxed break-words">
-      <GMNoteContent content={event.content} emojiTags={event.tags} {profileLabel} />
+      <GMNoteContent
+        content={event.content}
+        emojiTags={event.tags}
+        {profileLabel}
+        {availableArchetypes}
+      />
     </div>
 
     <!-- Actions -->
     <div class="flex flex-wrap gap-2 mt-2">
-      <button type="button" class="gm-action" onclick={openNote} data-gm-action="open">
-        Open
-      </button>
+      {#if noteViewerAvailable}
+        <button type="button" class="gm-action" onclick={openNote} data-gm-action="open">
+          Open
+        </button>
+      {/if}
       <button
         type="button"
         class="gm-action gm-action-primary"
@@ -183,9 +206,11 @@
       >
         {quickLabel}
       </button>
-      <button type="button" class="gm-action" onclick={openComposer} data-gm-action="reply">
-        GM Reply
-      </button>
+      {#if composerAvailable}
+        <button type="button" class="gm-action" onclick={openComposer} data-gm-action="reply">
+          GM Reply
+        </button>
+      {/if}
     </div>
   </div>
 </div>

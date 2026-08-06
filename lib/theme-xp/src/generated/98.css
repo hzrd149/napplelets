@@ -811,7 +811,7 @@ body {
     color: #222222;
 }
 
-@media (not(hover)) {
+@media (not (hover)) {
     button:not(:disabled):hover {
         box-shadow: var(--border-sunken-outer), var(--border-sunken-inner);
     }
