@@ -11,22 +11,36 @@ const ROOT = {
   kind: 1,
   content: 'GM frens',
   created_at: 1700,
+  tags: [],
+  sig: 'c'.repeat(128),
 };
 
 describe('createQuickGMReplyTemplate', () => {
-  it('builds a kind-1 "GM" reply that e-tags the root (NIP-10 reply marker)', () => {
-    const template = createQuickGMReplyTemplate(ROOT);
+  it('builds a kind-1 "GM" reply that e-tags the root (NIP-10 reply marker)', async () => {
+    const template = await createQuickGMReplyTemplate(ROOT);
     expect(template.kind).toBe(1);
     expect(template.content).toBe(QUICK_GM_CONTENT);
-    expect(template.tags).toContainEqual(['e', ROOT.id, '', 'reply']);
+    expect(template.tags).toContainEqual(['e', ROOT.id, '', 'root', ROOT.pubkey]);
+    expect(template.tags).toContainEqual(['e', ROOT.id, '', 'reply', ROOT.pubkey]);
     expect(template.tags).toContainEqual(['p', ROOT.pubkey]);
+    expect(template.tags).toContainEqual(['client', '@napplelets/good-morning']);
     expect(typeof template.created_at).toBe('number');
   });
 
-  it('e-tags the root id so the inbox isRead check flips to replied', () => {
-    const template = createQuickGMReplyTemplate(ROOT);
-    const eTag = template.tags.find((tag) => tag[0] === 'e');
-    expect(eTag?.[1]).toBe(ROOT.id);
+  it('preserves the root and marks the direct parent when replying inside a thread', async () => {
+    const parent = {
+      id: 'd'.repeat(64),
+      pubkey: ROOT.pubkey,
+      kind: 1,
+      content: 'replying GM',
+      created_at: 1800,
+      tags: [['e', ROOT.id, '', 'root']],
+      sig: 'e'.repeat(128),
+    };
+    const template = await createQuickGMReplyTemplate(parent);
+
+    expect(template.tags).toContainEqual(['e', ROOT.id, '', 'root']);
+    expect(template.tags).toContainEqual(['e', parent.id, '', 'reply', parent.pubkey]);
   });
 });
 

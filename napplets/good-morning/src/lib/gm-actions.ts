@@ -1,6 +1,7 @@
 import type { NostrEvent } from './nostr';
 import { createNoteViewerOpenPayload, type NoteViewerOpenPayload } from './note-viewer-protocol';
 import { outbox } from '@napplet/sdk';
+import { NoteFactory } from 'applesauce-common/factories/note';
 import * as nip19 from 'nostr-tools/nip19';
 
 /** Source tag emitted on note-viewer intents so the shell can attribute them. */
@@ -83,28 +84,24 @@ export function createGMReferenceOpenPayload(source: string): NoteViewerOpenPayl
 }
 
 /**
- * Build the NIP-10 reply tags + content for a one-tap "Quick GM". Mirrors
- * gm-protocol's quick reply: a kind-1 whose content is "GM", marked as a reply
- * to the root note. The `e` tag value is the root id, which is exactly what the
- * inbox's isRead check looks for — so publishing this flips the row to replied.
+ * Build the NIP-10 reply tags + content for a one-tap "Quick GM". Applesauce
+ * preserves the parent note's thread root and marks this event's direct parent
+ * as the reply target. The resulting `e` tags also make the inbox's isRead check
+ * flip the row to replied.
  */
-export function createQuickGMReplyTemplate(event: Pick<NostrEvent, 'id' | 'pubkey'>): {
+export async function createQuickGMReplyTemplate(event: NostrEvent): Promise<{
   kind: 1;
   content: string;
   tags: string[][];
   created_at: number;
-} {
-  return {
-    kind: 1,
-    content: QUICK_GM_CONTENT,
-    tags: [['e', event.id, '', 'reply'], ['p', event.pubkey], [...GM_CLIENT_TAG]],
-    created_at: Math.floor(Date.now() / 1000),
-  };
+}> {
+  const template = await NoteFactory.reply(event, QUICK_GM_CONTENT);
+  return { ...template, tags: [...template.tags, [...GM_CLIENT_TAG]] };
 }
 
 /** Sign + publish a Quick GM reply through the shell (NAP-OUTBOX). */
-export async function publishQuickGM(event: Pick<NostrEvent, 'id' | 'pubkey'>): Promise<object> {
-  const template = createQuickGMReplyTemplate(event);
+export async function publishQuickGM(event: NostrEvent): Promise<object> {
+  const template = await createQuickGMReplyTemplate(event);
   return outbox.publish(template);
 }
 
