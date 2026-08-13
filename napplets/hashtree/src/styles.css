@@ -1,0 +1,855 @@
+/*
+ * Layout and component primitives. Colours and fonts come from the DSUI custom
+ * properties that `@napplelets/theme-dsui` installs; the component classes are
+ * defined here because the theme's daisyUI utilities are never generated (see
+ * the note above `.btn`).
+ *
+ * Sizing is driven by container queries on `.app`, not viewport media queries: a
+ * napplet is embedded, so the frame can be a tiny sidebar pane on a large
+ * desktop display. What matters is how wide *this* box is.
+ */
+
+:root {
+  --napplet-text-selection: none;
+  --ht-gap: clamp(0.375rem, 1.2cqi, 0.75rem);
+  --ht-pad: clamp(0.5rem, 1.6cqi, 1rem);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--color-base-100);
+  color: var(--color-base-content);
+  font-family: var(--gm-font-body, system-ui, sans-serif);
+}
+
+body {
+  user-select: var(--napplet-text-selection);
+}
+
+[data-napplet-select='text'] {
+  user-select: text;
+}
+
+[data-napplet-select='all'] {
+  user-select: all;
+}
+
+/*
+ * Component primitives.
+ *
+ * `@napplelets/theme-dsui` ships the *unprocessed* Tailwind/daisyUI entry — no
+ * Tailwind step runs in any napplet's build, so `@plugin "daisyui"` and
+ * `@tailwind utilities` reach the bundle as unknown at-rules and emit nothing.
+ * What the theme actually provides is the `--color-*` custom properties. Class
+ * names like `.btn` and `.loading` therefore have to be defined here, exactly as
+ * `napplets/file-browser/src/styles.css` defines its own. Keep every value
+ * expressed in theme variables so the shell's theme still drives the look.
+ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 2.25rem;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--color-base-300);
+  border-radius: 0.375rem;
+  background: var(--color-base-200);
+  color: var(--color-base-content);
+  font: inherit;
+  font-size: 0.8125rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--color-base-300);
+}
+
+.btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.btn:focus-visible,
+.input:focus-visible,
+.tree-label:focus-visible,
+.crumb:focus-visible,
+.row:focus-visible,
+.recent:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.btn-sm {
+  min-height: 1.85rem;
+  padding: 0.3rem 0.55rem;
+  font-size: 0.78rem;
+}
+
+.btn-xs {
+  min-height: 1.5rem;
+  padding: 0.15rem 0.4rem;
+  font-size: 0.72rem;
+}
+
+.btn-ghost {
+  border-color: transparent;
+  background: transparent;
+}
+
+.btn-primary {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-primary-content);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-primary) 85%, black);
+}
+
+.input {
+  min-height: 2.25rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid transparent;
+  border-radius: 0.375rem;
+  background: var(--color-base-200);
+  color: var(--color-base-content);
+  font: inherit;
+}
+
+.input-bordered {
+  border-color: var(--color-base-300);
+}
+
+.alert {
+  display: flex;
+  align-items: start;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-base-300);
+  border-radius: 0.375rem;
+  background: var(--color-base-200);
+}
+
+.alert p {
+  margin: 0;
+}
+
+.alert-warning {
+  border-color: var(--color-warning, var(--color-base-300));
+  background: color-mix(in srgb, var(--color-warning, var(--color-base-300)) 18%, transparent);
+}
+
+.alert-error {
+  border-color: var(--color-error, var(--color-base-300));
+  background: color-mix(in srgb, var(--color-error, var(--color-base-300)) 18%, transparent);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.4rem;
+  border: 1px solid var(--color-base-300);
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  white-space: nowrap;
+}
+
+.badge-ghost {
+  background: var(--color-base-200);
+}
+
+.progress {
+  appearance: none;
+  width: 100%;
+  height: 0.375rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--color-base-300);
+  overflow: hidden;
+}
+
+.progress::-webkit-progress-bar {
+  background: var(--color-base-300);
+}
+
+.progress::-webkit-progress-value {
+  background: var(--color-primary);
+}
+
+.progress::-moz-progress-bar {
+  background: var(--color-primary);
+}
+
+/*
+ * The spinner the rest of the UI shares. A rotating ring rather than daisyUI's
+ * masked SVG, so it needs nothing but these rules to be visible.
+ */
+.loading {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  opacity: 0.7;
+  animation: ht-spin 0.7s linear infinite;
+  vertical-align: -0.15em;
+}
+
+.loading-xs {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-width: 1.5px;
+}
+
+.font-mono {
+  font-family: ui-monospace, monospace;
+}
+
+.font-semibold {
+  font-weight: 600;
+}
+
+.app {
+  container-type: inline-size;
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ---------- capability banners ---------- */
+
+.nap-alert {
+  margin: var(--ht-pad) var(--ht-pad) 0;
+  padding: 0.5rem 0.75rem;
+  align-items: start;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+}
+
+.nap-alert-body {
+  min-width: 0;
+}
+
+.nap-alert ul {
+  margin: 0.25rem 0 0;
+  padding-left: 1rem;
+  display: grid;
+  gap: 0.125rem;
+  opacity: 0.85;
+}
+
+/* ---------- entry stage ---------- */
+
+.entry {
+  grid-row: 2 / -1;
+  align-self: start;
+  display: grid;
+  gap: var(--ht-gap);
+  padding: var(--ht-pad);
+  min-width: 0;
+  overflow-y: auto;
+}
+
+.entry-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--ht-gap);
+}
+
+.entry-input {
+  min-width: 0;
+  font-family: ui-monospace, monospace;
+  font-size: 0.8125rem;
+}
+
+.entry-hint {
+  margin: 0;
+  font-size: 0.75rem;
+  opacity: 0.7;
+  overflow-wrap: anywhere;
+}
+
+.entry-hint-error {
+  color: var(--color-warning, currentColor);
+  opacity: 1;
+}
+
+.recents {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.recents-title {
+  margin: 0;
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.6;
+}
+
+.recents-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.recent {
+  display: grid;
+  gap: 0.0625rem;
+  width: 100%;
+  min-width: 0;
+  padding: 0.375rem 0.5rem;
+  border: 0;
+  border-radius: 0.375rem;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.recent:hover:not(:disabled) {
+  background: var(--color-base-200);
+}
+
+.recent-label {
+  font-size: 0.8125rem;
+}
+
+.recent-ref,
+.hash {
+  font-family: ui-monospace, monospace;
+  font-size: 0.6875rem;
+  opacity: 0.6;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.entry-settings {
+  justify-self: start;
+}
+
+/* ---------- browsing chrome ---------- */
+
+.bar {
+  grid-row: 2;
+  display: flex;
+  align-items: center;
+  gap: var(--ht-gap);
+  padding: var(--ht-gap) var(--ht-pad);
+  border-bottom: 1px solid var(--color-base-300);
+  min-width: 0;
+}
+
+.bar-spacer {
+  flex: 1 1 auto;
+}
+
+.bar-source {
+  flex: 0 0 auto;
+  font-size: 0.6875rem;
+}
+
+.bar-note {
+  grid-row: 3;
+  margin: 0;
+  padding: 0.25rem var(--ht-pad);
+  font-size: 0.6875rem;
+  opacity: 0.7;
+  border-bottom: 1px solid var(--color-base-300);
+}
+
+.crumbs {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.crumb {
+  flex: 0 0 auto;
+  max-width: 12rem;
+  padding: 0.125rem 0.375rem;
+  border: 0;
+  border-radius: 0.25rem;
+  background: transparent;
+  color: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.crumb:hover:not(:disabled) {
+  background: var(--color-base-200);
+}
+
+.crumb:disabled {
+  cursor: default;
+  font-weight: 600;
+}
+
+.crumb-sep {
+  opacity: 0.4;
+}
+
+.crumb-busy {
+  flex: 0 0 auto;
+  margin-left: 0.25rem;
+}
+
+/* ---------- explorer ---------- */
+
+.explorer {
+  grid-row: 4;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* Below this width the detail panel replaces the list rather than splitting it. */
+@container (min-width: 34rem) {
+  .explorer-with-panel {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 20rem);
+  }
+}
+
+@container (max-width: 34rem) {
+  .explorer-with-panel .explorer-main {
+    display: none;
+  }
+}
+
+/*
+ * The folder tree is the first thing to go: in a sidebar-width frame the
+ * breadcrumb already answers "where am I", and a third column would not fit.
+ */
+.tree {
+  display: none;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--ht-gap) 0;
+  border-right: 1px solid var(--color-base-300);
+}
+
+@container (min-width: 52rem) {
+  .explorer {
+    grid-template-columns: minmax(0, 14rem) minmax(0, 1fr);
+  }
+
+  .explorer-with-panel {
+    grid-template-columns: minmax(0, 14rem) minmax(0, 1fr) minmax(0, 20rem);
+  }
+
+  .tree {
+    display: block;
+  }
+}
+
+.tree-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.tree-row {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  min-width: 0;
+  padding-left: calc(var(--ht-gap) + var(--depth, 0) * 0.75rem);
+}
+
+.tree-row-current {
+  background: var(--color-base-300);
+}
+
+.tree-twisty {
+  flex: 0 0 auto;
+  width: 1.125rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 0.6875rem;
+  opacity: 0.6;
+  cursor: pointer;
+}
+
+.tree-spinner {
+  display: inline-block;
+  animation: ht-spin 0.8s linear infinite;
+}
+
+@keyframes ht-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/*
+ * A folder waiting on its children reads as muted, and its twisty spins. The
+ * label stays legible -- it is still a valid navigation target while loading.
+ */
+.tree-row-loading .tree-label {
+  opacity: 0.55;
+}
+
+.tree-row-loading .tree-twisty {
+  opacity: 0.9;
+}
+
+.tree-loading-note {
+  flex: 0 0 auto;
+  padding-right: 0.375rem;
+  font-size: 0.625rem;
+  font-style: italic;
+  opacity: 0.45;
+  white-space: nowrap;
+}
+
+/* Below this width the tree is hidden anyway, but the note is the first thing
+   worth dropping if the row gets tight. */
+@container (max-width: 60rem) {
+  .tree-loading-note {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tree-spinner {
+    animation: none;
+  }
+}
+
+.tree-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.1875rem 0.25rem;
+  border: 0;
+  border-radius: 0.25rem;
+  background: transparent;
+  color: inherit;
+  font-size: 0.75rem;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tree-label:hover {
+  background: var(--color-base-200);
+}
+
+.tree-empty,
+.tree-error {
+  margin: 0;
+  padding: 0.125rem 0.25rem 0.125rem
+    calc(var(--ht-gap) + var(--depth, 0) * 0.75rem + 1.125rem);
+  font-size: 0.6875rem;
+  opacity: 0.5;
+  overflow-wrap: anywhere;
+}
+
+.tree-error {
+  color: var(--color-warning, currentColor);
+  opacity: 0.9;
+}
+
+.explorer-main {
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.explorer-error {
+  margin: var(--ht-gap);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+}
+
+/* ---------- listing ---------- */
+
+.listing {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-width: 0;
+}
+
+.listing-head,
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 8rem) 5.5rem;
+  align-items: center;
+  gap: var(--ht-gap);
+  width: 100%;
+  min-width: 0;
+  text-align: left;
+}
+
+/* A narrow pane drops the type column rather than overflowing. */
+@container (max-width: 26rem) {
+  .listing-head,
+  .row {
+    grid-template-columns: minmax(0, 1fr) 5rem;
+  }
+
+  .col-kind {
+    display: none;
+  }
+}
+
+.listing-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 0.25rem var(--ht-pad);
+  background: var(--color-base-100);
+  border-bottom: 1px solid var(--color-base-300);
+}
+
+.listing-head > button {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  padding: 0.125rem 0;
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.65;
+  cursor: pointer;
+  text-align: inherit;
+}
+
+.listing-body {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.row {
+  padding: 0.3125rem var(--ht-pad);
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.row:hover {
+  background: var(--color-base-200);
+}
+
+.row-selected {
+  background: var(--color-base-300);
+}
+
+.col-name {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-width: 0;
+}
+
+.row-icon {
+  flex: 0 0 auto;
+  font-size: 0.875rem;
+}
+
+.row-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.col-kind {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.6;
+  font-size: 0.75rem;
+}
+
+.col-size {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.75;
+  font-size: 0.75rem;
+}
+
+.listing-status {
+  margin: 0;
+  padding: 0.75rem var(--ht-pad);
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
+
+/* ---------- file panel ---------- */
+
+.panel {
+  display: grid;
+  grid-template-rows: auto auto auto auto minmax(0, 1fr);
+  gap: var(--ht-gap);
+  min-width: 0;
+  min-height: 0;
+  padding: var(--ht-pad);
+  overflow-y: auto;
+  border-left: 1px solid var(--color-base-300);
+}
+
+@container (max-width: 34rem) {
+  .panel {
+    border-left: 0;
+  }
+}
+
+.panel-head {
+  display: flex;
+  align-items: start;
+  gap: var(--ht-gap);
+  min-width: 0;
+}
+
+.panel-title {
+  margin: 0;
+  min-width: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.125rem 0.5rem;
+  margin: 0;
+  font-size: 0.75rem;
+}
+
+.facts dt {
+  opacity: 0.55;
+}
+
+.facts dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.note {
+  margin: 0;
+  font-size: 0.6875rem;
+  opacity: 0.65;
+}
+
+.preview {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  gap: 0.25rem;
+  align-content: start;
+}
+
+.preview-status {
+  margin: 0;
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.preview-error {
+  color: var(--color-warning, currentColor);
+  opacity: 1;
+  overflow-wrap: anywhere;
+}
+
+.preview-media {
+  max-width: 100%;
+  max-height: 60cqh;
+  object-fit: contain;
+  border-radius: 0.375rem;
+  background: var(--color-base-200);
+}
+
+.preview-audio {
+  width: 100%;
+}
+
+.preview-text {
+  margin: 0;
+  padding: 0.5rem;
+  max-height: 60cqh;
+  overflow: auto;
+  border-radius: 0.375rem;
+  background: var(--color-base-200);
+  font-family: ui-monospace, monospace;
+  font-size: 0.6875rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- status bar ---------- */
+
+.status {
+  grid-row: 5;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem var(--ht-pad);
+  border-top: 1px solid var(--color-base-300);
+  font-size: 0.6875rem;
+  opacity: 0.7;
+}
+
+.status-sep {
+  opacity: 0.5;
+}
+
+.toast-note {
+  position: fixed;
+  inset-inline: var(--ht-pad);
+  bottom: 2rem;
+  margin-inline: auto;
+  width: fit-content;
+  max-width: calc(100% - 2 * var(--ht-pad));
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.5rem;
+  background: var(--color-base-300);
+  color: var(--color-base-content);
+  font-size: 0.75rem;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.2);
+}
