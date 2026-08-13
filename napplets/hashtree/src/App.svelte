@@ -35,13 +35,6 @@
     type TreeTarget,
   } from './lib/tree.js';
   import type { PreviewState, SortKey } from './lib/view.js';
-  import type { ReferenceQueue } from './lib/intent-inbound.js';
-
-  interface Props {
-    intents: ReferenceQueue;
-  }
-
-  const { intents }: Props = $props();
 
   /** Refuse to hold more than this in memory for a preview. */
   const MAX_PREVIEW_BYTES = 64 * 1024 * 1024;
@@ -119,13 +112,6 @@
   // --- lifecycle -----------------------------------------------------------
 
   $effect(() => subscribeSettings((next) => (settings = next)));
-
-  $effect(() => {
-    intents.listen((reference) => {
-      inputValue = reference;
-      void open(reference);
-    });
-  });
 
   $effect(() => {
     void loadRecents().then((loaded) => (recents = loaded));

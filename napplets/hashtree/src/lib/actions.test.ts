@@ -5,7 +5,6 @@ import {
   directBlobUrlBlocker,
   mediaMetadataFor,
 } from './actions.js';
-import { parseOpenPayload } from './intent-inbound.js';
 import { DEFAULT_SETTINGS, mergeRecent, readSettings } from './session.js';
 import type { TreeTarget } from './tree.js';
 
@@ -72,25 +71,6 @@ describe('mediaMetadataFor', () => {
       mediaType: 'audio',
     });
     expect(mediaMetadataFor('clip.webm', 'my tree').mediaType).toBe('video');
-  });
-});
-
-describe('parseOpenPayload', () => {
-  it('accepts a bare string', () => {
-    expect(parseOpenPayload('nhash1abc')).toBe('nhash1abc');
-  });
-
-  it('accepts the documented payload fields', () => {
-    expect(parseOpenPayload({ uri: 'htree://x' })).toBe('htree://x');
-    expect(parseOpenPayload({ nhash: 'nhash1abc' })).toBe('nhash1abc');
-    expect(parseOpenPayload({ naddr: 'naddr1abc' })).toBe('naddr1abc');
-  });
-
-  it('rejects payloads with nothing usable', () => {
-    expect(parseOpenPayload(null)).toBeNull();
-    expect(parseOpenPayload('')).toBeNull();
-    expect(parseOpenPayload({})).toBeNull();
-    expect(parseOpenPayload({ uri: 42 })).toBeNull();
   });
 });
 

@@ -3,10 +3,15 @@
 A read-only file explorer for Blossom hashtrees, in the
 [napplelets](../../README.md) monorepo.
 
-Paste an `htree://` URI, an `nhash`, an `naddr`, or a bare root hash — or receive
-one over NAP-INTENT — and browse the folder structure. Manifests, folders and
-file chunks are fetched only as you open them; every blob is verified against its
-SHA-256 before it is used.
+Paste an `htree://` URI, an `nhash`, an `naddr`, or a bare root hash and browse
+the folder structure. Manifests, folders and file chunks are fetched only as you
+open them; every blob is verified against its SHA-256 before it is used.
+
+There is deliberately no inbound-intent handling. NAP-INTENT's inbound envelopes
+are `invoke.result`, `available.result`, `handlers.result` and `changed` — the
+protocol has no way to deliver a payload to a handler, and NAP-INC is for
+napplet-to-napplet messaging, not a substitute for one. So this napplet declares
+no `archetypes` rather than advertising a role it cannot service.
 
 Implements the four pending Blossom drafts:
 

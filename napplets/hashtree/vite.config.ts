@@ -90,13 +90,14 @@ export default defineConfig({
         'link', // open a single-blob file at its real https URL
         'fs', // save an assembled file to disk
         'media', // transport controls while previewing audio/video
-        'intent', // outbound handoff + availability probing
-        'inc', // inbound intent payloads (NAP-INTENT has no inbound envelope)
         'storage', // recently opened trees
       ],
       artifactMode: 'single-file',
-      // NAP-INTENT delivers handler payloads over NAP-INC, keyed by convention.
-      archetypes: [{ slug: 'hashtree-browser', convention: 'napplet:hashtree/open' }],
+      // No `archetypes`: NAP-INTENT's inbound envelopes are only invoke/available/
+      // handlers results and availability changes -- the protocol has no way to
+      // deliver a payload to a handler. Declaring an archetype would advertise a
+      // role this napplet cannot actually service. References come from the entry
+      // screen instead.
       configSchema,
     }),
   ],

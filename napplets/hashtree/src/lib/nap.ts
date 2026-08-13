@@ -84,18 +84,6 @@ export const REQUIREMENTS: readonly CapabilityRequirement[] = [
     severity: 'degraded',
   },
   {
-    domain: 'intent',
-    label: 'NAP-INTENT',
-    purpose: 'Handing a file off to another napplet.',
-    severity: 'degraded',
-  },
-  {
-    domain: 'inc',
-    label: 'NAP-INC',
-    purpose: 'Receiving a reference opened from elsewhere in the shell.',
-    severity: 'degraded',
-  },
-  {
     domain: 'storage',
     label: 'NAP-STORAGE',
     purpose: 'Remembering recently opened trees.',

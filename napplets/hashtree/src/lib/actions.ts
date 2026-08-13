@@ -9,7 +9,7 @@
  * single unencrypted blob.
  */
 
-import { fs, intent, link, media } from '@napplet/sdk';
+import { fs, link, media } from '@napplet/sdk';
 import type { MediaAction, MediaMetadata } from '@napplet/sdk';
 import { extensionOf, mimeForName } from './mime.js';
 import { hasMethod } from './nap.js';
@@ -206,40 +206,6 @@ export function mediaMetadataFor(name: string, treeLabel: string): MediaMetadata
     album: treeLabel,
     mediaType: mime.startsWith('video/') ? 'video' : 'audio',
   };
-}
-
-/**
- * Offer the file to another napplet. Availability is probed first so the UI can
- * hide an action no installed napplet can service.
- */
-export async function intentAvailableFor(archetype: string): Promise<boolean> {
-  if (!hasMethod('intent', 'available')) return false;
-  try {
-    return (await intent.available(archetype)).available;
-  } catch {
-    return false;
-  }
-}
-
-export async function handOff(
-  archetype: string,
-  convention: string,
-  payload: unknown,
-): Promise<ActionOutcome> {
-  if (!hasMethod('intent', 'open')) {
-    return { ok: false, error: 'This shell does not provide NAP-INTENT.' };
-  }
-  try {
-    const result = await intent.open(archetype, payload, {
-      convention,
-      behavior: { focus: true, reuse: true },
-    });
-    return result.ok && result.handled
-      ? { ok: true }
-      : { ok: false, error: result.error ?? 'No napplet handled the request.' };
-  } catch (error) {
-    return { ok: false, error: describe(error) };
-  }
 }
 
 /**
