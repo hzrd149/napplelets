@@ -1,6 +1,12 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import type { NostrEvent } from '@napplet/sdk';
-import { mergeServers, normalizeServer, readServerList, ServerRanking } from './servers.js';
+import {
+  fetchUserServers,
+  mergeServers,
+  normalizeServer,
+  readServerList,
+  ServerRanking,
+} from './servers.js';
 import { classifyCapabilities, REQUIREMENTS } from './nap.js';
 import { mimeForName, previewKindFor, isTimedMedia, extensionOf } from './mime.js';
 
@@ -22,10 +28,26 @@ describe('normalizeServer', () => {
 });
 
 describe('mergeServers', () => {
-  it('keeps configured servers first and de-duplicates', () => {
+  it('keeps earlier groups first and de-duplicates', () => {
     expect(
       mergeServers(['https://a.example', 'b.example'], ['https://b.example/', 'https://c.example']),
     ).toEqual(['https://a.example', 'https://b.example', 'https://c.example']);
+  });
+
+  it("tries the user's own servers before configured and author ones", () => {
+    expect(
+      mergeServers(
+        ['https://mine.example'],
+        ['https://configured.example', 'https://mine.example'],
+        ['https://author.example'],
+      ),
+    ).toEqual(['https://mine.example', 'https://configured.example', 'https://author.example']);
+  });
+
+  it('falls back to the remaining groups when the user has no list', () => {
+    expect(mergeServers([], ['https://configured.example'], [])).toEqual([
+      'https://configured.example',
+    ]);
   });
 });
 
@@ -40,6 +62,29 @@ describe('readServerList', () => {
       ],
     } as unknown as NostrEvent;
     expect(readServerList(event)).toEqual(['https://one.example', 'https://two.example']);
+  });
+});
+
+describe('fetchUserServers', () => {
+  const shell = globalThis as unknown as { napplet?: Record<string, unknown> };
+
+  afterEach(() => {
+    delete shell.napplet;
+  });
+
+  it('resolves to no servers when the shell withholds NAP-IDENTITY', async () => {
+    expect(await fetchUserServers()).toEqual([]);
+  });
+
+  it('resolves to no servers when no user is connected', async () => {
+    // NAP-IDENTITY returns "" rather than failing when there is no signer.
+    shell.napplet = { identity: { getPublicKey: async () => '' } };
+    expect(await fetchUserServers()).toEqual([]);
+  });
+
+  it('does not query for a pubkey the shell returned in an unusable shape', async () => {
+    shell.napplet = { identity: { getPublicKey: async () => 'npub1notahexkey' } };
+    expect(await fetchUserServers()).toEqual([]);
   });
 });
 

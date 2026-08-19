@@ -79,6 +79,7 @@ describe('readSettings', () => {
     expect(
       readSettings({
         blossomServers: ['cdn.example.com'],
+        useUserServerList: false,
         useAuthorServerList: false,
         maxParallelChunks: 8,
         maxCacheBytes: 64,
@@ -86,11 +87,18 @@ describe('readSettings', () => {
       }),
     ).toEqual({
       blossomServers: ['https://cdn.example.com'],
+      useUserServerList: false,
       useAuthorServerList: false,
       maxParallelChunks: 8,
       maxCacheBytes: 64 * 1024 * 1024,
       autoPreview: true,
     });
+  });
+
+  it("defaults to using the user's own BUD-03 servers", () => {
+    expect(readSettings({}).useUserServerList).toBe(true);
+    expect(readSettings({ useUserServerList: 'no' }).useUserServerList).toBe(true);
+    expect(readSettings({ useUserServerList: false }).useUserServerList).toBe(false);
   });
 
   it('falls back to the defaults rather than leaving nothing to fetch from', () => {

@@ -33,6 +33,52 @@ implementation disagree, the implementation wins — the `k` key is read from th
 URI fragment and never sent to a server, and equal `created_at` ties break on the
 lowest event id per NIP-01.
 
+## Where blobs are fetched from
+
+BUD-18 gives `htree://` no server hint, so the candidate servers are assembled
+here, best guess first, and every one is tried in turn until a blob verifies:
+
+1. **Your own BUD-03 list** — kind `10063` for the pubkey NAP-IDENTITY reports.
+   These are the servers you already mirror to, so they are the likeliest to hold
+   what you browse. Skipped when no user is connected, when the shell withholds
+   NAP-IDENTITY, or when the "Use my own server list" setting is off — the list
+   is not even queried in that last case.
+2. **The configured servers** — the fallback for a user who publishes no list.
+3. **The tree author's BUD-03 list** — for a mutable (`naddr`/npub) root only.
+
+Duplicates collapse to their earliest position, and a server that serves a
+verified blob is promoted for later fetches while a failing one is demoted. Only
+the hash is ever sent: a `k` decryption key never reaches a server.
+
+## Inspector
+
+**Inspect** in the header swaps the browser for a debug view of whatever you are
+looking at — the selected file, or the directory you are in. It needs no extra
+NAP domain: everything shown is already known to the blob layer.
+
+**Structure** is the tree as stored, not as browsed. The browser has to hide the
+real shape — BUD-17 requires readers to flatten `t = 3` fanout nodes and never
+expose their internal links, and a chunked file is presented as a file — so the
+inspector deliberately undoes both: fanout nodes appear as nodes, files as their
+chunk lists, links in manifest order rather than sorted for display. Each row
+carries its type (`blob`/`file`/`directory`/`fanout`), hash, size, a lock when
+the link is encrypted, and, inside a file manifest, the plaintext offset its
+bytes start at — the prefix sum BUD-17 stores no field for. Expanding a row
+fetches exactly that one manifest; leaf blobs are described from their link and
+never fetched. A manifest that will not decode shows its error in place, which is
+the case worth debugging.
+
+**Fetches** is the log the blob layer used to throw away: per request, whether it
+came from the network, the cache, or was coalesced onto an identical request
+already in flight; which server answered; bytes, milliseconds, and every server
+rejected on the way, with why — a wrong-hash response reads differently from a
+timeout. Recording is always on and bounded to the last 300 events, so opening
+the inspector explains what already happened rather than starting from empty.
+"Only this hash" narrows it to the node in view.
+
+Nothing in here widens the boundary: hashes and server URLs are already public,
+and a `k` key is reported only as "encrypted", never printed.
+
 ## Opening a file
 
 A `blob:` object URL made here has an opaque origin, so the shell cannot resolve

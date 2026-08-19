@@ -7,14 +7,25 @@ import type { NappletConfigSchema } from '@napplet/sdk';
 /**
  * Blossom servers are the only way to fetch a hashtree's blobs. BUD-18 defines
  * no `xs=` server hint for `htree://` references and never says to use the root
- * author's BUD-03 list, so a resolver needs an out-of-band server set. These are
- * the two the reference implementation ships with.
+ * author's BUD-03 list, so a resolver needs an out-of-band server set. The
+ * signed-in user's own BUD-03 list is tried ahead of these, so they are the
+ * fallback for a user who has published none — the two the reference
+ * implementation ships with.
  */
 const DEFAULT_BLOSSOM_SERVERS = ['https://blossom.primal.net', 'https://cdn.iris.to'];
 
 const configSchema = {
   type: 'object',
   properties: {
+    useUserServerList: {
+      type: 'boolean',
+      title: 'Use my own server list',
+      description:
+        'Try the Blossom servers from your own BUD-03 kind 10063 list first, before the servers below.',
+      default: true,
+      'x-napplet-section': 'sources',
+      'x-napplet-order': 1,
+    },
     blossomServers: {
       type: 'array',
       title: 'Blossom servers',
@@ -23,7 +34,7 @@ const configSchema = {
       items: { type: 'string' },
       default: DEFAULT_BLOSSOM_SERVERS,
       'x-napplet-section': 'sources',
-      'x-napplet-order': 1,
+      'x-napplet-order': 2,
     },
     useAuthorServerList: {
       type: 'boolean',
@@ -32,7 +43,7 @@ const configSchema = {
         'For npub/naddr references, also try the BUD-03 kind 10063 servers published by the root event author.',
       default: true,
       'x-napplet-section': 'sources',
-      'x-napplet-order': 2,
+      'x-napplet-order': 3,
     },
     maxParallelChunks: {
       type: 'integer',
@@ -85,6 +96,7 @@ export default defineConfig({
       requires: [
         'resource', // fetch blobs by hash from Blossom servers -- essential
         'outbox', // kind 30064 mutable roots + kind 10063 server lists
+        'identity', // the signed-in user's pubkey, to read their BUD-03 servers
         'config', // server list, concurrency, cache budget
         'theme', // DSUI theme following
         'link', // open a single-blob file at its real https URL

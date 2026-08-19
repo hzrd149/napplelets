@@ -13,6 +13,7 @@ import { hasMethod } from './nap.js';
 
 export interface Settings {
   readonly blossomServers: readonly string[];
+  readonly useUserServerList: boolean;
   readonly useAuthorServerList: boolean;
   readonly maxParallelChunks: number;
   /** In bytes; the setting is expressed in MiB. */
@@ -22,6 +23,7 @@ export interface Settings {
 
 export const DEFAULT_SETTINGS: Settings = {
   blossomServers: DEFAULT_BLOSSOM_SERVERS,
+  useUserServerList: true,
   useAuthorServerList: true,
   maxParallelChunks: 4,
   maxCacheBytes: 128 * 1024 * 1024,
@@ -43,6 +45,10 @@ export function readSettings(values: Record<string, unknown>): Settings {
     // An empty or all-invalid list would leave nothing to fetch from, which is a
     // worse outcome than ignoring the setting.
     blossomServers: servers.length > 0 ? servers : DEFAULT_BLOSSOM_SERVERS,
+    useUserServerList:
+      typeof values['useUserServerList'] === 'boolean'
+        ? values['useUserServerList']
+        : DEFAULT_SETTINGS.useUserServerList,
     useAuthorServerList:
       typeof values['useAuthorServerList'] === 'boolean'
         ? values['useAuthorServerList']

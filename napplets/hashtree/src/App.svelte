@@ -3,18 +3,20 @@
   import EntryList from './components/EntryList.svelte';
   import EntryScreen from './components/EntryScreen.svelte';
   import FilePanel from './components/FilePanel.svelte';
+  import InspectorView from './components/InspectorView.svelte';
   import MissingNaps from './components/MissingNaps.svelte';
   import TreeSidebar from './components/TreeSidebar.svelte';
 
   import { directBlobUrl, copyText, openInBrowser, saveToDisk } from './lib/actions.js';
   import { BlobStore, describeResourceLimits } from './lib/blobs.js';
+  import { BlobTrace } from './lib/trace.js';
   import { formatBytes } from './lib/bytes.js';
   import type { TreeLink } from './lib/manifest.js';
   import { previewKindFor, mimeForName, TEXT_PREVIEW_BYTES } from './lib/mime.js';
   import { reportCapabilities } from './lib/nap.js';
   import { encodeNhash, formatHtreeUri, parseTreeRef, type TreeRef } from './lib/refs.js';
   import { resolveRoot, type ResolvedRoot } from './lib/resolve.js';
-  import { fetchAuthorServers, mergeServers } from './lib/servers.js';
+  import { fetchAuthorServers, mergeServers, subscribeUserServers } from './lib/servers.js';
   import {
     DEFAULT_SETTINGS,
     loadRecents,
@@ -42,12 +44,22 @@
   const capabilityReport = reportCapabilities();
 
   let settings = $state<Settings>(DEFAULT_SETTINGS);
+  let userServers = $state<readonly string[]>([]);
   let authorServers = $state<readonly string[]>([]);
-  const activeServers = $derived(mergeServers(settings.blossomServers, authorServers));
+
+  // The user's own BUD-03 servers lead: they are where the blobs a user browses
+  // are most likely to be, and to stay. Configured servers are the fallback for
+  // a user who publishes no list; the tree author's list is the last resort.
+  const activeServers = $derived(mergeServers(userServers, settings.blossomServers, authorServers));
+
+  // Recording is unconditional: the inspector has to be able to explain fetches
+  // that happened before it was opened.
+  const trace = new BlobTrace();
 
   const store = new BlobStore({
     servers: () => activeServers,
     maxCacheBytes: () => settings.maxCacheBytes,
+    onEvent: (event) => trace.record(event),
   });
 
   let stage = $state<'entry' | 'browsing'>('entry');
@@ -65,6 +77,9 @@
   let listing = $state(false);
   let listError = $state<string | null>(null);
   let selected = $state<TreeTarget | null>(null);
+  /** The directory being listed, so the inspector has a subject with no file selected. */
+  let currentTarget = $state<TreeTarget | null>(null);
+  let view = $state<'browse' | 'inspect'>('browse');
 
   let sortKey = $state<SortKey>('name');
   let sortAscending = $state(true);
@@ -99,6 +114,10 @@
     selected === null ? null : directBlobUrl(selected, activeServers),
   );
 
+  // Inspect whatever the user is actually looking at: the selected file, or the
+  // directory they are in when nothing is selected.
+  const inspectTarget = $derived(selected ?? currentTarget);
+
   const message = (error: unknown): string =>
     error instanceof Error ? error.message : String(error);
 
@@ -112,6 +131,16 @@
   // --- lifecycle -----------------------------------------------------------
 
   $effect(() => subscribeSettings((next) => (settings = next)));
+
+  // Re-runs when the setting is toggled, so a disabled list is never queried at
+  // all rather than being fetched and then filtered out.
+  $effect(() => {
+    if (!settings.useUserServerList) {
+      userServers = [];
+      return;
+    }
+    return subscribeUserServers((servers) => (userServers = servers));
+  });
 
   $effect(() => {
     void loadRecents().then((loaded) => (recents = loaded));
@@ -174,6 +203,8 @@
     entries = [];
     dirPath = [];
     selected = null;
+    currentTarget = null;
+    view = 'browse';
     listError = null;
     authorServers = [];
   }
@@ -194,6 +225,7 @@
 
       if (isDirectoryLink(target.type)) {
         dirPath = path;
+        currentTarget = target;
         selected = null;
         clearPreview();
         entries = [];
@@ -207,6 +239,8 @@
       } else {
         // A path that names a file: show its folder and select it.
         const parent = trail.at(-2) ?? root;
+        // `trail[0]` is the root, so there is always a directory to fall back to.
+        currentTarget = trail.at(-2) ?? trail[0] ?? null;
         dirPath = path.slice(0, -1);
         const listed = await listDirectory(store, parent);
         if (token !== navToken) return;
@@ -398,6 +432,17 @@
           onNavigate={(path) => void navigate(path)}
         />
         <span class="bar-spacer"></span>
+        <button
+          type="button"
+          class="btn btn-ghost btn-xs"
+          class:btn-active={view === 'inspect'}
+          aria-pressed={view === 'inspect'}
+          disabled={inspectTarget === null}
+          title="Show the blob structure and fetches behind what you are looking at"
+          onclick={() => (view = view === 'inspect' ? 'browse' : 'inspect')}
+        >
+          Inspect
+        </button>
         {#if resolved !== null}
           <span class="badge badge-ghost bar-source" title={resolved.rootHash}>
             {resolved.source === 'nhash' ? 'pinned' : `kind ${resolved.event?.kind ?? ''}`}
@@ -409,6 +454,17 @@
         <p class="bar-note">{resolved.warnings.join(' ')}</p>
       {/if}
 
+      {#if view === 'inspect' && inspectTarget !== null}
+        <InspectorView
+          {store}
+          {trace}
+          target={inspectTarget}
+          label={rootLabel}
+          servers={activeServers}
+          onCopy={(value) => void onCopy(value)}
+          onClose={() => (view = 'browse')}
+        />
+      {:else}
       <div class="explorer" class:explorer-with-panel={selected !== null}>
         {#if resolved !== null}
           <TreeSidebar
@@ -460,6 +516,7 @@
           />
         {/if}
       </div>
+      {/if}
 
       <footer class="status">
         <span>{entries.length} item{entries.length === 1 ? '' : 's'}</span>

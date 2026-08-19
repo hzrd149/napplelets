@@ -60,6 +60,13 @@ export const REQUIREMENTS: readonly CapabilityRequirement[] = [
     severity: 'degraded',
   },
   {
+    domain: 'identity',
+    label: 'NAP-IDENTITY',
+    purpose:
+      'Reading your public key, so your own BUD-03 servers can be tried first. Only the configured servers are used without it.',
+    severity: 'degraded',
+  },
+  {
     domain: 'config',
     label: 'NAP-CONFIG',
     purpose: 'Reading the configured Blossom servers. Defaults are used without it.',

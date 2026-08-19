@@ -822,6 +822,385 @@ body {
   overflow-wrap: anywhere;
 }
 
+/* ---------- inspector ---------- */
+
+/*
+ * The debug view of a node: what it is made of, and what it cost to read.
+ *
+ * Deliberately an indented tree rather than a drawn graph. A hashtree is a DAG,
+ * but the only edges worth seeing are parent-to-child, and an indented list
+ * survives a 20rem sidebar pane where a laid-out node graph would not.
+ */
+
+.btn-active {
+  background: var(--color-base-300);
+}
+
+.inspector {
+  grid-row: 4;
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ht-gap);
+  min-height: 0;
+  min-width: 0;
+  padding: var(--ht-pad);
+  overflow: auto;
+}
+
+.ins-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.ins-title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ins-head-size {
+  font-size: 0.6875rem;
+  opacity: 0.7;
+}
+
+.ins-head-spacer {
+  flex: 1 1 auto;
+}
+
+.ins-subject {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.ins-panes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--ht-gap);
+  min-height: 0;
+}
+
+/* Side by side only when both panes can still be read. */
+@container (min-width: 46rem) {
+  .ins-panes {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  }
+}
+
+.ins-structure,
+.ins-trace-pane {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.ins-structure-head,
+.ins-trace-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ins-section-title {
+  margin: 0;
+  flex: 1 1 auto;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.7;
+}
+
+.ins-hint {
+  font-size: 0.6875rem;
+  opacity: 0.6;
+}
+
+/* ---------- inspector: structure ---------- */
+
+.ins-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ins-list-root {
+  border: 1px solid var(--color-base-300);
+  border-radius: 0.375rem;
+  padding: 0.25rem 0;
+  overflow-x: auto;
+}
+
+.ins-row {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  flex-wrap: wrap;
+  padding: 0.125rem 0.375rem;
+  padding-inline-start: calc(0.375rem + var(--depth) * 0.85rem);
+  min-width: 0;
+  font-size: 0.6875rem;
+}
+
+.ins-row:hover {
+  background: var(--color-base-200);
+}
+
+.ins-row-loading {
+  opacity: 0.6;
+}
+
+.ins-twisty {
+  flex: 0 0 auto;
+  width: 1rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0.25rem;
+  background: none;
+  color: inherit;
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.ins-twisty-leaf {
+  cursor: default;
+  opacity: 0.35;
+  text-align: center;
+}
+
+.ins-kind {
+  flex: 0 0 auto;
+  padding: 0 0.3rem;
+  border-radius: 0.25rem;
+  background: var(--color-base-300);
+  font-size: 0.625rem;
+  letter-spacing: 0.02em;
+}
+
+/*
+ * Colour carries the node type, because that is the single most useful thing to
+ * read off a structure dump at a glance. Every value falls back to the neutral
+ * base tokens, so a theme that defines no accent colours still renders.
+ */
+.ins-kind-directory {
+  background: var(--color-primary, var(--color-base-300));
+  color: var(--color-primary-content, inherit);
+}
+
+.ins-kind-fanout {
+  background: var(--color-accent, var(--color-base-300));
+  color: var(--color-accent-content, inherit);
+}
+
+.ins-kind-file {
+  background: var(--color-secondary, var(--color-base-300));
+  color: var(--color-secondary-content, inherit);
+}
+
+.ins-kind-blob {
+  background: var(--color-base-300);
+}
+
+.ins-label {
+  min-width: 0;
+  flex: 1 1 6rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ins-offset,
+.ins-size {
+  flex: 0 0 auto;
+  font-family: ui-monospace, monospace;
+  font-size: 0.625rem;
+  opacity: 0.6;
+}
+
+.ins-flag {
+  flex: 0 0 auto;
+  font-size: 0.625rem;
+}
+
+.ins-hash {
+  flex: 0 0 auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-family: ui-monospace, monospace;
+  font-size: 0.625rem;
+  cursor: pointer;
+  opacity: 0.75;
+  text-decoration: underline dotted;
+}
+
+.ins-hash:hover {
+  opacity: 1;
+}
+
+.ins-hash-full {
+  overflow-wrap: anywhere;
+  text-align: start;
+  white-space: normal;
+}
+
+.ins-facts,
+.ins-bounds,
+.ins-error {
+  margin: 0;
+  padding: 0.125rem 0.375rem;
+  padding-inline-start: calc(1.75rem + var(--depth) * 0.85rem);
+  font-size: 0.625rem;
+  overflow-wrap: anywhere;
+}
+
+.ins-facts {
+  opacity: 0.65;
+}
+
+.ins-bounds {
+  font-family: ui-monospace, monospace;
+  opacity: 0.55;
+}
+
+.ins-error {
+  color: var(--color-warning, currentColor);
+}
+
+.ins-sep {
+  margin: 0 0.25rem;
+  opacity: 0.5;
+}
+
+/* ---------- inspector: fetches ---------- */
+
+.ins-scope {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.6875rem;
+  opacity: 0.8;
+}
+
+.ins-trace-totals {
+  font-size: 0.625rem;
+  opacity: 0.7;
+}
+
+.ins-trace-failed {
+  color: var(--color-warning, currentColor);
+  opacity: 1;
+}
+
+.ins-empty {
+  margin: 0;
+  padding: 0.5rem;
+  font-size: 0.6875rem;
+  opacity: 0.6;
+}
+
+.ins-events {
+  margin: 0;
+  padding: 0.25rem 0;
+  list-style: none;
+  border: 1px solid var(--color-base-300);
+  border-radius: 0.375rem;
+  max-height: 22rem;
+  overflow: auto;
+}
+
+.ins-event {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  flex-wrap: wrap;
+  padding: 0.1875rem 0.375rem;
+  font-size: 0.6875rem;
+  border-bottom: 1px solid var(--color-base-200);
+}
+
+.ins-event:last-child {
+  border-bottom: 0;
+}
+
+.ins-event-failed {
+  background: var(--color-base-200);
+}
+
+.ins-event-source {
+  flex: 0 0 auto;
+  min-width: 4.5rem;
+  padding: 0 0.3rem;
+  border-radius: 0.25rem;
+  background: var(--color-base-300);
+  font-size: 0.5625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* A network read is the one that actually cost something. */
+.ins-event-source-network {
+  background: var(--color-primary, var(--color-base-300));
+  color: var(--color-primary-content, inherit);
+}
+
+.ins-event-server {
+  flex: 1 1 6rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.625rem;
+  opacity: 0.75;
+}
+
+.ins-event-size,
+.ins-event-ms {
+  flex: 0 0 auto;
+  font-family: ui-monospace, monospace;
+  font-size: 0.625rem;
+  opacity: 0.7;
+}
+
+.ins-event-error {
+  flex: 1 1 100%;
+  margin: 0.125rem 0 0;
+  font-size: 0.625rem;
+  color: var(--color-warning, currentColor);
+  overflow-wrap: anywhere;
+}
+
+.ins-attempts {
+  flex: 1 1 100%;
+  margin: 0.125rem 0 0;
+  padding: 0 0 0 0.75rem;
+  list-style: none;
+  font-size: 0.5625rem;
+  opacity: 0.7;
+}
+
+.ins-attempts li {
+  display: flex;
+  gap: 0.375rem;
+}
+
+.ins-attempt-error {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 /* ---------- status bar ---------- */
 
 .status {

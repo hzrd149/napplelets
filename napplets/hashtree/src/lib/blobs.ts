@@ -19,6 +19,9 @@ import { decryptChkHex } from './chk.js';
 import { sha256Hex } from './hash.js';
 import { decodeNode, type TreeNode } from './manifest.js';
 import { ServerRanking } from './servers.js';
+import { startTimer, type RecordedEvent, type ServerAttempt } from './trace.js';
+
+export type { ServerAttempt };
 
 export type BlobErrorCode =
   | 'no-servers'
@@ -26,11 +29,6 @@ export type BlobErrorCode =
   | 'unavailable'
   | 'decrypt-failed'
   | 'aborted';
-
-export interface ServerAttempt {
-  readonly server: string;
-  readonly error: string;
-}
 
 export class BlobError extends Error {
   constructor(
@@ -47,6 +45,11 @@ export interface BlobStoreOptions {
   /** Read lazily so a config change takes effect without rebuilding the store. */
   readonly servers: () => readonly string[];
   readonly maxCacheBytes: () => number;
+  /**
+   * Called once per `bytes()` call with what it took to satisfy it. Optional and
+   * never awaited: the store's behaviour must not depend on anyone watching.
+   */
+  readonly onEvent?: (event: RecordedEvent) => void;
 }
 
 export interface FetchOptions {
@@ -111,9 +114,14 @@ export class BlobStore {
    * Fetch the blob addressed by `hash` and prove it is that blob.
    *
    * A server that returns the wrong bytes is treated as a failed server, not a
-   * failed fetch — the next one is tried.
+   * failed fetch — the next one is tried. The servers that were rejected on the
+   * way to the one that worked are returned too, not just on failure: that trail
+   * is exactly what the inspector shows.
    */
-  private async fetchVerified(hash: string, signal: AbortSignal | undefined): Promise<Uint8Array> {
+  private async fetchVerified(
+    hash: string,
+    signal: AbortSignal | undefined,
+  ): Promise<{ bytes: Uint8Array; server: string; attempts: readonly ServerAttempt[] }> {
     if (typeof resource?.bytes !== 'function') {
       throw new BlobError(
         'This shell does not provide NAP-RESOURCE, so no blobs can be fetched.',
@@ -146,7 +154,7 @@ export class BlobStore {
           continue;
         }
         this.ranking.succeeded(server);
-        return bytes;
+        return { bytes, server, attempts };
       } catch (error) {
         if (error instanceof BlobError && error.code === 'aborted') throw error;
         this.ranking.failed(server);
@@ -165,19 +173,56 @@ export class BlobStore {
   /** Verified, and decrypted when the link carried a key. */
   async bytes(hash: string, key: string | null, options: FetchOptions = {}): Promise<Uint8Array> {
     const cacheKey = BlobStore.cacheKey(hash, key);
+    const elapsed = startTimer();
+    const encrypted = key !== null;
+
     const cached = this.take(cacheKey);
-    if (cached !== undefined) return cached;
+    if (cached !== undefined) {
+      this.report({
+        hash,
+        encrypted,
+        source: 'cache',
+        server: null,
+        attempts: [],
+        bytes: cached.length,
+        ms: elapsed(),
+        ok: true,
+        error: null,
+      });
+      return cached;
+    }
 
     const existing = this.inflight.get(cacheKey);
-    if (existing !== undefined) return existing;
+    if (existing !== undefined) {
+      // Ride along on the request already in flight. Reported separately from a
+      // cache hit so a fan-out of duplicate chunk requests is visible as such.
+      const bytes = await existing;
+      this.report({
+        hash,
+        encrypted,
+        source: 'inflight',
+        server: null,
+        attempts: [],
+        bytes: bytes.length,
+        ms: elapsed(),
+        ok: true,
+        error: null,
+      });
+      return bytes;
+    }
+
+    let server: string | null = null;
+    let attempts: readonly ServerAttempt[] = [];
 
     const pending = (async () => {
-      const verified = await this.fetchVerified(hash, options.signal);
-      if (key === null) return verified;
+      const result = await this.fetchVerified(hash, options.signal);
+      server = result.server;
+      attempts = result.attempts;
+      if (key === null) return result.bytes;
       try {
         // The ciphertext already matched `hash`, so a failure here is a wrong
         // key, not a bad server. Retrying elsewhere would just fail identically.
-        return decryptChkHex(verified, key);
+        return decryptChkHex(result.bytes, key);
       } catch (error) {
         throw new BlobError(
           `The blob ${hash.slice(0, 12)}… could not be decrypted: ${describeError(error)}`,
@@ -190,9 +235,43 @@ export class BlobStore {
     try {
       const bytes = await pending;
       this.remember(cacheKey, bytes);
+      this.report({
+        hash,
+        encrypted,
+        source: 'network',
+        server,
+        attempts,
+        bytes: bytes.length,
+        ms: elapsed(),
+        ok: true,
+        error: null,
+      });
       return bytes;
+    } catch (error) {
+      this.report({
+        hash,
+        encrypted,
+        source: 'network',
+        server,
+        // A failure before any server answered still carries the whole trail.
+        attempts: error instanceof BlobError && error.attempts.length > 0 ? error.attempts : attempts,
+        bytes: 0,
+        ms: elapsed(),
+        ok: false,
+        error: describeError(error),
+      });
+      throw error;
     } finally {
       this.inflight.delete(cacheKey);
+    }
+  }
+
+  /** Never let a broken observer break a fetch. */
+  private report(event: RecordedEvent): void {
+    try {
+      this.options.onEvent?.(event);
+    } catch {
+      // Ignore: tracing is diagnostic, and the caller wants its bytes.
     }
   }
 
