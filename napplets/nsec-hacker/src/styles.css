@@ -1,0 +1,542 @@
+/*
+ * Standalone phosphor-CRT theme.
+ *
+ * This napplet deliberately does NOT use `@napplelets/theme-dsui`, which is the
+ * repo default. The whole point is a hacker-terminal aesthetic, and a themeable
+ * palette that follows the host would undercut it. That was an explicit call --
+ * see README.md. Consequently the napplet declares no `theme` domain either.
+ */
+
+:root {
+  --phos: #38ff9c;
+  --phos-dim: #176b45;
+  --phos-mid: #1fbf74;
+  --amber: #ffc93c;
+  --danger: #ff4d4d;
+  --bg: #010704;
+  --bg-soft: #04140c;
+  --edge: rgba(56, 255, 156, 0.22);
+  --glow: 0 0 0.5em rgba(56, 255, 156, 0.45);
+  --mono:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
+
+  /* Readouts and key strings are meant to be copied. */
+  --napplet-text-selection: text;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+}
+
+body {
+  font-family: var(--mono);
+  color: var(--phos);
+  overflow: hidden;
+}
+
+/* ---------------------------------------------------------------- terminal */
+
+.term {
+  position: relative;
+  width: 100%;
+  height: 100dvh;
+  min-height: 100%;
+  overflow: hidden;
+  container-type: inline-size;
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(31, 191, 116, 0.13), transparent 60%), var(--bg);
+}
+
+.rain,
+.scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.rain {
+  width: 100%;
+  height: 100%;
+  opacity: 0.5;
+}
+
+.scanlines {
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0 2px,
+    rgba(0, 0, 0, 0.28) 2px 4px
+  );
+  mix-blend-mode: multiply;
+  opacity: 0.55;
+}
+
+.shell {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.5rem, 2cqi, 1.1rem);
+  height: 100%;
+  min-height: 0;
+  padding: clamp(0.5rem, 2.5cqi, 1.4rem);
+}
+
+/* -------------------------------------------------------------------- bar */
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--edge);
+  font-size: clamp(0.62rem, 1.8cqi, 0.8rem);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.led {
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--phos);
+  box-shadow: var(--glow);
+  animation: pulse 1.8s ease-in-out infinite;
+}
+
+.bar-title {
+  flex: none;
+  color: var(--phos);
+  text-shadow: var(--glow);
+}
+
+.bar-target {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--phos-mid);
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------ stage */
+
+.stage {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0.6rem;
+  justify-content: center;
+  min-height: 0;
+}
+
+/*
+ * 64 hex columns on a wide pane, fewer on a narrow one. `auto-fit` plus
+ * `minmax(0, 1fr)` is what keeps this from ever overflowing horizontally --
+ * the columns get narrower, the row never gets wider than the frame.
+ */
+.slots {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: clamp(1px, 0.3cqi, 3px);
+  width: 100%;
+  height: clamp(2.4rem, 16cqi, 5.5rem);
+  padding: 0.35rem clamp(0.25rem, 1cqi, 0.75rem);
+  border: 1px solid var(--edge);
+  border-radius: 2px;
+  background: linear-gradient(180deg, rgba(4, 20, 12, 0.85), rgba(1, 7, 4, 0.9));
+  overflow: hidden;
+}
+
+.slot {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  text-align: center;
+}
+
+/*
+ * The strip is what GSAP moves. Tweens animate `yPercent`, never pixels, so a
+ * mid-run resize cannot desync the timeline from the layout.
+ */
+.slot-strip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: clamp(0.55rem, 2.1cqi, 1.05rem);
+  line-height: 1.35;
+  color: var(--phos-mid);
+  will-change: transform;
+}
+
+.slot-strip > span {
+  display: block;
+}
+
+.slot.is-locked .slot-strip {
+  color: var(--phos);
+  text-shadow: var(--glow);
+}
+
+/*
+ * The live guess. One line, ellipsised rather than wrapped, so it shows as much
+ * of the npub as the frame allows and never reflows the stage while streaming.
+ */
+.guess {
+  margin: 0;
+  overflow: hidden;
+  color: var(--phos);
+  font-size: clamp(0.55rem, 1.9cqi, 0.85rem);
+  letter-spacing: 0.02em;
+  text-align: center;
+  text-overflow: ellipsis;
+  text-shadow: var(--glow);
+  white-space: nowrap;
+}
+
+.term[data-phase='idle'] .guess {
+  color: var(--phos-dim);
+  text-shadow: none;
+}
+
+.caption {
+  margin: 0;
+  overflow: hidden;
+  color: var(--phos-mid);
+  font-size: clamp(0.6rem, 1.9cqi, 0.82rem);
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------- readout */
+
+.readout {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(7.5rem, 100%), 1fr));
+  gap: clamp(0.25rem, 1cqi, 0.6rem);
+}
+
+.cell {
+  display: flex;
+  gap: 0.4rem;
+  align-items: baseline;
+  justify-content: space-between;
+  min-width: 0;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--edge);
+  border-radius: 2px;
+  background: rgba(4, 20, 12, 0.55);
+}
+
+.cell-key {
+  flex: none;
+  color: var(--phos-dim);
+  font-size: clamp(0.55rem, 1.6cqi, 0.68rem);
+  letter-spacing: 0.12em;
+}
+
+.cell-val {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  font-size: clamp(0.66rem, 2cqi, 0.92rem);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------- actions */
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.hack {
+  flex: 0 1 auto;
+  min-width: 0;
+  padding: clamp(0.45rem, 1.8cqi, 0.8rem) clamp(0.9rem, 5cqi, 2.4rem);
+  border: 1px solid var(--phos);
+  border-radius: 2px;
+  background: rgba(23, 107, 69, 0.18);
+  color: var(--phos);
+  font: inherit;
+  font-size: clamp(0.72rem, 2.4cqi, 1.05rem);
+  letter-spacing: 0.16em;
+  text-shadow: var(--glow);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.hack:hover:not(:disabled),
+.hack:focus-visible {
+  background: rgba(56, 255, 156, 0.2);
+  box-shadow: 0 0 1.2em rgba(56, 255, 156, 0.35);
+  outline: none;
+}
+
+.hack:disabled {
+  border-color: var(--phos-dim);
+  color: var(--phos-dim);
+  text-shadow: none;
+  cursor: progress;
+}
+
+.odds {
+  color: var(--phos-dim);
+  font-size: clamp(0.55rem, 1.6cqi, 0.7rem);
+  letter-spacing: 0.08em;
+}
+
+/* ------------------------------------------------------------------ diff */
+
+.diff {
+  margin: 0 0 1rem;
+  text-align: left;
+}
+
+.diff-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.4rem 0;
+  border-top: 1px solid var(--edge);
+}
+
+.diff-row[hidden] {
+  display: none;
+}
+
+.diff-label {
+  color: var(--phos-dim);
+  font-size: clamp(0.52rem, 1.5cqi, 0.64rem);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/*
+ * Per-character spans so matching positions can be picked out. Wrapping is
+ * `anywhere` because an npub has no break opportunities and would otherwise
+ * push the panel wider than a narrow frame.
+ */
+.diff-chars {
+  font-size: clamp(0.56rem, 1.8cqi, 0.78rem);
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  overflow-wrap: anywhere;
+}
+
+.diff-chars .hit {
+  color: var(--phos);
+  background: rgba(56, 255, 156, 0.16);
+  text-shadow: var(--glow);
+}
+
+.diff-chars .miss {
+  color: var(--phos-dim);
+}
+
+.diff-chars .pre {
+  color: var(--phos-mid);
+}
+
+.term[data-phase='granted'] .diff-chars .hit {
+  color: var(--amber);
+  background: rgba(255, 201, 60, 0.18);
+  text-shadow: none;
+}
+
+.diff-summary {
+  margin: 0.5rem 0 0;
+  color: var(--phos-mid);
+  font-size: clamp(0.55rem, 1.7cqi, 0.72rem);
+  letter-spacing: 0.04em;
+  text-align: right;
+}
+
+/* ---------------------------------------------------------------- result */
+
+.result {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.5rem, 3cqi, 2rem);
+  background: rgba(1, 7, 4, 0.88);
+}
+
+.result[hidden] {
+  display: none;
+}
+
+.result-box {
+  width: min(34rem, 100%);
+  max-height: 100%;
+  padding: clamp(0.75rem, 3cqi, 1.6rem);
+  overflow: auto;
+  border: 1px solid var(--danger);
+  border-radius: 2px;
+  background: rgba(4, 20, 12, 0.92);
+  text-align: center;
+}
+
+.term[data-phase='granted'] .result-box {
+  border-color: var(--amber);
+}
+
+.result-title {
+  margin: 0 0 0.4rem;
+  color: var(--danger);
+  font-size: clamp(1rem, 5cqi, 2rem);
+  letter-spacing: 0.18em;
+}
+
+.term[data-phase='granted'] .result-title {
+  color: var(--amber);
+  text-shadow: 0 0 0.6em rgba(255, 201, 60, 0.55);
+}
+
+.term[data-phase='no-target'] .result-title {
+  color: var(--phos-mid);
+}
+
+.term[data-phase='no-target'] .result-box {
+  border-color: var(--edge);
+}
+
+.result-note {
+  margin: 0 0 0.9rem;
+  color: var(--phos-mid);
+  font-size: clamp(0.62rem, 2cqi, 0.82rem);
+  line-height: 1.5;
+}
+
+.result-rows {
+  margin: 0 0 1rem;
+  text-align: left;
+}
+
+.result-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.6rem;
+  justify-content: space-between;
+  padding: 0.35rem 0;
+  border-top: 1px solid var(--edge);
+}
+
+.result-row[hidden] {
+  display: none;
+}
+
+.result-row dt {
+  flex: none;
+  color: var(--phos-dim);
+  font-size: clamp(0.55rem, 1.6cqi, 0.68rem);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.result-row dd {
+  flex: 1 1 12ch;
+  min-width: 0;
+  margin: 0;
+  font-size: clamp(0.58rem, 1.8cqi, 0.76rem);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.mono {
+  font-family: var(--mono);
+  color: var(--phos);
+}
+
+/* ------------------------------------------------------- compact / tiny */
+
+/*
+ * In a sidebar or a tiny tile the slot strip and the odds line are the first
+ * things to go: the button and the counters have to stay reachable.
+ */
+@container (max-width: 26rem) {
+  .odds {
+    display: none;
+  }
+
+  .bar-target {
+    font-size: 0.58rem;
+  }
+}
+
+@container (max-width: 17rem) {
+  .slots {
+    height: 2rem;
+  }
+
+  .caption {
+    display: none;
+  }
+
+  .readout {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@container (max-height: 15rem) {
+  .slots {
+    height: 1.9rem;
+  }
+
+  .scanlines {
+    display: none;
+  }
+}
+
+/* ------------------------------------------------------- reduced motion */
+
+@media (prefers-reduced-motion: reduce) {
+  .led {
+    animation: none;
+  }
+
+  .rain {
+    display: none;
+  }
+
+  .scanlines {
+    opacity: 0.25;
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.slot[hidden] {
+  display: none;
+}

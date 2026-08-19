@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nsec Hacker</title>
+  </head>
+  <body>
+    <!--
+      The napplet fills whatever frame the shell gives it: this is a terminal
+      surface, not a page with a card on it. Everything below scales from a
+      full tab down to a sidebar tile.
+    -->
+    <div id="app" class="term" data-phase="idle">
+      <canvas class="rain" aria-hidden="true"></canvas>
+      <div class="scanlines" aria-hidden="true"></div>
+
+      <div class="shell">
+        <header class="bar">
+          <span class="led" aria-hidden="true"></span>
+          <span class="bar-title">nsec-hacker</span>
+          <span class="bar-target" id="target">TARGET &middot; scanning</span>
+        </header>
+
+        <div class="stage">
+          <div class="slots" id="slots" aria-hidden="true"></div>
+          <p class="guess mono" id="guess" data-napplet-select="all">&mdash;</p>
+          <p class="caption" id="caption">Awaiting input.</p>
+        </div>
+
+        <div class="readout">
+          <div class="cell">
+            <span class="cell-key">KEYS</span>
+            <span class="cell-val" id="r-keys">0</span>
+          </div>
+          <div class="cell">
+            <span class="cell-key">RATE</span>
+            <span class="cell-val" id="r-rate">0 keys/s</span>
+          </div>
+          <div class="cell">
+            <span class="cell-key">BEST</span>
+            <span class="cell-val" id="r-best">0 / 64</span>
+          </div>
+          <div class="cell">
+            <span class="cell-key">TIME</span>
+            <span class="cell-val" id="r-time">0.0s</span>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="hack" id="hack">HACK NSEC</button>
+          <span class="odds" id="odds">1 in 2^256</span>
+        </div>
+      </div>
+
+      <div class="result" id="result" hidden>
+        <div class="result-box">
+          <p class="result-title" id="result-title">ACCESS DENIED</p>
+          <p class="result-note" id="result-note"></p>
+          <div class="diff" id="diff">
+            <div class="diff-row" id="diff-target-row">
+              <span class="diff-label">your key</span>
+              <span class="diff-chars mono" id="diff-target" data-napplet-select="all"></span>
+            </div>
+            <div class="diff-row">
+              <span class="diff-label">closest guess</span>
+              <span class="diff-chars mono" id="diff-guess" data-napplet-select="all"></span>
+            </div>
+            <p class="diff-summary" id="diff-summary"></p>
+          </div>
+
+          <dl class="result-rows">
+            <div class="result-row" id="result-secret-row" hidden>
+              <dt>secret key</dt>
+              <dd class="mono" id="result-nsec" data-napplet-select="all"></dd>
+            </div>
+          </dl>
+          <button type="button" class="hack hack-again" id="again">TRY AGAIN</button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
