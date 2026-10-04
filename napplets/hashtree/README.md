@@ -92,10 +92,10 @@ one. The four exits are therefore:
   session control, not a viewer.
 
 ```bash
-pnpm --filter hashtree dev               # bare vite dev server
+pnpm --filter @napplelets/hashtree dev               # bare vite dev server
 pnpm dev hashtree                        # Kehto Paja runtime with live NAP adapters
-pnpm --filter hashtree verify            # tests + type-check + single-file build
-pnpm --filter hashtree test:conformance  # NAP conformance check
+pnpm --filter @napplelets/hashtree verify            # tests + type-check + single-file build
+pnpm --filter @napplelets/hashtree test:conformance  # NAP conformance check
 ```
 
 The runtime injects `window.napplet`; app code uses `@napplet/sdk` for shell

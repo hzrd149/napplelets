@@ -67,10 +67,10 @@ test('adopts old boilerplate without app-owned runtime bootstrap', async () => {
     const pkg = JSON.parse(await readFile(join(dir, 'package.json'), 'utf8'));
     // The generator names the package after its target directory, not the
     // napplet, so adoption has to correct it.
-    assert.equal(pkg.name, 'test-napplet');
+    assert.equal(pkg.name, '@napplelets/test-napplet');
     assert.equal(pkg.dependencies[shimPackage], undefined);
-    assert.equal(pkg.dependencies['@napplet/sdk'], '^0.27.2');
-    assert.equal(pkg.devDependencies['@napplet/conformance-cli'], '^0.2.18');
+    assert.equal(pkg.dependencies['@napplet/sdk'], '^0.28.0');
+    assert.equal(pkg.devDependencies['@napplet/conformance-cli'], '^0.2.19');
     assert.equal(pkg.devDependencies['@napplet/vite-plugin'], '^0.14.1');
     assert.equal(pkg.scripts['test:guidance'], undefined);
     assert.equal(pkg.scripts.verify, 'pnpm type-check && pnpm build');
@@ -87,6 +87,7 @@ test('adopts old boilerplate without app-owned runtime bootstrap', async () => {
     assert.match(viteConfig, /requires: \['storage'\]/);
 
     const readme = await readFile(join(dir, 'README.md'), 'utf8');
+    assert.match(readme, /pnpm --filter @napplelets\/test-napplet verify/);
     assert.match(readme, /runtime injects `window\.napplet`/);
     assert.match(readme, /uses `@napplet\/sdk`/);
 

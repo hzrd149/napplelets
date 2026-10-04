@@ -8,9 +8,9 @@ entries. All access uses NAP-FS virtual paths; the shell owns host filesystem
 access and authorization.
 
 ```bash
-pnpm --filter file-browser dev               # local dev server
-pnpm --filter file-browser verify            # type-check + single-file build
-pnpm --filter file-browser test:conformance  # NAP conformance check
+pnpm --filter @napplelets/file-browser dev               # local dev server
+pnpm --filter @napplelets/file-browser verify            # type-check + single-file build
+pnpm --filter @napplelets/file-browser test:conformance  # NAP conformance check
 ```
 
 The runtime injects `window.napplet`; app code uses `@napplet/sdk` for shell

@@ -1,12 +1,15 @@
 import { defineConfig } from 'vite';
+import { viteSingleFile } from 'vite-plugin-singlefile';
 import { nip5aManifest } from '@napplet/vite-plugin';
 
 export default defineConfig({
   plugins: [
+    // Explicit inlining keeps the artifact self-contained with Vite 8/Rolldown.
+    viteSingleFile(),
     nip5aManifest({
       nappletType: 'nap-feed',
       title: 'Napplet Feed',
-      description: "Napplet manifests published by your contacts, with quick naddr copy.",
+      description: 'Napplet manifests published by your contacts, with quick naddr copy.',
       requires: ['config', 'identity', 'outbox', 'theme'],
       artifactMode: 'single-file',
       configSchema: {

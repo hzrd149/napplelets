@@ -43,7 +43,7 @@ itself is **not** in this repo — only the napplet side of the boundary.
 
 ## Repo shape
 
-- `napplets/<name>/` — one napplet per directory (a pnpm workspace package).
+- `napplets/<name>/` — one napplet per directory, named `@napplelets/<name>` in its package.json.
 - `lib/<name>/` — shared workspace packages consumed by napplets.
 - `docs/` — shared, repo-wide NIP-5D authoring context (single source of truth).
 - `.agents/skills/` — napplet design, build, port, and verification skills.
@@ -86,7 +86,7 @@ edit napplet source and the running napplet hot-updates with host services live.
 Paja loads via `iframe.src=<vite-url>` (not the built single-file srcdoc), so this
 is a dev convenience, not the production loading model. `pnpm test:conformance`
 remains the real gate (built single-file in a real `allow-scripts` iframe); for
-bare Vite with no runtime, use `pnpm --filter <name> dev`.
+bare Vite with no runtime, use `pnpm --filter @napplelets/<name> dev`.
 
 **`@napplet/cli` drives testing/deploy from the repo root, in monorepo mode.** It
 is a Deno tool published to JSR with no Node bin, so `tools/napplet-cli` exposes
@@ -119,9 +119,9 @@ Manager, Linux libsecret/`secret-tool` (needs a D-Bus session) — check with
 Per-napplet (use pnpm's filter; `<name>` is the dir under `napplets/`):
 
 ```bash
-pnpm --filter <name> dev                # vite dev server (127.0.0.1)
-pnpm --filter <name> verify             # unit tests + type-check + single-file build
-pnpm --filter <name> test:conformance   # built-artifact conformance
+pnpm --filter @napplelets/<name> dev                # vite dev server (127.0.0.1)
+pnpm --filter @napplelets/<name> verify             # unit tests + type-check + single-file build
+pnpm --filter @napplelets/<name> test:conformance   # built-artifact conformance
 ```
 
 Unit tests protect app logic; **`test:conformance` remains the protocol gate**.
@@ -202,8 +202,8 @@ and defensively strips retired app-owned shim bootstrap from older templates.
 Run per-napplet (filter) or across the whole workspace:
 
 ```bash
-pnpm --filter <name> verify          # unit tests + type-check + build one napplet
-pnpm --filter <name> test:conformance # NAP conformance for one napplet
+pnpm --filter @napplelets/<name> verify          # unit tests + type-check + build one napplet
+pnpm --filter @napplelets/<name> test:conformance # NAP conformance for one napplet
 pnpm verify                          # whole workspace
 pnpm test:conformance                # whole workspace
 ```

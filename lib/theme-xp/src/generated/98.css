@@ -16,16 +16,12 @@
  * Copyright (c) 2020 Adam Hammad <adamham.dev>
  * Based on 98.css by Jordan Scales <thatjdanisso.cool>
  * https://github.com/botoxparty/XP.css/blob/main/LICENSE
- */
-
-/**
+ *//**
  * GUI.css
  * Copyright (c) 2020 Adam Hammad <adamham.dev>
  * Based on 98.css by Jordan Scales <thatjdanisso.cool>
  * https://github.com/botoxparty/XP.css/blob/main/LICENSE
- */
-
-/*-------------------------------------------*\
+ *//*-------------------------------------------*\
     Variables
 \*-------------------------------------------*/
 
@@ -82,9 +78,11 @@
 
     --border-status-bar-field: inset -1px -1px var(--button-face), inset 1px 1px var(--button-shadow);
 }
+
 /*-------------------------------------------*\
     Fonts
 \*-------------------------------------------*/
+
 /*-------------------------------------------*\
     Global
 \*-------------------------------------------*/
@@ -222,6 +220,7 @@ button:focus,
 button::-moz-focus-inner {
         border: 0;
     }
+
 /*-------------------------------------------*\
     Forms
 \*-------------------------------------------*/
@@ -574,6 +573,7 @@ input[type="range"].has-box-indicator::-moz-range-thumb {
     padding: 2px 3px;
     margin: 0;
 }
+
 /*-------------------------------------------*\
     Tree View
 \*-------------------------------------------*/
@@ -665,6 +665,7 @@ ul.tree-view details[open] summary {
 ul.tree-view details[open] > summary:before {
                 content: "-";
             }
+
 /*-------------------------------------------*\
     GroupBox
 \*-------------------------------------------*/
@@ -757,6 +758,7 @@ menu[role="tablist"].justified button {
     z-index: 2;
     margin-bottom: 9px;
 }
+
 :root {
     --sans-serif: "Pixelated MS Sans Serif", Arial;
     --surface: #c0c0c0;
@@ -801,6 +803,7 @@ menu[role="tablist"].justified button {
     --tab-border: none;
     --title-bar-bg: linear-gradient(90deg, var(--dialog-blue), var(--dialog-blue-light));
 }
+
 /*-------------------------------------------*\
     Global
 \*-------------------------------------------*/
@@ -878,6 +881,7 @@ textarea,
 option {
     -webkit-font-smoothing: none;
 }
+
 /*-------------------------------------------*\
     Tabs
 \*-------------------------------------------*/
@@ -921,6 +925,7 @@ menu[role="tablist"] button {
 [role="tabpanel"] {
     box-shadow: inset 1px 1px white, inset 2px 2px #dfdfdf, inset -1px -1px #0a0a0a, inset -2px -2px gray;
 }
+
 /*-------------------------------------------*\
     Buttons
 \*-------------------------------------------*/
@@ -929,6 +934,7 @@ button {
     font-family: var(--sans-serif);
     -webkit-font-smoothing: none;
 }
+
 /*-------------------------------------------*\
     TreeView
 \*-------------------------------------------*/

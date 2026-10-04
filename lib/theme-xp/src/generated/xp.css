@@ -16,16 +16,12 @@
  * Copyright (c) 2020 Adam Hammad <adamham.dev>
  * Based on 98.css by Jordan Scales <thatjdanisso.cool>
  * https://github.com/botoxparty/XP.css/blob/main/LICENSE
- */
-
- /**
+ *//**
  * GUI.css
  * Copyright (c) 2020 Adam Hammad <adamham.dev>
  * Based on 98.css by Jordan Scales <thatjdanisso.cool>
  * https://github.com/botoxparty/XP.css/blob/main/LICENSE
- */
-
-/*-------------------------------------------*\
+ *//*-------------------------------------------*\
     Variables
 \*-------------------------------------------*/
 
@@ -82,9 +78,11 @@
 
     --border-status-bar-field: inset -1px -1px var(--button-face), inset 1px 1px var(--button-shadow);
 }
+
 /*-------------------------------------------*\
     Fonts
 \*-------------------------------------------*/
+
 /*-------------------------------------------*\
     Global
 \*-------------------------------------------*/
@@ -222,6 +220,7 @@ button:focus,
 button::-moz-focus-inner {
         border: 0;
     }
+
 /*-------------------------------------------*\
     Forms
 \*-------------------------------------------*/
@@ -574,6 +573,7 @@ input[type="range"].has-box-indicator::-moz-range-thumb {
     padding: 2px 3px;
     margin: 0;
 }
+
 /*-------------------------------------------*\
     Tree View
 \*-------------------------------------------*/
@@ -665,6 +665,7 @@ ul.tree-view details[open] summary {
 ul.tree-view details[open] > summary:before {
                 content: "-";
             }
+
 /*-------------------------------------------*\
     GroupBox
 \*-------------------------------------------*/
@@ -757,7 +758,8 @@ menu[role="tablist"].justified button {
     z-index: 2;
     margin-bottom: 9px;
 }
- /*-------------------------------------------*\
+
+/*-------------------------------------------*\
     Variables
 \*-------------------------------------------*/
 
@@ -783,7 +785,8 @@ menu[role="tablist"].justified button {
     );
     --scrollbar-shadow: inset 1px 1px white, inset -1px -1px white, inset 2px 2px #b9cdfa, inset -2px -2px #b6c9f7;
 }
- /*-------------------------------------------*\
+
+/*-------------------------------------------*\
     Global
 \*-------------------------------------------*/
 
@@ -831,7 +834,7 @@ menu[role="tablist"].justified button {
             width: 17px;
             background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -0.5 17 17' shape-rendering='crispEdges'%3E %3Cpath stroke='%23eeede5' d='M0 0h17M16 1h1M16 15h1M16 16h1'/%3E %3Cpath stroke='%23fdfdfa' d='M0 1h1'/%3E %3Cpath stroke='%23ffffff' d='M1 1h15M0 2h1M15 2h1M0 3h1M15 3h1M0 4h1M15 4h1M0 5h1M15 5h1M0 6h1M15 6h1M0 7h1M15 7h1M0 8h1M15 8h1M0 9h1M15 9h1M0 10h1M15 10h1M0 11h1M15 11h1M0 12h1M15 12h1M0 13h1M15 13h1M0 14h1M15 14h1M1 15h14'/%3E %3Cpath stroke='%23e6eefc' d='M1 2h1'/%3E %3Cpath stroke='%23d0dffc' d='M2 2h1M1 3h1'/%3E %3Cpath stroke='%23cad8f9' d='M3 2h1M1 4h1'/%3E %3Cpath stroke='%23c4d2f7' d='M4 2h1'/%3E %3Cpath stroke='%23c0d0f7' d='M5 2h1'/%3E %3Cpath stroke='%23bdcef7' d='M6 2h1M1 7h1'/%3E %3Cpath stroke='%23bbcdf5' d='M7 2h2'/%3E %3Cpath stroke='%23b8cbf6' d='M9 2h1M1 8h1'/%3E %3Cpath stroke='%23b7caf5' d='M10 2h1'/%3E %3Cpath stroke='%23b5c8f7' d='M11 2h1'/%3E %3Cpath stroke='%23b3c7f5' d='M12 2h1'/%3E %3Cpath stroke='%23afc5f4' d='M13 2h1'/%3E %3Cpath stroke='%23dce6f9' d='M14 2h1'/%3E %3Cpath stroke='%23dfe2e1' d='M16 2h1'/%3E %3Cpath stroke='%23e1eafe' d='M2 3h1'/%3E %3Cpath stroke='%23dae6fe' d='M3 3h1M2 4h1'/%3E %3Cpath stroke='%23d4e1fc' d='M4 3h1M2 5h1'/%3E %3Cpath stroke='%23d1e0fd' d='M5 3h1M3 5h1'/%3E %3Cpath stroke='%23d0ddfc' d='M6 3h1M2 6h1'/%3E %3Cpath stroke='%23cedbfd' d='M7 3h1M5 4h1'/%3E %3Cpath stroke='%23cddbfc' d='M8 3h1M4 5h1M2 7h1'/%3E %3Cpath stroke='%23cad9fd' d='M9 3h1M6 4h1M4 6h1'/%3E %3Cpath stroke='%23c8d8fb' d='M10 3h1'/%3E %3Cpath stroke='%23c5d6fc' d='M11 3h1M3 10h3'/%3E %3Cpath stroke='%23c2d3fc' d='M12 3h1M11 4h1M2 10h1M3 11h1'/%3E %3Cpath stroke='%23bccefa' d='M13 3h1M13 5h1M4 13h2'/%3E %3Cpath stroke='%23b9c9f3' d='M14 3h1M4 14h3'/%3E %3Cpath stroke='%23cfd7dd' d='M16 3h1'/%3E %3Cpath stroke='%23d8e3fc' d='M3 4h1'/%3E %3Cpath stroke='%23d1defd' d='M4 4h1'/%3E %3Cpath stroke='%234d6185' d='M7 4h1M6 5h3M7 6h3M8 7h3M9 8h3M8 9h3M7 10h3M6 11h3M7 12h1'/%3E %3Cpath stroke='%23c8d6fb' d='M8 4h1M5 6h2'/%3E %3Cpath stroke='%23c5d5fc' d='M9 4h1M2 9h5'/%3E %3Cpath stroke='%23c5d3fc' d='M10 4h1'/%3E %3Cpath stroke='%23bed0fc' d='M12 4h1M9 5h1M2 11h1M3 12h1'/%3E %3Cpath stroke='%23bccdfa' d='M13 4h1'/%3E %3Cpath stroke='%23baccf4' d='M14 4h1'/%3E %3Cpath stroke='%23bdcbda' d='M16 4h1'/%3E %3Cpath stroke='%23c4d4f7' d='M1 5h1'/%3E %3Cpath stroke='%23c9d8fc' d='M5 5h1M4 7h3M2 8h1'/%3E %3Cpath stroke='%23bbcefd' d='M10 5h3M7 7h1'/%3E %3Cpath stroke='%23bcccf3' d='M14 5h1M14 6h1M14 7h1'/%3E %3Cpath stroke='%23b1c2d5' d='M16 5h1'/%3E %3Cpath stroke='%23bed0f8' d='M1 6h1'/%3E %3Cpath stroke='%23ceddfd' d='M3 6h1'/%3E %3Cpath stroke='%23bacdfc' d='M10 6h1M12 6h2M2 12h1'/%3E %3Cpath stroke='%23b9cdfb' d='M11 6h1M12 7h2M13 8h1'/%3E %3Cpath stroke='%23a8bbd4' d='M16 6h1'/%3E %3Cpath stroke='%23cddafc' d='M3 7h1'/%3E %3Cpath stroke='%23b7cdfc' d='M11 7h1M12 8h1'/%3E %3Cpath stroke='%23a4b8d3' d='M16 7h1'/%3E %3Cpath stroke='%23cad8fd' d='M3 8h3'/%3E %3Cpath stroke='%23c1d3fb' d='M6 8h3'/%3E %3Cpath stroke='%23bacbf4' d='M14 8h1'/%3E %3Cpath stroke='%23a0b5d3' d='M16 8h1M16 13h1'/%3E %3Cpath stroke='%23b4c8f6' d='M1 9h1'/%3E %3Cpath stroke='%23c2d5fc' d='M7 9h1M5 11h1'/%3E %3Cpath stroke='%23b6cefb' d='M11 9h2'/%3E %3Cpath stroke='%23b5cdfa' d='M13 9h1'/%3E %3Cpath stroke='%23b5c9f3' d='M14 9h1'/%3E %3Cpath stroke='%239fb5d2' d='M16 9h1M16 10h1M16 11h1M16 12h1'/%3E %3Cpath stroke='%23b1c7f6' d='M1 10h1'/%3E %3Cpath stroke='%23c3d5fd' d='M6 10h1'/%3E %3Cpath stroke='%23b2cffb' d='M10 10h3M11 12h1'/%3E %3Cpath stroke='%23b1cbfa' d='M13 10h1'/%3E %3Cpath stroke='%23b3c8f5' d='M14 10h1M9 14h2'/%3E %3Cpath stroke='%23adc3f6' d='M1 11h1'/%3E %3Cpath stroke='%23c3d3fd' d='M4 11h1'/%3E %3Cpath stroke='%23bad4fc' d='M9 11h1'/%3E %3Cpath stroke='%23b7d3fc' d='M10 11h1M9 12h1'/%3E %3Cpath stroke='%23b3d1fc' d='M11 11h1'/%3E %3Cpath stroke='%23afcefb' d='M12 11h1'/%3E %3Cpath stroke='%23aecafa' d='M13 11h1'/%3E %3Cpath stroke='%23b1c8f3' d='M14 11h1'/%3E %3Cpath stroke='%23acc2f5' d='M1 12h1'/%3E %3Cpath stroke='%23c1d2fb' d='M4 12h1'/%3E %3Cpath stroke='%23bed1fc' d='M5 12h2'/%3E %3Cpath stroke='%23bbd3fd' d='M8 12h1'/%3E %3Cpath stroke='%23b6d1fb' d='M10 12h1'/%3E %3Cpath stroke='%23afccfb' d='M12 12h1'/%3E %3Cpath stroke='%23adc9f9' d='M13 12h1M12 13h1'/%3E %3Cpath stroke='%23b1c5f3' d='M14 12h1'/%3E %3Cpath stroke='%23aac0f3' d='M1 13h1'/%3E %3Cpath stroke='%23b7cbf9' d='M2 13h1'/%3E %3Cpath stroke='%23b9cefb' d='M3 13h1'/%3E %3Cpath stroke='%23bbcef9' d='M6 13h1'/%3E %3Cpath stroke='%23b9cffb' d='M7 13h1'/%3E %3Cpath stroke='%23b8cffa' d='M8 13h1'/%3E %3Cpath stroke='%23b6cdfb' d='M9 13h1'/%3E %3Cpath stroke='%23b2cdfb' d='M10 13h1'/%3E %3Cpath stroke='%23b0cbf9' d='M11 13h1'/%3E %3Cpath stroke='%23aec8f7' d='M13 13h1'/%3E %3Cpath stroke='%23b0c5f2' d='M14 13h1'/%3E %3Cpath stroke='%23dbe3f8' d='M1 14h1'/%3E %3Cpath stroke='%23b7c6f1' d='M2 14h1'/%3E %3Cpath stroke='%23b8c9f2' d='M3 14h1M7 14h2'/%3E %3Cpath stroke='%23b2c8f4' d='M11 14h1'/%3E %3Cpath stroke='%23b1c6f3' d='M12 14h1'/%3E %3Cpath stroke='%23b0c4f2' d='M13 14h1'/%3E %3Cpath stroke='%23d9e3f6' d='M14 14h1'/%3E %3Cpath stroke='%23aec0d6' d='M16 14h1'/%3E %3Cpath stroke='%23c3d4e7' d='M0 15h1'/%3E %3Cpath stroke='%23aec4e5' d='M15 15h1'/%3E %3Cpath stroke='%23edf1f3' d='M0 16h1'/%3E %3Cpath stroke='%23aac0e1' d='M1 16h1'/%3E %3Cpath stroke='%2394b1d9' d='M2 16h1'/%3E %3Cpath stroke='%2388a7d8' d='M3 16h1'/%3E %3Cpath stroke='%2383a4d3' d='M4 16h1'/%3E %3Cpath stroke='%237da0d4' d='M5 16h1M10 16h3'/%3E %3Cpath stroke='%237e9fd2' d='M6 16h1'/%3E %3Cpath stroke='%237c9fd3' d='M7 16h3'/%3E %3Cpath stroke='%2382a4d6' d='M13 16h1'/%3E %3Cpath stroke='%2394b0dd' d='M14 16h1'/%3E %3Cpath stroke='%23ecf2f7' d='M15 16h1'/%3E %3C/svg%3E");
         }
- /*-------------------------------------------*\
+/*-------------------------------------------*\
     Window
 \*-------------------------------------------*/
 
@@ -976,7 +979,8 @@ menu[role="tablist"].justified button {
 .status-bar-field:last-of-type {
         border-right: none;
     }
- /*-------------------------------------------*\
+
+/*-------------------------------------------*\
     Buttons
 \*-------------------------------------------*/
 
@@ -1021,7 +1025,8 @@ button:focus,
 button::-moz-focus-inner {
         border: 0;
     }
- /*-------------------------------------------*\
+
+/*-------------------------------------------*\
     Forms
 \*-------------------------------------------*/
 
@@ -1205,7 +1210,7 @@ input[type="range"].has-box-indicator::-moz-range-thumb {
             box-shadow: -1px 0 0 white, -1px 1px 0 white, 0 1px 0 white, 1px 0 0 #9d9c99, 1px -1px 0 #9d9c99,
                 0 -1px 0 #9d9c99, 1px 1px 0 white, -1px -1px #9d9c99;
         }
- /*-------------------------------------------*\
+/*-------------------------------------------*\
     GroupBox
 \*-------------------------------------------*/
 
@@ -1238,7 +1243,7 @@ legend {
 .field-row-stacked * + * {
                 margin-top: var(--grouped-element-spacing);
             }
- /*-------------------------------------------*\
+/*-------------------------------------------*\
     Tabs
 \*-------------------------------------------*/
 
@@ -1293,7 +1298,7 @@ menu[role="tablist"] button[aria-selected="true"]:first-of-type::before {
 [role="tabpanel"] {
     box-shadow: inset 1px 1px #fcfcfe, inset -1px -1px #fcfcfe, 1px 2px 2px 0px rgba(208, 206, 191, 0.75);
 }
- /*-------------------------------------------*\
+/*-------------------------------------------*\
     TreeView
 \*-------------------------------------------*/
 
@@ -1302,7 +1307,8 @@ ul.tree-view {
     border: 1px solid #7f9db9;
     padding: 2px 5px;
 }
- /*-------------------------------------------*\
+
+/*-------------------------------------------*\
     ProgressBar
 \*-------------------------------------------*/
 

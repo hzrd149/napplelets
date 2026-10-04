@@ -15,8 +15,8 @@ const SHIM_PACKAGE = '@napplet/shim';
 // on their own — a stale entry here mints stale napplets. Keep them level with
 // what the existing napplets resolve to.
 const CURRENT_NAPPLET_PACKAGES = {
-  '@napplet/sdk': '^0.27.2',
-  '@napplet/conformance-cli': '^0.2.18',
+  '@napplet/sdk': '^0.28.0',
+  '@napplet/conformance-cli': '^0.2.19',
   '@napplet/vite-plugin': '^0.14.1',
 };
 const STATIC_SHIM_IMPORT =
@@ -62,10 +62,9 @@ export async function adoptNapplet(dir, { name, title } = {}) {
   }
   const pkgPath = join(dir, 'package.json');
   const pkg = JSON.parse(await readFile(pkgPath, 'utf8'));
-  // The generator names the package after the target directory, which is the
-  // napplet name for us anyway — but be explicit, since pnpm filters and the
-  // deploy `d` tag both key off it.
-  pkg.name = name;
+  // Package names use the workspace scope; the folder and manifest type
+  // retain the bare name used as the deploy `d` tag.
+  pkg.name = `@napplelets/${name}`;
   for (const dependencyGroup of ['dependencies', 'devDependencies']) {
     if (!pkg[dependencyGroup]) continue;
     delete pkg[dependencyGroup][SHIM_PACKAGE];
@@ -154,9 +153,9 @@ host code, direct \`fetch\`/\`WebSocket\`/storage, \`window.nostr\`, or an app-o
 A NIP-5D napplet in the [napplelets](../../README.md) monorepo.
 
 \`\`\`bash
-pnpm --filter ${name} dev               # local dev server
-pnpm --filter ${name} verify            # type-check + single-file build
-pnpm --filter ${name} test:conformance  # NAP conformance check
+pnpm --filter @napplelets/${name} dev               # local dev server
+pnpm --filter @napplelets/${name} verify            # type-check + single-file build
+pnpm --filter @napplelets/${name} test:conformance  # NAP conformance check
 \`\`\`
 
 The runtime injects \`window.napplet\`; app code uses \`@napplet/sdk\` for shell

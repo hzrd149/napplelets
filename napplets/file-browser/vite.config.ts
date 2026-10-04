@@ -1,9 +1,12 @@
 import { defineConfig } from 'vite';
+import tailwindcss from '@tailwindcss/vite';
 import { viteSingleFile } from 'vite-plugin-singlefile';
 import { nip5aManifest } from '@napplet/vite-plugin';
 
 export default defineConfig({
   plugins: [
+    // Compile the shared DSUI theme directives into browser CSS.
+    tailwindcss(),
     // Inline all JS/CSS into a single `index.html`. NIP-5D loads a napplet as a
     // single self-contained `/index.html` via `iframe.srcdoc` with
     // `sandbox="allow-scripts"` and no `allow-same-origin` (an opaque origin):

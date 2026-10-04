@@ -52,7 +52,8 @@ running napplet. Extra flags are forwarded to `kehto paja` to simulate the shell
 (e.g. `pnpm dev my-napplet --theme light`); see `pnpm exec kehto paja --help`.
 
 For bare Vite with no runtime (pure layout/styling iteration), use
-`pnpm --filter <name> dev`.
+`pnpm --filter @napplelets/<name> dev`. Package names use `@napplelets/<name>`;
+`pnpm dev <name>` and `pnpm new <name>` take the bare folder name.
 
 `pnpm dev` uses `iframe.src` for HMR, which is a dev convenience — **not** the
 production loading model. To exercise a napplet the way a real shell loads it,

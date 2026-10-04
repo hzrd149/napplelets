@@ -15,9 +15,9 @@ file list, a three-field status bar, and `.window.is-inactive` on whatever sits
 behind an open dialog.
 
 ```bash
-pnpm --filter notepad dev               # local dev server (127.0.0.1:3002)
-pnpm --filter notepad verify            # tests + type-check + single-file build
-pnpm --filter notepad test:conformance  # NAP conformance check
+pnpm --filter @napplelets/notepad dev               # local dev server (127.0.0.1:3002)
+pnpm --filter @napplelets/notepad verify            # tests + type-check + single-file build
+pnpm --filter @napplelets/notepad test:conformance  # NAP conformance check
 ```
 
 ## Shell surface

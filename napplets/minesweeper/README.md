@@ -32,6 +32,6 @@ and is original TypeScript/CSS; it does not include that project's sprite sheet.
 ## Verify
 
 ```bash
-pnpm --filter minesweeper verify
-pnpm --filter minesweeper test:conformance
+pnpm --filter @napplelets/minesweeper verify
+pnpm --filter @napplelets/minesweeper test:conformance
 ```

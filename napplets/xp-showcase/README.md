@@ -6,13 +6,13 @@ NAP-THEME payload rather than by a hardcoded palette.
 
 ```bash
 pnpm dev xp-showcase                        # Paja runtime + HMR, with a real theme domain
-pnpm --filter xp-showcase verify            # unit tests + type-check + single-file build
-pnpm --filter xp-showcase test:conformance  # NAP conformance on the built artifact
+pnpm --filter @napplelets/xp-showcase verify            # unit tests + type-check + single-file build
+pnpm --filter @napplelets/xp-showcase test:conformance  # NAP conformance on the built artifact
 ```
 
 `pnpm dev` boots it in Paja, which offers `--theme dark|light` and a live theme
 switcher — that is the only way to see `theme.changed` actually arrive. Bare
-`pnpm --filter xp-showcase dev` runs it with no shell at all, which is the
+`pnpm --filter @napplelets/xp-showcase dev` runs it with no shell at all, which is the
 degraded path (and worth looking at).
 
 ---

@@ -84,5 +84,5 @@ console.log('');
 console.log(`Created napplets/${name} ("${title}")`);
 console.log('Next steps:');
 console.log('  pnpm install');
-console.log(`  pnpm --filter ${name} dev`);
-console.log(`  pnpm --filter ${name} verify`);
+console.log(`  pnpm --filter @napplelets/${name} dev`);
+console.log(`  pnpm --filter @napplelets/${name} verify`);

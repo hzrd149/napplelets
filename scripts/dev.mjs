@@ -21,7 +21,7 @@
 // --help` to see them. `pnpm test:conformance` remains the real gate: it loads the
 // built single-file napplet in a real `allow-scripts` iframe.
 //
-// For bare Vite with no host runtime, use `pnpm --filter <name> dev`.
+// For bare Vite with no host runtime, use `pnpm --filter @napplelets/<name> dev`.
 import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -124,7 +124,7 @@ const args = [
   '--',
   'pnpm',
   '--filter',
-  target,
+  `@napplelets/${target}`,
   'exec',
   'vite',
   '--host',

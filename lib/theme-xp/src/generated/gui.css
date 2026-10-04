@@ -16,9 +16,7 @@
  * Copyright (c) 2020 Adam Hammad <adamham.dev>
  * Based on 98.css by Jordan Scales <thatjdanisso.cool>
  * https://github.com/botoxparty/XP.css/blob/main/LICENSE
- */
-
-/*-------------------------------------------*\
+ *//*-------------------------------------------*\
     Variables
 \*-------------------------------------------*/
 
@@ -75,9 +73,11 @@
 
     --border-status-bar-field: inset -1px -1px var(--button-face), inset 1px 1px var(--button-shadow);
 }
+
 /*-------------------------------------------*\
     Fonts
 \*-------------------------------------------*/
+
 /*-------------------------------------------*\
     Global
 \*-------------------------------------------*/
@@ -215,6 +215,7 @@ button:focus,
 button::-moz-focus-inner {
         border: 0;
     }
+
 /*-------------------------------------------*\
     Forms
 \*-------------------------------------------*/
@@ -567,6 +568,7 @@ input[type="range"].has-box-indicator::-moz-range-thumb {
     padding: 2px 3px;
     margin: 0;
 }
+
 /*-------------------------------------------*\
     Tree View
 \*-------------------------------------------*/
@@ -658,6 +660,7 @@ ul.tree-view details[open] summary {
 ul.tree-view details[open] > summary:before {
                 content: "-";
             }
+
 /*-------------------------------------------*\
     GroupBox
 \*-------------------------------------------*/

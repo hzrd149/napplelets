@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import { viteSingleFile } from 'vite-plugin-singlefile';
 import { nip5aManifest } from '@napplet/vite-plugin';
 import type { NappletConfigSchema } from '@napplet/sdk';
 
@@ -19,6 +20,8 @@ const configSchema = {
 
 export default defineConfig({
   plugins: [
+    // Explicit inlining keeps the artifact self-contained with Vite 8/Rolldown.
+    viteSingleFile(),
     nip5aManifest({
       nappletType: 'notepad',
       title: 'Notepad',

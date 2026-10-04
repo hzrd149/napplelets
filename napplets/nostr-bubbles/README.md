@@ -25,9 +25,9 @@ It does not use `window.nostr`, relay pools, direct `fetch`, WebSockets,
 browser storage, or `nostr-social-graph`.
 
 ```bash
-pnpm --filter nostr-bubbles dev               # local dev server
-pnpm --filter nostr-bubbles verify            # tests + type-check + single-file build
-pnpm --filter nostr-bubbles test:conformance  # NAP conformance check
+pnpm --filter @napplelets/nostr-bubbles dev               # local dev server
+pnpm --filter @napplelets/nostr-bubbles verify            # tests + type-check + single-file build
+pnpm --filter @napplelets/nostr-bubbles test:conformance  # NAP conformance check
 ```
 
 The runtime injects `window.napplet`; app code uses `@napplet/sdk` for shell

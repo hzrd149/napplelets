@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import tailwindcss from '@tailwindcss/vite';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { viteSingleFile } from 'vite-plugin-singlefile';
 import { nip5aManifest } from '@napplet/vite-plugin';
@@ -78,6 +79,8 @@ const configSchema = {
 
 export default defineConfig({
   plugins: [
+    // Compile the shared DSUI theme directives into browser CSS.
+    tailwindcss(),
     svelte(),
     // NIP-5D loads a napplet via `iframe.srcdoc` with `sandbox="allow-scripts"`
     // and no `allow-same-origin` (an opaque origin): there is no served origin
