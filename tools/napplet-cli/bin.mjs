@@ -5,6 +5,11 @@
 // root workspace as the `napplet` bin, so scripts can call e.g. `napplet
 // conformance` / `napplet deploy` without depending on the napplet/ submodule.
 import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+
+// Use pnpm's installed version rather than an unversioned JSR URL, which can
+// resolve to an older release in Deno's independent registry cache.
+const cliPath = fileURLToPath(import.meta.resolve('@napplet/cli/cli'));
 
 // Permissions mirror @napplet/cli's own shebang (read/write/run/env/net) — enough
 // for conformance, discover, debug, deploy, and keys.
@@ -12,15 +17,15 @@ const result = spawnSync(
   'deno',
   [
     'run',
+    '--no-config',
     '--no-lock',
-    '--minimum-dependency-age=0',
-    '--node-modules-dir=auto',
+    '--node-modules-dir=manual',
     '--allow-read',
     '--allow-write',
     '--allow-run',
     '--allow-env',
     '--allow-net',
-    'jsr:@napplet/cli/cli',
+    cliPath,
     ...process.argv.slice(2),
   ],
   { stdio: 'inherit' },

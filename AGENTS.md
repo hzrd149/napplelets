@@ -91,7 +91,8 @@ bare Vite with no runtime, use `pnpm --filter @napplelets/<name> dev`.
 **`@napplet/cli` drives testing/deploy from the repo root, in monorepo mode.** It
 is a Deno tool published to JSR with no Node bin, so `tools/napplet-cli` exposes
 it as the `napplet` launcher (a root `workspace:*` devDependency) that runs
-`jsr:@napplet/cli/cli` via Deno — **Deno must be installed**. A single root
+the pnpm-installed `@napplet/cli/cli` entry point via Deno — **Deno must be
+installed**. A single root
 `.napplet/config.json` sets `discover.roots: ["napplets"]`; the `--all` commands
 treat every built napplet folder as its own deploy target (folder name = the
 named-site `d` tag, so it must match `^[a-z0-9-]{1,13}$`). Add `relays` and
