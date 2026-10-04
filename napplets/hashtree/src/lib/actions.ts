@@ -26,17 +26,12 @@ const describe = (error: unknown): string =>
  * A chunked file has no single URL, and an encrypted one would hand the server's
  * ciphertext to the browser, which cannot decrypt it.
  */
-export function directBlobUrl(
-  target: TreeTarget,
-  servers: readonly string[],
-): string | null {
+export function directBlobUrl(target: TreeTarget, servers: readonly string[]): string | null {
   if (target.type !== LINK_BLOB || target.key !== null) return null;
   const server = servers[0];
   if (server === undefined) return null;
   const extension = target.name === null ? null : extensionOf(target.name);
-  return extension === null
-    ? `${server}/${target.hash}`
-    : `${server}/${target.hash}.${extension}`;
+  return extension === null ? `${server}/${target.hash}` : `${server}/${target.hash}.${extension}`;
 }
 
 /** Why the "open in browser" action is unavailable, phrased for the user. */
@@ -80,10 +75,7 @@ export function bytesToBase64(bytes: Uint8Array): string {
  * This is the export path that works for chunked and encrypted files, since the
  * bytes are already decrypted and concatenated in memory.
  */
-export async function saveToDisk(
-  bytes: Uint8Array,
-  suggestedName: string,
-): Promise<ActionOutcome> {
+export async function saveToDisk(bytes: Uint8Array, suggestedName: string): Promise<ActionOutcome> {
   if (!hasMethod('fs', 'pickSaveFile') || !hasMethod('fs', 'write')) {
     return { ok: false, error: 'This shell does not provide NAP-FS, so files cannot be saved.' };
   }

@@ -43,7 +43,9 @@
   <header class="ins-head">
     <h2 class="ins-title" title={target.name ?? label}>{target.name ?? label}</h2>
     <span class="ins-kind ins-kind-{rootLink.kind}">{rootLink.kind}</span>
-    <span class="ins-head-size">{target.size === 0 ? 'size unknown' : formatBytes(target.size)}</span>
+    <span class="ins-head-size"
+      >{target.size === 0 ? 'size unknown' : formatBytes(target.size)}</span
+    >
     <span class="ins-head-spacer"></span>
     <button type="button" class="btn btn-ghost btn-xs" onclick={onClose}>Close</button>
   </header>
@@ -58,7 +60,9 @@
       {target.hash}
     </button>
     {#if target.key !== null}
-      <span class="ins-flag" title="chk-v1 encrypted; the key stays in this napplet">🔒 encrypted</span>
+      <span class="ins-flag" title="chk-v1 encrypted; the key stays in this napplet"
+        >🔒 encrypted</span
+      >
     {/if}
   </p>
 
@@ -66,7 +70,8 @@
     <section class="ins-structure" aria-label="Blob structure">
       <header class="ins-structure-head">
         <h3 class="ins-section-title">Structure</h3>
-        <span class="ins-hint">{servers.length} server{servers.length === 1 ? '' : 's'} in use</span>
+        <span class="ins-hint">{servers.length} server{servers.length === 1 ? '' : 's'} in use</span
+        >
       </header>
       <!-- A new subject is a new inspection, not the old one with new props. -->
       {#key target.hash}

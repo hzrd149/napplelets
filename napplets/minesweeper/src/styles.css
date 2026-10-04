@@ -297,7 +297,9 @@ body {
 }
 
 .result-icon {
-  font: 30px/1 Arial, sans-serif;
+  font:
+    30px/1 Arial,
+    sans-serif;
 }
 
 .result-summary p {

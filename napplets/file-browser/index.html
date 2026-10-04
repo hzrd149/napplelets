@@ -9,8 +9,20 @@
     <main id="app" class="app-shell" aria-label="File browser">
       <header class="toolbar">
         <div class="toolbar-group navigation-actions">
-          <button id="backButton" class="btn btn-ghost btn-sm square" type="button" aria-label="Go up" title="Go up"></button>
-          <button id="refreshButton" class="btn btn-ghost btn-sm square" type="button" aria-label="Refresh" title="Refresh"></button>
+          <button
+            id="backButton"
+            class="btn btn-ghost btn-sm square"
+            type="button"
+            aria-label="Go up"
+            title="Go up"
+          ></button>
+          <button
+            id="refreshButton"
+            class="btn btn-ghost btn-sm square"
+            type="button"
+            aria-label="Refresh"
+            title="Refresh"
+          ></button>
         </div>
         <nav id="breadcrumbs" class="breadcrumbs" aria-label="Current folder"></nav>
         <div class="toolbar-divider" aria-hidden="true"></div>
@@ -21,9 +33,27 @@
         <div class="toolbar-divider selection-divider" aria-hidden="true"></div>
         <div class="toolbar-group selection-actions" aria-label="Selected item actions">
           <output id="selectionLabel" class="selection-label"></output>
-          <button id="renameButton" class="btn btn-ghost btn-sm compact-action" type="button" aria-label="Rename selected item" title="Rename"></button>
-          <button id="moveButton" class="btn btn-ghost btn-sm compact-action" type="button" aria-label="Move selected items" title="Move"></button>
-          <button id="deleteButton" class="btn btn-error btn-outline btn-sm compact-action" type="button" aria-label="Delete selected items" title="Delete"></button>
+          <button
+            id="renameButton"
+            class="btn btn-ghost btn-sm compact-action"
+            type="button"
+            aria-label="Rename selected item"
+            title="Rename"
+          ></button>
+          <button
+            id="moveButton"
+            class="btn btn-ghost btn-sm compact-action"
+            type="button"
+            aria-label="Move selected items"
+            title="Move"
+          ></button>
+          <button
+            id="deleteButton"
+            class="btn btn-error btn-outline btn-sm compact-action"
+            type="button"
+            aria-label="Delete selected items"
+            title="Delete"
+          ></button>
         </div>
       </header>
 
@@ -47,9 +77,15 @@
       <dialog id="nameDialog" class="modal">
         <section class="modal-box" aria-labelledby="nameDialogTitle">
           <h2 id="nameDialogTitle">Name</h2>
-          <label class="field"><span id="nameDialogLabel">Name</span><input id="nameInput" class="input input-bordered" autocomplete="off" /></label>
+          <label class="field"
+            ><span id="nameDialogLabel">Name</span
+            ><input id="nameInput" class="input input-bordered" autocomplete="off"
+          /></label>
           <p id="nameError" class="field-error" role="alert"></p>
-          <div class="modal-action"><button id="nameCancel" class="btn btn-ghost" type="button">Cancel</button><button id="nameConfirm" class="btn btn-primary" type="button">Create</button></div>
+          <div class="modal-action">
+            <button id="nameCancel" class="btn btn-ghost" type="button">Cancel</button
+            ><button id="nameConfirm" class="btn btn-primary" type="button">Create</button>
+          </div>
         </section>
       </dialog>
 
@@ -59,7 +95,10 @@
           <nav id="moveBreadcrumbs" class="breadcrumbs" aria-label="Destination folder"></nav>
           <div id="moveEntries" class="move-entries" role="list"></div>
           <p id="moveError" class="field-error" role="alert"></p>
-          <div class="modal-action"><button id="moveCancel" class="btn btn-ghost" type="button">Cancel</button><button id="moveConfirm" class="btn btn-primary" type="button">Move here</button></div>
+          <div class="modal-action">
+            <button id="moveCancel" class="btn btn-ghost" type="button">Cancel</button
+            ><button id="moveConfirm" class="btn btn-primary" type="button">Move here</button>
+          </div>
         </section>
       </dialog>
 
@@ -67,8 +106,13 @@
         <section class="modal-box" aria-labelledby="deleteDialogTitle">
           <h2 id="deleteDialogTitle">Delete permanently?</h2>
           <p id="deleteMessage"></p>
-          <p class="danger-note">This cannot be undone. Non-empty folders and their contents will also be removed.</p>
-          <div class="modal-action"><button id="deleteCancel" class="btn btn-ghost" type="button">Cancel</button><button id="deleteConfirm" class="btn btn-error" type="button">Delete</button></div>
+          <p class="danger-note">
+            This cannot be undone. Non-empty folders and their contents will also be removed.
+          </p>
+          <div class="modal-action">
+            <button id="deleteCancel" class="btn btn-ghost" type="button">Cancel</button
+            ><button id="deleteConfirm" class="btn btn-error" type="button">Delete</button>
+          </div>
         </section>
       </dialog>
     </main>

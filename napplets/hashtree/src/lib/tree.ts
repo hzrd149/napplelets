@@ -125,7 +125,11 @@ export async function lookupEntry(
   name: string,
   options: FetchOptions = {},
 ): Promise<TreeLink | null> {
-  const search = async (hash: string, key: string | null, depth: number): Promise<TreeLink | null> => {
+  const search = async (
+    hash: string,
+    key: string | null,
+    depth: number,
+  ): Promise<TreeLink | null> => {
     if (depth > MAX_DEPTH) {
       throw new TreeError(`Directory nests deeper than ${MAX_DEPTH} levels.`, 'limit');
     }
@@ -339,13 +343,7 @@ export async function readFileRange(
         const bytes = await store.bytes(slice.link.hash, slice.link.key, options);
         return bytes.slice(slice.start, slice.end);
       }
-      return readFileRange(
-        store,
-        targetFromLink(slice.link),
-        slice.start,
-        slice.end,
-        options,
-      );
+      return readFileRange(store, targetFromLink(slice.link), slice.start, slice.end, options);
     }),
   );
   return concatBytes(parts);

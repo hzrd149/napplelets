@@ -37,7 +37,11 @@ function parseHexColor(value: string | undefined): Rgb | null {
   const match = /^#([0-9a-f]{6})$/i.exec(value.trim());
   if (!match) return null;
   const hex = match[1]!;
-  return [parseInt(hex.slice(0, 2), 16), parseInt(hex.slice(2, 4), 16), parseInt(hex.slice(4, 6), 16)];
+  return [
+    parseInt(hex.slice(0, 2), 16),
+    parseInt(hex.slice(2, 4), 16),
+    parseInt(hex.slice(4, 6), 16),
+  ];
 }
 
 function toHex([r, g, b]: Rgb): string {
@@ -60,7 +64,8 @@ function applyCssVariables(values: Record<string, string>): void {
   const style = document.documentElement.style;
   for (const [name, value] of Object.entries(values)) style.setProperty(name, value);
   const colorScheme = values['--hg-color-scheme'];
-  if (colorScheme === 'light' || colorScheme === 'dark') document.documentElement.dataset.hgTheme = colorScheme;
+  if (colorScheme === 'light' || colorScheme === 'dark')
+    document.documentElement.dataset.hgTheme = colorScheme;
   for (const [name, value] of Object.entries(values)) {
     const match = /^#([0-9a-f]{6})$/i.exec(value.trim());
     if (!match) continue;
@@ -103,8 +108,12 @@ function variablesForTheme(theme: Theme): Record<string, string> {
     variables['--hg-text-secondary'] = toHex(mix(text, background, 0.32));
     variables['--hg-text-muted'] = toHex(mix(text, background, 0.48));
     variables['--hg-text-dim'] = toHex(mix(text, background, 0.64));
-    variables['--hg-accent-amber'] = toHex(isLight ? mix(primary, [245, 158, 11], 0.72) : mix(primary, [229, 196, 100], 0.72));
-    variables['--hg-accent-red'] = toHex(isLight ? mix(primary, [220, 38, 38], 0.76) : mix(primary, [255, 115, 105], 0.76));
+    variables['--hg-accent-amber'] = toHex(
+      isLight ? mix(primary, [245, 158, 11], 0.72) : mix(primary, [229, 196, 100], 0.72),
+    );
+    variables['--hg-accent-red'] = toHex(
+      isLight ? mix(primary, [220, 38, 38], 0.76) : mix(primary, [255, 115, 105], 0.76),
+    );
   }
   return variables;
 }

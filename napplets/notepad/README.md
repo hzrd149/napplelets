@@ -26,7 +26,7 @@ pnpm --filter @napplelets/notepad test:conformance  # NAP conformance check
 | --------- | --------------------------------------------------------------------------- |
 | `fs`      | everything: roots, listing, read, write, stat, pickers, and change watching |
 | `storage` | the editor's own state — open path, unsaved buffer, word wrap, last folder  |
-| `inc`     | delivery rail for payloads resolved through NAP-INTENT                     |
+| `inc`     | delivery rail for payloads resolved through NAP-INTENT                      |
 | `config`  | shell-owned option to show or hide the Windows XP window frame              |
 
 The documents live on the filesystem; `storage` never holds one. Word wrap is a

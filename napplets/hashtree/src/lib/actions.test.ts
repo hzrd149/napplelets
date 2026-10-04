@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  bytesToBase64,
-  directBlobUrl,
-  directBlobUrlBlocker,
-  mediaMetadataFor,
-} from './actions.js';
+import { bytesToBase64, directBlobUrl, directBlobUrlBlocker, mediaMetadataFor } from './actions.js';
 import { DEFAULT_SETTINGS, mergeRecent, readSettings } from './session.js';
 import type { TreeTarget } from './tree.js';
 

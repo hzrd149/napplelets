@@ -43,7 +43,13 @@ describe('readRootEvent', () => {
 
   it('reads a public root that publishes its key', () => {
     const result = readRootEvent(
-      event({ tags: [['d', 'photos'], ['hash', HASH], ['key', KEY]] }),
+      event({
+        tags: [
+          ['d', 'photos'],
+          ['hash', HASH],
+          ['key', KEY],
+        ],
+      }),
     );
     expect(result).toMatchObject({ hash: HASH, key: KEY, visibility: 'public' });
   });
@@ -51,7 +57,12 @@ describe('readRootEvent', () => {
   it('classifies a link-private root', () => {
     const result = readRootEvent(
       event({
-        tags: [['d', 'photos'], ['hash', HASH], ['encryptedKey', KEY], ['keyId', '00'.repeat(8)]],
+        tags: [
+          ['d', 'photos'],
+          ['hash', HASH],
+          ['encryptedKey', KEY],
+          ['keyId', '00'.repeat(8)],
+        ],
       }),
     );
     expect(result).toMatchObject({ visibility: 'link-private', key: null });
@@ -59,7 +70,13 @@ describe('readRootEvent', () => {
 
   it('classifies an owner-private root', () => {
     const result = readRootEvent(
-      event({ tags: [['d', 'photos'], ['hash', HASH], ['selfEncryptedKey', 'nip44…']] }),
+      event({
+        tags: [
+          ['d', 'photos'],
+          ['hash', HASH],
+          ['selfEncryptedKey', 'nip44…'],
+        ],
+      }),
     );
     expect(result).toMatchObject({ visibility: 'owner-private', key: null });
   });
@@ -69,13 +86,27 @@ describe('readRootEvent', () => {
   });
 
   it('rejects a malformed hash tag', () => {
-    expect(readRootEvent(event({ tags: [['d', 'p'], ['hash', 'nope']] }))).toMatch(
-      /not a 32 byte hex hash/,
-    );
+    expect(
+      readRootEvent(
+        event({
+          tags: [
+            ['d', 'p'],
+            ['hash', 'nope'],
+          ],
+        }),
+      ),
+    ).toMatch(/not a 32 byte hex hash/);
   });
 
   it('accepts but flags an uppercase hash', () => {
-    const result = readRootEvent(event({ tags: [['d', 'p'], ['hash', HASH.toUpperCase()]] }));
+    const result = readRootEvent(
+      event({
+        tags: [
+          ['d', 'p'],
+          ['hash', HASH.toUpperCase()],
+        ],
+      }),
+    );
     expect(result).toMatchObject({ hash: HASH });
     expect(typeof result === 'string' ? [] : result.warnings).toHaveLength(1);
   });
@@ -120,7 +151,17 @@ describe('filterCandidates', () => {
     expect(filterCandidates([event({ pubkey: '22'.repeat(32) })], ref)).toHaveLength(0);
     expect(filterCandidates([event({ kind: 30023 })], ref)).toHaveLength(0);
     expect(
-      filterCandidates([event({ tags: [['d', 'other'], ['hash', HASH]] })], ref),
+      filterCandidates(
+        [
+          event({
+            tags: [
+              ['d', 'other'],
+              ['hash', HASH],
+            ],
+          }),
+        ],
+        ref,
+      ),
     ).toHaveLength(0);
   });
 });

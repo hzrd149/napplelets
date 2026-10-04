@@ -38,39 +38,85 @@ button {
 .space-backdrop {
   z-index: -3;
   background:
-    radial-gradient(circle at 18% 22%, rgba(var(--hg-accent-green-rgb, 155 229 100) / 0.2), transparent 30%),
+    radial-gradient(
+      circle at 18% 22%,
+      rgba(var(--hg-accent-green-rgb, 155 229 100) / 0.2),
+      transparent 30%
+    ),
     radial-gradient(circle at 78% 18%, rgba(168 85 247 / 0.22), transparent 28%),
-    radial-gradient(circle at 52% 80%, rgba(var(--hg-accent-amber-rgb, 229 196 100) / 0.17), transparent 34%),
-    linear-gradient(135deg, rgb(var(--hg-bg-overlay-rgb, 8 7 6)) 0%, rgb(var(--hg-bg-base-rgb, 20 17 12)) 52%, #030303 100%);
+    radial-gradient(
+      circle at 52% 80%,
+      rgba(var(--hg-accent-amber-rgb, 229 196 100) / 0.17),
+      transparent 34%
+    ),
+    linear-gradient(
+      135deg,
+      rgb(var(--hg-bg-overlay-rgb, 8 7 6)) 0%,
+      rgb(var(--hg-bg-base-rgb, 20 17 12)) 52%,
+      #030303 100%
+    );
 }
 
 :root[data-hg-theme='light'] .space-backdrop {
   background:
-    radial-gradient(circle at 14% 18%, rgba(var(--hg-accent-green-rgb, 34 197 94) / 0.28), transparent 30%),
+    radial-gradient(
+      circle at 14% 18%,
+      rgba(var(--hg-accent-green-rgb, 34 197 94) / 0.28),
+      transparent 30%
+    ),
     radial-gradient(circle at 82% 16%, rgba(129 140 248 / 0.22), transparent 30%),
-    radial-gradient(circle at 50% 86%, rgba(var(--hg-accent-amber-rgb, 245 158 11) / 0.24), transparent 34%),
-    linear-gradient(135deg, rgb(var(--hg-bg-overlay-rgb, 255 255 255)) 0%, rgb(var(--hg-bg-base-rgb, 248 250 252)) 58%, rgb(var(--hg-bg-surface-rgb, 241 245 249)) 100%);
+    radial-gradient(
+      circle at 50% 86%,
+      rgba(var(--hg-accent-amber-rgb, 245 158 11) / 0.24),
+      transparent 34%
+    ),
+    linear-gradient(
+      135deg,
+      rgb(var(--hg-bg-overlay-rgb, 255 255 255)) 0%,
+      rgb(var(--hg-bg-base-rgb, 248 250 252)) 58%,
+      rgb(var(--hg-bg-surface-rgb, 241 245 249)) 100%
+    );
 }
 
 .space-backdrop::before {
   content: '';
   opacity: 0.24;
-  background-image: radial-gradient(circle at center, rgba(255 255 255 / 0.45) 0 1px, transparent 1px);
+  background-image: radial-gradient(
+    circle at center,
+    rgba(255 255 255 / 0.45) 0 1px,
+    transparent 1px
+  );
   background-size: 34px 34px;
 }
 
 .space-backdrop::after {
   content: '';
-  background: linear-gradient(to bottom, rgba(0 0 0 / 0.68), transparent 26%, transparent 72%, rgba(0 0 0 / 0.72));
+  background: linear-gradient(
+    to bottom,
+    rgba(0 0 0 / 0.68),
+    transparent 26%,
+    transparent 72%,
+    rgba(0 0 0 / 0.72)
+  );
 }
 
 :root[data-hg-theme='light'] .space-backdrop::before {
   opacity: 0.38;
-  background-image: radial-gradient(circle at center, rgba(var(--hg-text-primary-rgb, 15 23 42) / 0.14) 0 1px, transparent 1px);
+  background-image: radial-gradient(
+    circle at center,
+    rgba(var(--hg-text-primary-rgb, 15 23 42) / 0.14) 0 1px,
+    transparent 1px
+  );
 }
 
 :root[data-hg-theme='light'] .space-backdrop::after {
-  background: linear-gradient(to bottom, rgba(255 255 255 / 0.74), transparent 26%, transparent 72%, rgba(255 255 255 / 0.78));
+  background: linear-gradient(
+    to bottom,
+    rgba(255 255 255 / 0.74),
+    transparent 26%,
+    transparent 72%,
+    rgba(255 255 255 / 0.78)
+  );
 }
 
 .effects-layer,
@@ -421,7 +467,9 @@ button {
 :root[data-hg-theme='light'] .avatar {
   border-color: rgba(255 255 255 / 0.92);
   background: rgba(255 255 255 / 0.58);
-  box-shadow: inset 0 0 1.2rem rgba(255 255 255 / 0.72), 0 0.45rem 1.4rem rgba(var(--hg-text-primary-rgb, 15 23 42) / 0.16);
+  box-shadow:
+    inset 0 0 1.2rem rgba(255 255 255 / 0.72),
+    0 0.45rem 1.4rem rgba(var(--hg-text-primary-rgb, 15 23 42) / 0.16);
 }
 
 .avatar-shaped {
@@ -462,7 +510,9 @@ button {
 
 .bubble-root .avatar {
   border-color: rgb(var(--hg-accent-amber-rgb, 229 196 100));
-  box-shadow: 0 0 2rem rgba(var(--hg-accent-amber-rgb, 229 196 100) / 0.24), inset 0 0 1.1rem rgba(255 255 255 / 0.46);
+  box-shadow:
+    0 0 2rem rgba(var(--hg-accent-amber-rgb, 229 196 100) / 0.24),
+    inset 0 0 1.1rem rgba(255 255 255 / 0.46);
 }
 
 .bubble-reply .avatar {
@@ -471,7 +521,9 @@ button {
 
 .bubble-zap .avatar {
   border-color: rgba(var(--hg-accent-amber-rgb, 229 196 100) / 0.92);
-  box-shadow: 0 0 1.6rem rgba(var(--hg-accent-amber-rgb, 229 196 100) / 0.48), inset 0 0 1.1rem rgba(255 255 255 / 0.46);
+  box-shadow:
+    0 0 1.6rem rgba(var(--hg-accent-amber-rgb, 229 196 100) / 0.48),
+    inset 0 0 1.1rem rgba(255 255 255 / 0.46);
 }
 
 .bubble-reaction .avatar {

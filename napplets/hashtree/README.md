@@ -15,12 +15,12 @@ no `archetypes` rather than advertising a role it cannot service.
 
 Implements the four pending Blossom drafts:
 
-| BUD | Covered here |
-| --- | --- |
+| BUD                                               | Covered here                                                                  |
+| ------------------------------------------------- | ----------------------------------------------------------------------------- |
 | [15](https://github.com/hzrd149/blossom/pull/104) | `chk-v1` decryption (HKDF-SHA256 + AES-256-GCM, zero nonce), public keys only |
-| [16](https://github.com/hzrd149/blossom/pull/105) | MessagePack directory manifests (`t = 2`) |
-| [17](https://github.com/hzrd149/blossom/pull/106) | Chunked file manifests (`t = 1`) and directory fanout (`t = 3`) |
-| [18](https://github.com/hzrd149/blossom/pull/107) | `htree://` references, `nhash` TLV, kind `30064` mutable roots |
+| [16](https://github.com/hzrd149/blossom/pull/105) | MessagePack directory manifests (`t = 2`)                                     |
+| [17](https://github.com/hzrd149/blossom/pull/106) | Chunked file manifests (`t = 1`) and directory fanout (`t = 3`)               |
+| [18](https://github.com/hzrd149/blossom/pull/107) | `htree://` references, `nhash` TLV, kind `30064` mutable roots                |
 
 **These specs are unmerged drafts and may change.** Decoding is strict so a
 format shift fails loudly rather than rendering something wrong, and the four

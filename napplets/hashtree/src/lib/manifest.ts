@@ -60,10 +60,7 @@ export interface TreeNode {
 }
 
 export type ManifestErrorCode =
-  | 'malformed'
-  | 'unsupported-type'
-  | 'invalid-link'
-  | 'duplicate-name';
+  'malformed' | 'unsupported-type' | 'invalid-link' | 'duplicate-name';
 
 export class ManifestError extends Error {
   constructor(
@@ -75,9 +72,7 @@ export class ManifestError extends Error {
   }
 }
 
-function isMap(
-  value: MsgpackValue | undefined,
-): value is { [key: string]: MsgpackValue } {
+function isMap(value: MsgpackValue | undefined): value is { [key: string]: MsgpackValue } {
   return typeof value === 'object' && value !== null && !Array.isArray(value) && !isBytes(value);
 }
 
@@ -283,11 +278,7 @@ export interface ChunkSlice {
  * `s` values before it. That is what makes random access possible — only the
  * subtrees whose cumulative range overlaps the request need to be fetched.
  */
-export function sliceLinks(
-  node: TreeNode,
-  rangeStart: number,
-  rangeEnd: number,
-): ChunkSlice[] {
+export function sliceLinks(node: TreeNode, rangeStart: number, rangeEnd: number): ChunkSlice[] {
   const slices: ChunkSlice[] = [];
   let offset = 0;
   for (const link of node.links) {

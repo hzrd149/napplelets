@@ -1,6 +1,19 @@
 import { installThemeClient } from '@napplelets/theme-dsui';
-import { config, identity, outbox, type NostrEvent, type RelayEventResult, type Subscription } from '@napplet/sdk';
-import { NAPPLET_KIND_NAMED, sortedSummaries, summarizeManifest, upsertNewest, type NappletManifestSummary } from './lib/manifest';
+import {
+  config,
+  identity,
+  outbox,
+  type NostrEvent,
+  type RelayEventResult,
+  type Subscription,
+} from '@napplet/sdk';
+import {
+  NAPPLET_KIND_NAMED,
+  sortedSummaries,
+  summarizeManifest,
+  upsertNewest,
+  type NappletManifestSummary,
+} from './lib/manifest';
 import './styles.css';
 
 interface FeedSettings {
@@ -54,8 +67,14 @@ async function loadSettings(): Promise<FeedSettings> {
 function normalizeSettings(values: Record<string, unknown>): FeedSettings {
   return {
     scanWindowDays: boundedInteger(values.scanWindowDays, DEFAULT_SETTINGS.scanWindowDays, 1, 365),
-    contactBatchSize: boundedInteger(values.contactBatchSize, DEFAULT_SETTINGS.contactBatchSize, 25, 250),
-    includeSelf: typeof values.includeSelf === 'boolean' ? values.includeSelf : DEFAULT_SETTINGS.includeSelf,
+    contactBatchSize: boundedInteger(
+      values.contactBatchSize,
+      DEFAULT_SETTINGS.contactBatchSize,
+      25,
+      250,
+    ),
+    includeSelf:
+      typeof values.includeSelf === 'boolean' ? values.includeSelf : DEFAULT_SETTINGS.includeSelf,
   };
 }
 
@@ -90,7 +109,7 @@ async function restartFeed(): Promise<void> {
     if (token !== streamToken) return;
     if (!pubkey) {
       loadState = 'signed-out';
-      statusMessage = 'Connect an identity in the shell to see contacts\' napplets.';
+      statusMessage = "Connect an identity in the shell to see contacts' napplets.";
       render();
       return;
     }
@@ -166,7 +185,9 @@ function handleManifestResult(result: RelayEventResult): void {
 function relayHintsFromResult(result: RelayEventResult): string[] {
   const sidecar = result.sidecar as { relayHints?: unknown; relays?: unknown } | undefined;
   const hints = sidecar?.relayHints ?? sidecar?.relays;
-  return Array.isArray(hints) ? hints.filter((hint): hint is string => typeof hint === 'string') : [];
+  return Array.isArray(hints)
+    ? hints.filter((hint): hint is string => typeof hint === 'string')
+    : [];
 }
 
 function settleLiveState(): void {
@@ -203,9 +224,11 @@ function render(): void {
     </main>
   `;
 
-  root.querySelector<HTMLButtonElement>('[data-action="refresh"]')?.addEventListener('click', () => {
-    void restartFeed();
-  });
+  root
+    .querySelector<HTMLButtonElement>('[data-action="refresh"]')
+    ?.addEventListener('click', () => {
+      void restartFeed();
+    });
   for (const button of root.querySelectorAll<HTMLButtonElement>('[data-copy-naddr]')) {
     button.addEventListener('click', () => {
       void copyNaddr(button.dataset.copyNaddr ?? '', button.dataset.copyTitle ?? 'napplet');
@@ -214,7 +237,11 @@ function render(): void {
 }
 
 function renderBody(items: NappletManifestSummary[]): string {
-  if (loadState === 'signed-out' || loadState === 'error' || (loadState === 'empty' && items.length === 0)) {
+  if (
+    loadState === 'signed-out' ||
+    loadState === 'error' ||
+    (loadState === 'empty' && items.length === 0)
+  ) {
     return `<section class="empty"><h2>${stateTitle(loadState)}</h2><p>${escapeHtml(statusMessage)}</p></section>`;
   }
 
@@ -229,7 +256,9 @@ function renderBody(items: NappletManifestSummary[]): string {
 function renderCard(item: NappletManifestSummary): string {
   const requires = item.requires.length > 0 ? item.requires : ['No special access listed'];
   const archetypes = item.archetypes.length > 0 ? item.archetypes : ['General napplet'];
-  const buildLabel = item.isSingleFile ? 'Ready for sandboxed shells' : `${item.pathCount} files listed`;
+  const buildLabel = item.isSingleFile
+    ? 'Ready for sandboxed shells'
+    : `${item.pathCount} files listed`;
   const settingsLabel = item.hasConfig ? 'Has settings' : 'No settings listed';
 
   return `
@@ -269,7 +298,9 @@ async function copyNaddr(naddr: string, title: string): Promise<void> {
     await navigator.clipboard?.writeText(text);
     copyStatus = `Copied ${title} naddr.`;
   } catch {
-    const input = [...root.querySelectorAll<HTMLInputElement>('input[readonly]')].find((candidate) => candidate.value === text);
+    const input = [...root.querySelectorAll<HTMLInputElement>('input[readonly]')].find(
+      (candidate) => candidate.value === text,
+    );
     input?.focus();
     input?.select();
     copyStatus = 'Clipboard was unavailable; the naddr field is selected for manual copy.';
@@ -279,7 +310,8 @@ async function copyNaddr(naddr: string, title: string): Promise<void> {
 
 function chunk<T>(items: T[], size: number): T[][] {
   const chunks: T[][] = [];
-  for (let index = 0; index < items.length; index += size) chunks.push(items.slice(index, index + size));
+  for (let index = 0; index < items.length; index += size)
+    chunks.push(items.slice(index, index + size));
   return chunks;
 }
 
@@ -299,11 +331,16 @@ function stateTitle(state: LoadState): string {
 }
 
 function formatTime(seconds: number): string {
-  return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(seconds * 1000));
+  return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(
+    new Date(seconds * 1000),
+  );
 }
 
 function escapeHtml(value: string): string {
-  return value.replace(/[&<>"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[char] ?? char);
+  return value.replace(
+    /[&<>"]/g,
+    (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[char] ?? char,
+  );
 }
 
 globalThis.addEventListener('beforeunload', () => {

@@ -19,7 +19,10 @@ export interface NappletManifestSummary {
   hasConfig: boolean;
 }
 
-export function summarizeManifest(event: NostrEvent, relayHints: string[] = []): NappletManifestSummary | null {
+export function summarizeManifest(
+  event: NostrEvent,
+  relayHints: string[] = [],
+): NappletManifestSummary | null {
   if (event.kind !== NAPPLET_KIND_NAMED) return null;
 
   const identifier = firstTagValue(event, 'd');
@@ -27,7 +30,8 @@ export function summarizeManifest(event: NostrEvent, relayHints: string[] = []):
 
   const title = firstTagValue(event, 'title') || identifier;
   const description = firstTagValue(event, 'description') || '';
-  const aggregateHash = event.tags.find((tag) => tag[0] === 'x' && tag[2] === 'aggregate')?.[1] ?? null;
+  const aggregateHash =
+    event.tags.find((tag) => tag[0] === 'x' && tag[2] === 'aggregate')?.[1] ?? null;
   const pathTags = event.tags.filter((tag) => tag[0] === 'path');
   const requires = uniqueTagValues(event, 'requires');
   const archetypes = event.tags
@@ -76,5 +80,7 @@ function firstTagValue(event: NostrEvent, name: string): string | null {
 }
 
 function uniqueTagValues(event: NostrEvent, name: string): string[] {
-  return [...new Set(event.tags.filter((tag) => tag[0] === name && Boolean(tag[1])).map((tag) => tag[1]))];
+  return [
+    ...new Set(event.tags.filter((tag) => tag[0] === name && Boolean(tag[1])).map((tag) => tag[1])),
+  ];
 }

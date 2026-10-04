@@ -1,5 +1,13 @@
 import * as THREE from 'three';
-import { CubeModel, randomMove, type Axis, type Coord, type CubeSize, type Move, type Turn } from './cube';
+import {
+  CubeModel,
+  randomMove,
+  type Axis,
+  type Coord,
+  type CubeSize,
+  type Move,
+  type Turn,
+} from './cube';
 import './styles.css';
 
 interface CubieView {
@@ -120,7 +128,7 @@ function requireElement<T extends Element>(selector: string): T {
 }
 
 function parseCubeSize(value: string): CubeSize {
-  return value === '2' || value === '4' ? Number(value) as CubeSize : 3;
+  return value === '2' || value === '4' ? (Number(value) as CubeSize) : 3;
 }
 
 function buildCube(size: CubeSize): void {
@@ -130,7 +138,10 @@ function buildCube(size: CubeSize): void {
   zoomFactor = 1;
 
   for (const state of model.cubies) {
-    const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.92, 0.92, 0.92), makeMaterials(state, size));
+    const mesh = new THREE.Mesh(
+      new THREE.BoxGeometry(0.92, 0.92, 0.92),
+      makeMaterials(state, size),
+    );
     mesh.position.copy(coordToPosition(state, size));
     mesh.userData.cubieId = state.id;
     cubeGroup.add(mesh);
@@ -159,7 +170,11 @@ function faceMaterial(color: number): THREE.MeshStandardMaterial {
 function coordToPosition(coord: Coord, size: CubeSize): THREE.Vector3 {
   const spacing = 1.08;
   const offset = (size - 1) / 2;
-  return new THREE.Vector3((coord.x - offset) * spacing, (coord.y - offset) * spacing, (coord.z - offset) * spacing);
+  return new THREE.Vector3(
+    (coord.x - offset) * spacing,
+    (coord.y - offset) * spacing,
+    (coord.z - offset) * spacing,
+  );
 }
 
 function onPointerDown(event: PointerEvent): void {
@@ -199,8 +214,13 @@ function onPointerMove(event: PointerEvent): void {
 
   if (event.pointerId !== activePointerId || !orbiting) return;
   const rect = stage.getBoundingClientRect();
-  rotationY = startRotation.y + ((event.clientX - dragStart.x) / Math.max(rect.width, 1)) * Math.PI * 1.8;
-  rotationX = clamp(startRotation.x + ((event.clientY - dragStart.y) / Math.max(rect.height, 1)) * Math.PI, -1.35, 1.35);
+  rotationY =
+    startRotation.y + ((event.clientX - dragStart.x) / Math.max(rect.width, 1)) * Math.PI * 1.8;
+  rotationX = clamp(
+    startRotation.x + ((event.clientY - dragStart.y) / Math.max(rect.height, 1)) * Math.PI,
+    -1.35,
+    1.35,
+  );
 }
 
 function onPointerUp(event: PointerEvent): void {
@@ -249,7 +269,10 @@ function pickCubie(clientX: number, clientY: number): PickedCubie | null {
   pointer.x = ((clientX - rect.left) / Math.max(rect.width, 1)) * 2 - 1;
   pointer.y = -((clientY - rect.top) / Math.max(rect.height, 1)) * 2 + 1;
   raycaster.setFromCamera(pointer, camera);
-  const hits = raycaster.intersectObjects(cubies.map((cubie) => cubie.mesh), false);
+  const hits = raycaster.intersectObjects(
+    cubies.map((cubie) => cubie.mesh),
+    false,
+  );
   const hit = hits[0];
   if (!hit?.face) return null;
   const cubie = cubies.find((item) => item.mesh === hit.object);
@@ -325,14 +348,19 @@ function getRotation(startPickValue: PickedCubie, endPick: PickedCubie): Move | 
 
 function edgeRotation(start: Coord, end: Coord, fallbackAxis: Axis): Move | null {
   const changed = (['x', 'y', 'z'] as const).filter((axis) => start[axis] !== end[axis]);
-  const layerAxis = (['x', 'y', 'z'] as const).find((axis) => !changed.includes(axis)) ?? fallbackAxis;
+  const layerAxis =
+    (['x', 'y', 'z'] as const).find((axis) => !changed.includes(axis)) ?? fallbackAxis;
   const dragAxis = changed[0];
   if (!dragAxis) return null;
-  return { axis: layerAxis, layer: start[layerAxis], turns: end[dragAxis] < start[dragAxis] ? -1 : 1 };
+  return {
+    axis: layerAxis,
+    layer: start[layerAxis],
+    turns: end[dragAxis] < start[dragAxis] ? -1 : 1,
+  };
 }
 
 function invertTurn(turns: Turn): Turn {
-  return (-turns) as Turn;
+  return -turns as Turn;
 }
 
 async function scramble(): Promise<void> {
@@ -439,10 +467,9 @@ function updateFitDistance(): void {
   const horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * aspect);
   const cubeRadius = (model.size * 1.08 * Math.sqrt(3)) / 2;
   const margin = Math.min(width, height) < 360 ? 1.45 : 1.25;
-  fitDistance = Math.max(
-    cubeRadius / Math.tan(verticalFov / 2),
-    cubeRadius / Math.tan(horizontalFov / 2),
-  ) * margin;
+  fitDistance =
+    Math.max(cubeRadius / Math.tan(verticalFov / 2), cubeRadius / Math.tan(horizontalFov / 2)) *
+    margin;
 }
 
 function clamp(value: number, min: number, max: number): number {

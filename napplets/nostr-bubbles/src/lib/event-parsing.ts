@@ -60,17 +60,30 @@ export function parseThreadReference(event: NostrEvent): ThreadReference | undef
   const rootFromTag = rootTag ? referenceFromETag(rootTag) : undefined;
   const replyFromTag = replyTag ? referenceFromETag(replyTag) : undefined;
   if (eTags.length === 0) return undefined;
-  return rootFromTag ? { root: rootFromTag, reply: replyFromTag?.eventId === event.id ? undefined : replyFromTag } : undefined;
+  return rootFromTag
+    ? { root: rootFromTag, reply: replyFromTag?.eventId === event.id ? undefined : replyFromTag }
+    : undefined;
 }
 
 export function parseProfile(event: NostrEvent | undefined): ProfileResult {
   if (!event) return {};
   try {
     const content = JSON.parse(event.content) as Record<string, unknown>;
-    const picture = typeof content.picture === 'string' ? content.picture : typeof content.image === 'string' ? content.image : undefined;
-    const displayName = typeof content.display_name === 'string' ? content.display_name : typeof content.name === 'string' ? content.name : undefined;
+    const picture =
+      typeof content.picture === 'string'
+        ? content.picture
+        : typeof content.image === 'string'
+          ? content.image
+          : undefined;
+    const displayName =
+      typeof content.display_name === 'string'
+        ? content.display_name
+        : typeof content.name === 'string'
+          ? content.name
+          : undefined;
     return {
-      displayName: typeof displayName === 'string' && displayName.trim() ? displayName.trim() : undefined,
+      displayName:
+        typeof displayName === 'string' && displayName.trim() ? displayName.trim() : undefined,
       picture: typeof picture === 'string' && picture.trim() ? picture.trim() : undefined,
       shape: isEmojiShape(content?.shape) ? content.shape : undefined,
     };
@@ -129,7 +142,8 @@ export function getZapAmountSats(event: NostrEvent): number | undefined {
       const tags = zapRequest.tags;
       if (Array.isArray(tags)) {
         const amountTag = tags.find(
-          (tag): tag is string[] => Array.isArray(tag) && tag[0] === 'amount' && typeof tag[1] === 'string',
+          (tag): tag is string[] =>
+            Array.isArray(tag) && tag[0] === 'amount' && typeof tag[1] === 'string',
         );
         candidates.push(amountTag?.[1]);
       }
@@ -141,7 +155,8 @@ export function getZapAmountSats(event: NostrEvent): number | undefined {
   for (const candidate of candidates) {
     if (typeof candidate !== 'string') continue;
     const millisats = Number.parseInt(candidate, 10);
-    if (Number.isFinite(millisats) && millisats > 0) return Math.max(1, Math.round(millisats / 1000));
+    if (Number.isFinite(millisats) && millisats > 0)
+      return Math.max(1, Math.round(millisats / 1000));
   }
   return parseBolt11AmountSats(getTagValue(event, 'bolt11'));
 }
@@ -187,5 +202,10 @@ function getTagValue(event: NostrEvent, name: string): string | undefined {
 }
 
 function isEmojiShape(value: unknown): value is string {
-  return typeof value === 'string' && value.length > 0 && value.length <= 20 && /[^\x00-\x7F]/.test(value);
+  return (
+    typeof value === 'string' &&
+    value.length > 0 &&
+    value.length <= 20 &&
+    /[^\x00-\x7F]/.test(value)
+  );
 }

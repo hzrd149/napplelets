@@ -49,7 +49,17 @@ describe('event parsing', () => {
   it('selects reaction target by marker precedence', () => {
     const root = '1'.repeat(64);
     const reply = '2'.repeat(64);
-    expect(getReactionTargetEventId(event({ kind: 7, tags: [['e', reply, '', 'reply'], ['e', root, '', 'root']] }))).toBe(root);
+    expect(
+      getReactionTargetEventId(
+        event({
+          kind: 7,
+          tags: [
+            ['e', reply, '', 'reply'],
+            ['e', root, '', 'root'],
+          ],
+        }),
+      ),
+    ).toBe(root);
   });
 
   it('normalizes reaction emoji content', () => {
@@ -71,7 +81,14 @@ describe('event parsing', () => {
   });
 
   it('parses on-chain zap amount and self-zap state', () => {
-    const zap = event({ kind: 8333, pubkey: hexB, tags: [['amount', '42'], ['p', hexB]] });
+    const zap = event({
+      kind: 8333,
+      pubkey: hexB,
+      tags: [
+        ['amount', '42'],
+        ['p', hexB],
+      ],
+    });
     expect(getOnchainZapAmountSats(zap)).toBe(42);
     expect(isSelfOnchainZap(zap)).toBe(true);
   });

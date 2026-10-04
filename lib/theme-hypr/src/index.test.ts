@@ -64,7 +64,9 @@ describe('installThemeClient', () => {
       value: { theme: {} },
     });
     let onChanged: ((theme: unknown) => void) | undefined;
-    sdk.themeGet.mockResolvedValue({ colors: { background: '#14110c', text: '#f5f1e8', primary: '#9be564' } });
+    sdk.themeGet.mockResolvedValue({
+      colors: { background: '#14110c', text: '#f5f1e8', primary: '#9be564' },
+    });
     sdk.themeOnChanged.mockImplementation((callback) => {
       onChanged = callback;
       return { close: vi.fn() };

@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
-  base64ToBytes, basename, isDescendantPath, joinPath, parentPath, previewKind,
-  sortEntries, validateEntryName,
+  base64ToBytes,
+  basename,
+  isDescendantPath,
+  joinPath,
+  parentPath,
+  previewKind,
+  sortEntries,
+  validateEntryName,
 } from './fs-utils';
 
 describe('virtual path helpers', () => {

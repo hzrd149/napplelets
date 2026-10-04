@@ -27,7 +27,11 @@ This NIP uses addressable event kind `35641`.
     ["m", "application/vnd.comicbook+zip"],
     ["x", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"],
     ["size", "73400320"],
-    ["thumb", "https://cdn.example.com/batman-2016-001-thumb.jpg", "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"],
+    [
+      "thumb",
+      "https://cdn.example.com/batman-2016-001-thumb.jpg",
+      "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    ],
 
     ["c", "publisher:dc-comics"],
     ["c", "series:batman"],
@@ -207,20 +211,8 @@ Example query for one publication:
 ```json
 {
   "kinds": [35641],
-  "&c": [
-    "publisher:dc-comics",
-    "series:batman",
-    "volume:2016",
-    "number:1",
-    "language:en"
-  ],
-  "#c": [
-    "publisher:dc-comics",
-    "series:batman",
-    "volume:2016",
-    "number:1",
-    "language:en"
-  ]
+  "&c": ["publisher:dc-comics", "series:batman", "volume:2016", "number:1", "language:en"],
+  "#c": ["publisher:dc-comics", "series:batman", "volume:2016", "number:1", "language:en"]
 }
 ```
 

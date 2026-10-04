@@ -64,7 +64,7 @@ export class CubeModel {
 }
 
 export function invertTurns(turns: Turn): Turn {
-  return (-turns) as Turn;
+  return -turns as Turn;
 }
 
 export function normalizeTurns(turns: Turn): Turn {

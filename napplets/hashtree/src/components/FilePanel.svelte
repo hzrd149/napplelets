@@ -136,7 +136,9 @@
     <div class="preview">
       {#if preview.status === 'loading'}
         <p class="preview-status">
-          Fetching {preview.total > 0 ? `${formatBytes(preview.loaded)} of ${formatBytes(preview.total)}` : 'chunks'}…
+          Fetching {preview.total > 0
+            ? `${formatBytes(preview.loaded)} of ${formatBytes(preview.total)}`
+            : 'chunks'}…
         </p>
         <progress class="progress" value={progress} max="100"></progress>
       {:else if preview.status === 'error'}

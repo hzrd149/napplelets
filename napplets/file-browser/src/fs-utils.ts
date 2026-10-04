@@ -4,11 +4,30 @@ export const TEXT_PREVIEW_BYTES = 256 * 1024;
 export const IMAGE_PREVIEW_BYTES = 4 * 1024 * 1024;
 
 const TEXT_EXTENSIONS = new Set([
-  'txt', 'md', 'json', 'csv', 'log', 'xml', 'yaml', 'yml', 'toml', 'ini',
-  'css', 'js', 'ts', 'html', 'htm', 'sh', 'conf',
+  'txt',
+  'md',
+  'json',
+  'csv',
+  'log',
+  'xml',
+  'yaml',
+  'yml',
+  'toml',
+  'ini',
+  'css',
+  'js',
+  'ts',
+  'html',
+  'htm',
+  'sh',
+  'conf',
 ]);
 const IMAGE_TYPES: Record<string, string> = {
-  png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp',
+  png: 'image/png',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  gif: 'image/gif',
+  webp: 'image/webp',
 };
 
 export type PreviewKind = { kind: 'text' } | { kind: 'image'; mime: string } | { kind: 'none' };

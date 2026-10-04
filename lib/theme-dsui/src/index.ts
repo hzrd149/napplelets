@@ -57,5 +57,10 @@ export function installDsuiThemeClient(): { close(): void } {
 }
 
 export const installThemeClient = installDsuiThemeClient;
-export { buildDaisyTheme, buildDaisyThemeColors, isDaisyThemeHex, isDarkDaisyTheme } from './daisy-theme';
+export {
+  buildDaisyTheme,
+  buildDaisyThemeColors,
+  isDaisyThemeHex,
+  isDarkDaisyTheme,
+} from './daisy-theme';
 export type { DaisyThemeInput, DaisyThemeVariables } from './daisy-theme';

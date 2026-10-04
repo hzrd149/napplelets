@@ -23,10 +23,7 @@ import { HASHTREE_KIND, LEGACY_HASHTREE_KIND, type MutableRef, type TreeRef } fr
 export type RootVisibility = 'public' | 'link-private' | 'owner-private';
 
 export type ResolveErrorCode =
-  | 'outbox-unavailable'
-  | 'not-found'
-  | 'invalid-event'
-  | 'unsupported-visibility';
+  'outbox-unavailable' | 'not-found' | 'invalid-event' | 'unsupported-visibility';
 
 export class ResolveError extends Error {
   constructor(
@@ -191,7 +188,9 @@ async function resolveMutable(ref: MutableRef): Promise<ResolvedRoot> {
     warnings.push('Some relays did not answer, so a newer root may exist.');
   }
   if (ref.linkKey !== null) {
-    warnings.push('The reference carries a link key, but this root is public — the key was ignored.');
+    warnings.push(
+      'The reference carries a link key, but this root is public — the key was ignored.',
+    );
   }
 
   return {

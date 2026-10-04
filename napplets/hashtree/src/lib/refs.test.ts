@@ -19,7 +19,12 @@ const naddr = (kind: number, identifier: string, relays: string[] = []) =>
       { type: 2, value: hexToBytes(PUBKEY)! },
       {
         type: 3,
-        value: new Uint8Array([(kind >>> 24) & 0xff, (kind >>> 16) & 0xff, (kind >>> 8) & 0xff, kind & 0xff]),
+        value: new Uint8Array([
+          (kind >>> 24) & 0xff,
+          (kind >>> 16) & 0xff,
+          (kind >>> 8) & 0xff,
+          kind & 0xff,
+        ]),
       },
     ]),
   );
@@ -209,9 +214,7 @@ describe('formatting', () => {
 
   it('percent-encodes a tree name containing a slash', () => {
     const ref = ok(`htree://${NPUB}/releases%2Fnostr-vpn`);
-    expect(formatHtreeUri(ref, ['app.zip'])).toBe(
-      `htree://${NPUB}/releases%2Fnostr-vpn/app.zip`,
-    );
+    expect(formatHtreeUri(ref, ['app.zip'])).toBe(`htree://${NPUB}/releases%2Fnostr-vpn/app.zip`);
   });
 
   it('builds the replaceable event coordinate', () => {

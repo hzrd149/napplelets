@@ -23,13 +23,7 @@
  */
 
 export type MsgpackValue =
-  | null
-  | boolean
-  | number
-  | string
-  | Uint8Array
-  | MsgpackValue[]
-  | { [key: string]: MsgpackValue };
+  null | boolean | number | string | Uint8Array | MsgpackValue[] | { [key: string]: MsgpackValue };
 
 export class MsgpackError extends Error {
   constructor(message: string) {

@@ -39,7 +39,13 @@ function uint(value: number): Uint8Array {
   if (value < 0x100) return byte(0xcc, value);
   if (value < 0x10000) return byte(0xcd, value >> 8, value & 0xff);
   if (value < 0x100000000) {
-    return byte(0xce, (value >>> 24) & 0xff, (value >>> 16) & 0xff, (value >>> 8) & 0xff, value & 0xff);
+    return byte(
+      0xce,
+      (value >>> 24) & 0xff,
+      (value >>> 16) & 0xff,
+      (value >>> 8) & 0xff,
+      value & 0xff,
+    );
   }
   const high = Math.floor(value / 0x100000000);
   const low = value >>> 0;

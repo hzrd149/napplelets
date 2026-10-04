@@ -3,7 +3,11 @@
   --panel: color-mix(in srgb, var(--color-base-200, #241f16) 88%, transparent);
   --panel-strong: color-mix(in srgb, var(--color-base-300, #342c1f) 86%, transparent);
   --text: var(--color-base-content, #f5f1e8);
-  --muted: color-mix(in srgb, var(--color-base-content, #f5f1e8) 62%, var(--color-base-100, #14110c) 38%);
+  --muted: color-mix(
+    in srgb,
+    var(--color-base-content, #f5f1e8) 62%,
+    var(--color-base-100, #14110c) 38%
+  );
   --line: color-mix(in srgb, var(--color-base-content, #f5f1e8) 18%, transparent);
   --accent: var(--color-primary, #9be564);
   --accent-ink: var(--color-primary-content, #111827);
@@ -20,10 +24,22 @@ body {
   margin: 0;
   min-width: 0;
   background:
-    radial-gradient(circle at top left, color-mix(in srgb, var(--accent) 24%, transparent), transparent 34rem),
+    radial-gradient(
+      circle at top left,
+      color-mix(in srgb, var(--accent) 24%, transparent),
+      transparent 34rem
+    ),
     var(--color-base-100, #14110c);
   color: var(--text);
-  font-family: var(--gm-font-body, ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, Consolas, monospace);
+  font-family: var(
+    --gm-font-body,
+    ui-monospace,
+    'JetBrains Mono',
+    SFMono-Regular,
+    Menlo,
+    Consolas,
+    monospace
+  );
 }
 
 button,

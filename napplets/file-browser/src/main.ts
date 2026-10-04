@@ -176,9 +176,11 @@ function setBusy(value: boolean): void {
 
 function rootForPath(path: string): FsRoot | null {
   const roots = info?.roots ?? [];
-  return roots
-    .filter((root) => path === root.path || isDescendantPath(root.path, path))
-    .sort((a, b) => b.path.length - a.path.length)[0] ?? null;
+  return (
+    roots
+      .filter((root) => path === root.path || isDescendantPath(root.path, path))
+      .sort((a, b) => b.path.length - a.path.length)[0] ?? null
+  );
 }
 
 function updateActions(): void {
@@ -201,7 +203,12 @@ function revokePreview(): void {
   previewUrl = null;
 }
 
-function makeButton(label: string, onClick: () => void, className = 'btn btn-ghost btn-sm', iconNode?: IconNode): HTMLButtonElement {
+function makeButton(
+  label: string,
+  onClick: () => void,
+  className = 'btn btn-ghost btn-sm',
+  iconNode?: IconNode,
+): HTMLButtonElement {
   const button = document.createElement('button');
   button.type = 'button';
   button.className = className;
@@ -211,7 +218,11 @@ function makeButton(label: string, onClick: () => void, className = 'btn btn-gho
   return button;
 }
 
-function renderBreadcrumbs(target: HTMLElement, path: string | null, navigate: (path: string | null) => void): void {
+function renderBreadcrumbs(
+  target: HTMLElement,
+  path: string | null,
+  navigate: (path: string | null) => void,
+): void {
   target.replaceChildren();
   target.append(makeButton('Roots', () => navigate(null), 'crumb', HardDrive));
   if (!path) return;
@@ -264,10 +275,21 @@ function createEntryRow(entry: FsDirectoryEntry): HTMLElement {
     checkbox.checked ? selected.add(entry.path) : selected.delete(entry.path);
     updateActions();
   });
-  const name = makeButton(entry.name, () => {
-    if (entry.kind === 'directory') void navigate(entry.path);
-    else void showPreview(entry);
-  }, 'entry-name', entry.kind === 'directory' ? Folder : previewKind(entry.name).kind === 'image' ? FileImage : previewKind(entry.name).kind === 'text' ? FileText : File);
+  const name = makeButton(
+    entry.name,
+    () => {
+      if (entry.kind === 'directory') void navigate(entry.path);
+      else void showPreview(entry);
+    },
+    'entry-name',
+    entry.kind === 'directory'
+      ? Folder
+      : previewKind(entry.name).kind === 'image'
+        ? FileImage
+        : previewKind(entry.name).kind === 'text'
+          ? FileText
+          : File,
+  );
   const size = document.createElement('span');
   size.className = 'entry-meta size';
   size.textContent = entry.kind === 'directory' ? '—' : formatBytes(entry.size);
@@ -366,8 +388,10 @@ function metadataFragment(entry: FsDirectoryEntry, metadata: FsMetadata | null):
     ['Created', formatDate(metadata?.createdAt)],
   ];
   for (const [term, value] of rows) {
-    const dt = document.createElement('dt'); dt.textContent = term;
-    const dd = document.createElement('dd'); dd.textContent = value;
+    const dt = document.createElement('dt');
+    dt.textContent = term;
+    const dd = document.createElement('dd');
+    dd.textContent = value;
     list.append(dt, dd);
   }
   fragment.append(heading, list);
@@ -378,12 +402,17 @@ function renderMetadata(entry: FsDirectoryEntry, metadata: FsMetadata | null, no
   elements.preview.replaceChildren(metadataFragment(entry, metadata));
   if (note) {
     const paragraph = document.createElement('p');
-    paragraph.className = 'muted'; paragraph.textContent = note;
+    paragraph.className = 'muted';
+    paragraph.textContent = note;
     elements.preview.append(paragraph);
   }
 }
 
-async function renderPreview(entry: FsDirectoryEntry, metadata: FsMetadata, sequence: number): Promise<void> {
+async function renderPreview(
+  entry: FsDirectoryEntry,
+  metadata: FsMetadata,
+  sequence: number,
+): Promise<void> {
   const kind = previewKind(entry.name);
   const maxRead = info?.limits.maxReadBytes ?? 0;
   if (kind.kind === 'none') {
@@ -391,7 +420,11 @@ async function renderPreview(entry: FsDirectoryEntry, metadata: FsMetadata, sequ
     return;
   }
   const cap = kind.kind === 'text' ? TEXT_PREVIEW_BYTES : IMAGE_PREVIEW_BYTES;
-  if (kind.kind === 'image' && metadata.size !== undefined && metadata.size > Math.min(cap, maxRead)) {
+  if (
+    kind.kind === 'image' &&
+    metadata.size !== undefined &&
+    metadata.size > Math.min(cap, maxRead)
+  ) {
     renderMetadata(entry, metadata, 'Image exceeds the safe preview limit.');
     return;
   }
@@ -411,15 +444,22 @@ async function renderPreview(entry: FsDirectoryEntry, metadata: FsMetadata, sequ
     pre.textContent = new TextDecoder('utf-8', { fatal: false }).decode(bytes);
     elements.preview.append(pre);
     if (!result.eof) {
-      const note = document.createElement('p'); note.className = 'muted'; note.textContent = 'Preview truncated at 256 KiB.';
+      const note = document.createElement('p');
+      note.className = 'muted';
+      note.textContent = 'Preview truncated at 256 KiB.';
       elements.preview.append(note);
     }
   } else if (!result.eof) {
-    const note = document.createElement('p'); note.className = 'muted'; note.textContent = 'The complete image exceeds the safe preview limit.';
+    const note = document.createElement('p');
+    note.className = 'muted';
+    note.textContent = 'The complete image exceeds the safe preview limit.';
     elements.preview.append(note);
   } else {
     previewUrl = URL.createObjectURL(new Blob([bytes], { type: kind.mime }));
-    const image = document.createElement('img'); image.className = 'image-preview'; image.alt = `Preview of ${entry.name}`; image.src = previewUrl;
+    const image = document.createElement('img');
+    image.className = 'image-preview';
+    image.alt = `Preview of ${entry.name}`;
+    image.src = previewUrl;
     elements.preview.append(image);
   }
 }
@@ -436,8 +476,14 @@ function openNameDialog(action: NameAction): void {
     advertisedPermissions: currentRoot?.permissions ?? [],
   });
   nameAction = action;
-  const current = action === 'rename' ? selectedEntries()[0]?.name ?? '' : action === 'file' ? 'untitled.txt' : '';
-  elements.nameTitle.textContent = action === 'folder' ? 'New folder' : action === 'file' ? 'New text file' : 'Rename item';
+  const current =
+    action === 'rename'
+      ? (selectedEntries()[0]?.name ?? '')
+      : action === 'file'
+        ? 'untitled.txt'
+        : '';
+  elements.nameTitle.textContent =
+    action === 'folder' ? 'New folder' : action === 'file' ? 'New text file' : 'Rename item';
   elements.nameLabel.textContent = action === 'rename' ? 'New name' : 'Name';
   elements.nameConfirm.textContent = action === 'rename' ? 'Rename' : 'Create';
   elements.nameInput.value = current;
@@ -449,7 +495,9 @@ function openNameDialog(action: NameAction): void {
 
 async function submitName(): Promise<void> {
   if (!currentPath) {
-    debugError('create-dialog:no-current-path', new Error('No directory is selected'), { action: nameAction });
+    debugError('create-dialog:no-current-path', new Error('No directory is selected'), {
+      action: nameAction,
+    });
     setStatus('error', 'Choose a folder before creating an item.');
     return;
   }
@@ -464,14 +512,15 @@ async function submitName(): Promise<void> {
   const destination = joinPath(currentPath, name);
   debug('fs:mutation:start', {
     action: nameAction,
-    source: nameAction === 'rename' ? selectedEntries()[0]?.path ?? null : null,
+    source: nameAction === 'rename' ? (selectedEntries()[0]?.path ?? null) : null,
     destination,
     root: currentRoot?.name ?? null,
     advertisedPermissions: currentRoot?.permissions ?? [],
   });
   try {
     if (nameAction === 'folder') await fs.mkdir(destination);
-    else if (nameAction === 'file') await fs.write(destination, '', { mode: 'replace', ifAbsent: true });
+    else if (nameAction === 'file')
+      await fs.write(destination, '', { mode: 'replace', ifAbsent: true });
     else {
       const entry = selectedEntries()[0];
       if (!entry) return;
@@ -486,16 +535,25 @@ async function submitName(): Promise<void> {
     debugError('fs:mutation:failed', error, { action: nameAction, destination });
     elements.nameError.textContent = message;
     setStatus('error', message);
-  } finally { setBusy(false); }
+  } finally {
+    setBusy(false);
+  }
 }
 
 function renderMoveRoots(): void {
   elements.moveEntries.replaceChildren();
   for (const root of info?.roots ?? []) {
-    const button = makeButton(root.name, () => void loadMoveDirectory(root.path), 'move-row', HardDrive);
+    const button = makeButton(
+      root.name,
+      () => void loadMoveDirectory(root.path),
+      'move-row',
+      HardDrive,
+    );
     elements.moveEntries.append(button);
   }
-  renderBreadcrumbs(elements.moveBreadcrumbs, null, (path) => path ? void loadMoveDirectory(path) : renderMoveRoots());
+  renderBreadcrumbs(elements.moveBreadcrumbs, null, (path) =>
+    path ? void loadMoveDirectory(path) : renderMoveRoots(),
+  );
   elements.moveConfirm.disabled = true;
 }
 
@@ -505,11 +563,20 @@ async function loadMoveDirectory(path: string): Promise<void> {
   elements.moveEntries.innerHTML = '<p class="muted">Loading…</p>';
   try {
     const entries = sortEntries(await fs.list(path)).filter((entry) => entry.kind === 'directory');
-    elements.moveEntries.replaceChildren(...entries.map((entry) => makeButton(entry.name, () => void loadMoveDirectory(entry.path), 'move-row', FolderOpen)));
-    if (entries.length === 0) elements.moveEntries.innerHTML = '<p class="muted">No subfolders.</p>';
-    renderBreadcrumbs(elements.moveBreadcrumbs, path, (destination) => destination ? void loadMoveDirectory(destination) : renderMoveRoots());
+    elements.moveEntries.replaceChildren(
+      ...entries.map((entry) =>
+        makeButton(entry.name, () => void loadMoveDirectory(entry.path), 'move-row', FolderOpen),
+      ),
+    );
+    if (entries.length === 0)
+      elements.moveEntries.innerHTML = '<p class="muted">No subfolders.</p>';
+    renderBreadcrumbs(elements.moveBreadcrumbs, path, (destination) =>
+      destination ? void loadMoveDirectory(destination) : renderMoveRoots(),
+    );
     elements.moveConfirm.disabled = false;
-  } catch (error) { elements.moveError.textContent = errorMessage(error); }
+  } catch (error) {
+    elements.moveError.textContent = errorMessage(error);
+  }
 }
 
 async function moveSelected(): Promise<void> {
@@ -518,21 +585,43 @@ async function moveSelected(): Promise<void> {
   const failures: string[] = [];
   setBusy(true);
   for (const entry of entries) {
-    if (entry.path === movePath || (entry.kind === 'directory' && isDescendantPath(entry.path, movePath))) {
-      failures.push(`${entry.name}: cannot move into itself`); continue;
+    if (
+      entry.path === movePath ||
+      (entry.kind === 'directory' && isDescendantPath(entry.path, movePath))
+    ) {
+      failures.push(`${entry.name}: cannot move into itself`);
+      continue;
     }
     const destination = joinPath(movePath, entry.name);
-    if (destination === entry.path) { failures.push(`${entry.name}: already here`); continue; }
-    try { await fs.move(entry.path, destination); selected.delete(entry.path); }
-    catch (error) { failures.push(`${entry.name}: ${errorMessage(error)}`); }
+    if (destination === entry.path) {
+      failures.push(`${entry.name}: already here`);
+      continue;
+    }
+    try {
+      await fs.move(entry.path, destination);
+      selected.delete(entry.path);
+    } catch (error) {
+      failures.push(`${entry.name}: ${errorMessage(error)}`);
+    }
   }
-  const failedPaths = new Set(entries.filter((entry) => failures.some((failure) => failure.startsWith(`${entry.name}:`))).map((entry) => entry.path));
+  const failedPaths = new Set(
+    entries
+      .filter((entry) => failures.some((failure) => failure.startsWith(`${entry.name}:`)))
+      .map((entry) => entry.path),
+  );
   elements.moveDialog.close();
   setBusy(false);
   await refresh();
-  selected = new Set(currentEntries.filter((entry) => failedPaths.has(entry.path)).map((entry) => entry.path));
+  selected = new Set(
+    currentEntries.filter((entry) => failedPaths.has(entry.path)).map((entry) => entry.path),
+  );
   renderEntries();
-  setStatus(failures.length ? 'error' : 'ok', failures.length ? `${entries.length - failures.length} moved · ${failures.join('; ')}` : `${entries.length} moved`);
+  setStatus(
+    failures.length ? 'error' : 'ok',
+    failures.length
+      ? `${entries.length - failures.length} moved · ${failures.join('; ')}`
+      : `${entries.length} moved`,
+  );
 }
 
 async function deleteSelected(): Promise<void> {
@@ -540,16 +629,31 @@ async function deleteSelected(): Promise<void> {
   const failures: string[] = [];
   setBusy(true);
   for (const entry of entries) {
-    try { await fs.remove(entry.path, entry.kind === 'directory'); selected.delete(entry.path); }
-    catch (error) { failures.push(`${entry.name}: ${errorMessage(error)}`); }
+    try {
+      await fs.remove(entry.path, entry.kind === 'directory');
+      selected.delete(entry.path);
+    } catch (error) {
+      failures.push(`${entry.name}: ${errorMessage(error)}`);
+    }
   }
-  const failedPaths = new Set(entries.filter((entry) => failures.some((failure) => failure.startsWith(`${entry.name}:`))).map((entry) => entry.path));
+  const failedPaths = new Set(
+    entries
+      .filter((entry) => failures.some((failure) => failure.startsWith(`${entry.name}:`)))
+      .map((entry) => entry.path),
+  );
   elements.deleteDialog.close();
   setBusy(false);
   await refresh();
-  selected = new Set(currentEntries.filter((entry) => failedPaths.has(entry.path)).map((entry) => entry.path));
+  selected = new Set(
+    currentEntries.filter((entry) => failedPaths.has(entry.path)).map((entry) => entry.path),
+  );
   renderEntries();
-  setStatus(failures.length ? 'error' : 'ok', failures.length ? `${entries.length - failures.length} deleted · ${failures.join('; ')}` : `${entries.length} deleted`);
+  setStatus(
+    failures.length ? 'error' : 'ok',
+    failures.length
+      ? `${entries.length - failures.length} deleted · ${failures.join('; ')}`
+      : `${entries.length} deleted`,
+  );
 }
 
 function scheduleRefresh(): void {
@@ -565,10 +669,18 @@ elements.refresh.addEventListener('click', () => void refresh());
 elements.newFolder.addEventListener('click', () => openNameDialog('folder'));
 elements.newFile.addEventListener('click', () => openNameDialog('file'));
 elements.rename.addEventListener('click', () => openNameDialog('rename'));
-elements.move.addEventListener('click', () => { movePath = null; elements.moveError.textContent = ''; renderMoveRoots(); showDialog(elements.moveDialog, 'Could not open move dialog'); });
+elements.move.addEventListener('click', () => {
+  movePath = null;
+  elements.moveError.textContent = '';
+  renderMoveRoots();
+  showDialog(elements.moveDialog, 'Could not open move dialog');
+});
 elements.delete.addEventListener('click', () => {
   const entries = selectedEntries();
-  elements.deleteMessage.textContent = `Delete ${entries.length} selected item${entries.length === 1 ? '' : 's'}: ${entries.slice(0, 4).map((entry) => entry.name).join(', ')}${entries.length > 4 ? '…' : ''}`;
+  elements.deleteMessage.textContent = `Delete ${entries.length} selected item${entries.length === 1 ? '' : 's'}: ${entries
+    .slice(0, 4)
+    .map((entry) => entry.name)
+    .join(', ')}${entries.length > 4 ? '…' : ''}`;
   showDialog(elements.deleteDialog, 'Could not open delete dialog');
 });
 function submitNameFromDialog(): void {
@@ -582,7 +694,10 @@ elements.nameInput.addEventListener('keydown', (event) => {
   event.preventDefault();
   submitNameFromDialog();
 });
-elements.nameCancel.addEventListener('click', () => { debug('create-dialog:cancel', { action: nameAction }); elements.nameDialog.close(); });
+elements.nameCancel.addEventListener('click', () => {
+  debug('create-dialog:cancel', { action: nameAction });
+  elements.nameDialog.close();
+});
 elements.moveConfirm.addEventListener('click', () => void moveSelected());
 elements.moveCancel.addEventListener('click', () => elements.moveDialog.close());
 elements.deleteConfirm.addEventListener('click', () => void deleteSelected());
@@ -602,10 +717,16 @@ async function initialize(): Promise<void> {
   try {
     info = await fs.info();
     debug('initialize:fs-info', {
-      roots: info.roots.map((root) => ({ name: root.name, path: root.path, permissions: root.permissions })),
+      roots: info.roots.map((root) => ({
+        name: root.name,
+        path: root.path,
+        permissions: root.permissions,
+      })),
       limits: info.limits,
     });
-    changeSubscription = fs.onChanged((change) => { if (change.watchId === watchId) scheduleRefresh(); });
+    changeSubscription = fs.onChanged((change) => {
+      if (change.watchId === watchId) scheduleRefresh();
+    });
     renderRoots();
     setStatus('idle', 'Choose a root');
   } catch (error) {
@@ -614,7 +735,9 @@ async function initialize(): Promise<void> {
     elements.empty.hidden = false;
     elements.empty.textContent = `Filesystem unavailable: ${errorMessage(error)}`;
     setStatus('error', 'Filesystem unavailable');
-  } finally { setBusy(false); }
+  } finally {
+    setBusy(false);
+  }
 }
 
 installStaticIcons();

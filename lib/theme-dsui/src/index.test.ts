@@ -19,7 +19,11 @@ afterEach(() => {
 
 describe('installThemeClient', () => {
   it('builds compact flat DaisyUI metrics for the Hypr-like baseline', () => {
-    const variables = buildDaisyTheme({ background: '#14110c', text: '#f5f1e8', primary: '#9be564' });
+    const variables = buildDaisyTheme({
+      background: '#14110c',
+      text: '#f5f1e8',
+      primary: '#9be564',
+    });
 
     expect(variables['color-scheme']).toBe('dark');
     expect(variables['--radius-selector']).toBe('0.25rem');
@@ -87,7 +91,9 @@ describe('installThemeClient', () => {
       value: { theme: {} },
     });
     let onChanged: ((theme: unknown) => void) | undefined;
-    sdk.themeGet.mockResolvedValue({ colors: { background: '#14110c', text: '#f5f1e8', primary: '#9be564' } });
+    sdk.themeGet.mockResolvedValue({
+      colors: { background: '#14110c', text: '#f5f1e8', primary: '#9be564' },
+    });
     sdk.themeOnChanged.mockImplementation((callback) => {
       onChanged = callback;
       return { close: vi.fn() };

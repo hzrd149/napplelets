@@ -191,7 +191,10 @@ function parseAuthorityForm(rest: string, linkKey: string | null): ParseResult {
     if (typeof decoded === 'string') return fail(decoded);
     const path = parsePathSegments(rawSegments.slice(1));
     if (typeof path === 'string') return fail(path);
-    return { ok: true, ref: { kind: 'immutable', rootHash: decoded.hash, rootKey: decoded.key, path } };
+    return {
+      ok: true,
+      ref: { kind: 'immutable', rootHash: decoded.hash, rootKey: decoded.key, path },
+    };
   }
 
   if (authority.toLowerCase().startsWith('npub1')) {
@@ -286,7 +289,9 @@ export function parseTreeRef(input: string): ParseResult {
     return { ok: true, ref: { kind: 'immutable', rootHash: lower, rootKey: linkKey, path: [] } };
   }
 
-  return fail('unrecognised reference — expected htree://…, nhash1…, naddr1…, or a 64 character hash');
+  return fail(
+    'unrecognised reference — expected htree://…, nhash1…, naddr1…, or a 64 character hash',
+  );
 }
 
 /** Build a shareable `nhash` for a subtree the user is currently looking at. */

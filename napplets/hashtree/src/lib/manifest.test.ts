@@ -152,8 +152,7 @@ describe('BUD-16/17 golden vectors', () => {
 });
 
 describe('decodeNode rejections', () => {
-  const dirWith = (linkHex: string, linkCount = 1) =>
-    `82a16c9${linkCount}${linkHex}a17402`;
+  const dirWith = (linkHex: string, linkCount = 1) => `82a16c9${linkCount}${linkHex}a17402`;
 
   it('rejects an unknown node type instead of guessing', () => {
     expect(() => decodeNode(bytes('82a16c90a17404'))).toThrow(

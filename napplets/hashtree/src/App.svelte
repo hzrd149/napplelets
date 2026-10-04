@@ -101,18 +101,14 @@
   });
 
   const selectedUri = $derived(
-    ref === null || selected === null
-      ? ''
-      : formatHtreeUri(ref, [...dirPath, selected.name ?? '']),
+    ref === null || selected === null ? '' : formatHtreeUri(ref, [...dirPath, selected.name ?? '']),
   );
 
   const selectedNhash = $derived(
     selected === null ? null : encodeNhash(selected.hash, selected.key),
   );
 
-  const directUrl = $derived(
-    selected === null ? null : directBlobUrl(selected, activeServers),
-  );
+  const directUrl = $derived(selected === null ? null : directBlobUrl(selected, activeServers));
 
   // Inspect whatever the user is actually looking at: the selected file, or the
   // directory they are in when nothing is selected.
@@ -180,7 +176,8 @@
 
       recents = mergeRecent(recents, {
         reference,
-        label: parsed.ref.kind === 'mutable' ? parsed.ref.treeName : `${root.rootHash.slice(0, 10)}…`,
+        label:
+          parsed.ref.kind === 'mutable' ? parsed.ref.treeName : `${root.rootHash.slice(0, 10)}…`,
         openedAt: Date.now(),
       });
       void saveRecents(recents);
@@ -465,57 +462,57 @@
           onClose={() => (view = 'browse')}
         />
       {:else}
-      <div class="explorer" class:explorer-with-panel={selected !== null}>
-        {#if resolved !== null}
-          <TreeSidebar
-            {store}
-            rootHash={resolved.rootHash}
-            rootKey={resolved.rootKey}
-            {rootLabel}
-            currentPath={dirPath}
-            onNavigate={(path) => void navigate(path)}
-          />
-        {/if}
-
-        <div class="explorer-main">
-          {#if listError !== null}
-            <div class="alert alert-warning explorer-error" role="alert">
-              <p>{listError}</p>
-            </div>
+        <div class="explorer" class:explorer-with-panel={selected !== null}>
+          {#if resolved !== null}
+            <TreeSidebar
+              {store}
+              rootHash={resolved.rootHash}
+              rootKey={resolved.rootKey}
+              {rootLabel}
+              currentPath={dirPath}
+              onNavigate={(path) => void navigate(path)}
+            />
           {/if}
-          <EntryList
-            {entries}
-            selectedHash={selected?.hash ?? null}
-            {listing}
-            {sortKey}
-            {sortAscending}
-            {onSort}
-            onOpen={onOpenEntry}
-          />
-        </div>
 
-        {#if selected !== null}
-          <FilePanel
-            target={selected}
-            treeLabel={rootLabel}
-            htreeUri={selectedUri}
-            nhash={selectedNhash}
-            {directUrl}
-            {preview}
-            canSave={true}
-            {saving}
-            onPreview={() => void loadPreview()}
-            onCancel={cancelPreview}
-            onSave={() => void onSave()}
-            onOpenBrowser={() => void onOpenBrowser()}
-            onCopy={(value) => void onCopy(value)}
-            onClose={() => {
-              selected = null;
-              clearPreview();
-            }}
-          />
-        {/if}
-      </div>
+          <div class="explorer-main">
+            {#if listError !== null}
+              <div class="alert alert-warning explorer-error" role="alert">
+                <p>{listError}</p>
+              </div>
+            {/if}
+            <EntryList
+              {entries}
+              selectedHash={selected?.hash ?? null}
+              {listing}
+              {sortKey}
+              {sortAscending}
+              {onSort}
+              onOpen={onOpenEntry}
+            />
+          </div>
+
+          {#if selected !== null}
+            <FilePanel
+              target={selected}
+              treeLabel={rootLabel}
+              htreeUri={selectedUri}
+              nhash={selectedNhash}
+              {directUrl}
+              {preview}
+              canSave={true}
+              {saving}
+              onPreview={() => void loadPreview()}
+              onCancel={cancelPreview}
+              onSave={() => void onSave()}
+              onOpenBrowser={() => void onOpenBrowser()}
+              onCopy={(value) => void onCopy(value)}
+              onClose={() => {
+                selected = null;
+                clearPreview();
+              }}
+            />
+          {/if}
+        </div>
       {/if}
 
       <footer class="status">

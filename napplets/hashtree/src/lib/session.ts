@@ -56,7 +56,9 @@ export function readSettings(values: Record<string, unknown>): Settings {
     maxParallelChunks: clampInt(values['maxParallelChunks'], 1, 16, 4),
     maxCacheBytes: clampInt(values['maxCacheBytes'], 8, 1024, 128) * 1024 * 1024,
     autoPreview:
-      typeof values['autoPreview'] === 'boolean' ? values['autoPreview'] : DEFAULT_SETTINGS.autoPreview,
+      typeof values['autoPreview'] === 'boolean'
+        ? values['autoPreview']
+        : DEFAULT_SETTINGS.autoPreview,
   };
 }
 
@@ -95,10 +97,7 @@ const RECENTS_KEY = 'recent-trees';
 const MAX_RECENTS = 8;
 
 /** Pure: merge a new entry into the recents list, newest first, de-duplicated. */
-export function mergeRecent(
-  existing: readonly RecentTree[],
-  entry: RecentTree,
-): RecentTree[] {
+export function mergeRecent(existing: readonly RecentTree[], entry: RecentTree): RecentTree[] {
   return [entry, ...existing.filter((item) => item.reference !== entry.reference)].slice(
     0,
     MAX_RECENTS,

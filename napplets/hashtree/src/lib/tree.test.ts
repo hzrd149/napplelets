@@ -114,7 +114,12 @@ function buildTree() {
     t: 3,
     l: [
       { h: hexToBytes(shardA)!, m: { count: 1, first: 'docs', last: 'docs' }, s: 25, t: 2 },
-      { h: hexToBytes(shardB)!, m: { count: 1, first: 'zebra.txt', last: 'zebra.txt' }, s: 7, t: 2 },
+      {
+        h: hexToBytes(shardB)!,
+        m: { count: 1, first: 'zebra.txt', last: 'zebra.txt' },
+        s: 7,
+        t: 2,
+      },
     ],
   });
 
@@ -133,9 +138,13 @@ describe('listDirectory', () => {
   it('reports partial results as each fanout child lands', async () => {
     const { blobs, root } = buildTree();
     const snapshots: string[][] = [];
-    await listDirectory(blobs, { hash: root, key: null }, {
-      onPartial: (entries) => snapshots.push(entries.map((entry) => entry.name!)),
-    });
+    await listDirectory(
+      blobs,
+      { hash: root, key: null },
+      {
+        onPartial: (entries) => snapshots.push(entries.map((entry) => entry.name!)),
+      },
+    );
     expect(snapshots).toEqual([['docs'], ['docs', 'zebra.txt']]);
   });
 

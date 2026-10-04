@@ -76,7 +76,8 @@ export function parseOpenIntent(payload: unknown): ParsedIntent {
         ? (payload as Record<string, unknown>)
         : null;
 
-  if (!record) return { problem: 'Another napplet asked Notepad to open a file, but sent no path.' };
+  if (!record)
+    return { problem: 'Another napplet asked Notepad to open a file, but sent no path.' };
 
   const path = record.path;
   if (typeof path !== 'string' || !path) {

@@ -51,7 +51,11 @@ describe('summarizeManifest', () => {
 describe('upsertNewest', () => {
   it('keeps the newest event per address', () => {
     const oldest = summarizeManifest(baseEvent);
-    const newest = summarizeManifest({ ...baseEvent, created_at: 200, tags: [['d', 'good-morning']] });
+    const newest = summarizeManifest({
+      ...baseEvent,
+      created_at: 200,
+      tags: [['d', 'good-morning']],
+    });
     if (!oldest || !newest) throw new Error('test fixture failed');
 
     const items = new Map<string, typeof oldest>();

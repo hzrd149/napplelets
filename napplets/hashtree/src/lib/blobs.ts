@@ -24,11 +24,7 @@ import { startTimer, type RecordedEvent, type ServerAttempt } from './trace.js';
 export type { ServerAttempt };
 
 export type BlobErrorCode =
-  | 'no-servers'
-  | 'resource-unavailable'
-  | 'unavailable'
-  | 'decrypt-failed'
-  | 'aborted';
+  'no-servers' | 'resource-unavailable' | 'unavailable' | 'decrypt-failed' | 'aborted';
 
 export class BlobError extends Error {
   constructor(
@@ -254,7 +250,8 @@ export class BlobStore {
         source: 'network',
         server,
         // A failure before any server answered still carries the whole trail.
-        attempts: error instanceof BlobError && error.attempts.length > 0 ? error.attempts : attempts,
+        attempts:
+          error instanceof BlobError && error.attempts.length > 0 ? error.attempts : attempts,
         bytes: 0,
         ms: elapsed(),
         ok: false,
